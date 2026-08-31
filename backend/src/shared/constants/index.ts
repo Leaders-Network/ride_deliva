@@ -1,0 +1,200 @@
+// HTTP Status Codes
+export const HTTP_STATUS = {
+  OK: 200,
+  CREATED: 201,
+  NO_CONTENT: 204,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  CONFLICT: 409,
+  UNPROCESSABLE_ENTITY: 422,
+  TOO_MANY_REQUESTS: 429,
+  INTERNAL_SERVER_ERROR: 500,
+  SERVICE_UNAVAILABLE: 503,
+} as const;
+
+// Error Codes
+export const ERROR_CODES = {
+  // Authentication & Authorization
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+  TOKEN_EXPIRED: 'TOKEN_EXPIRED',
+  TOKEN_INVALID: 'TOKEN_INVALID',
+  UNAUTHORIZED_ACCESS: 'UNAUTHORIZED_ACCESS',
+  INSUFFICIENT_PERMISSIONS: 'INSUFFICIENT_PERMISSIONS',
+
+  // Validation
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  INVALID_INPUT: 'INVALID_INPUT',
+  MISSING_REQUIRED_FIELD: 'MISSING_REQUIRED_FIELD',
+  INVALID_FORMAT: 'INVALID_FORMAT',
+
+  // Business Logic
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+  USER_ALREADY_EXISTS: 'USER_ALREADY_EXISTS',
+  PHONE_ALREADY_VERIFIED: 'PHONE_ALREADY_VERIFIED',
+  VERIFICATION_CODE_EXPIRED: 'VERIFICATION_CODE_EXPIRED',
+  VERIFICATION_CODE_INVALID: 'VERIFICATION_CODE_INVALID',
+  MAX_ATTEMPTS_EXCEEDED: 'MAX_ATTEMPTS_EXCEEDED',
+
+  // Driver
+  DRIVER_NOT_FOUND: 'DRIVER_NOT_FOUND',
+  DRIVER_NOT_AVAILABLE: 'DRIVER_NOT_AVAILABLE',
+  DRIVER_ALREADY_ASSIGNED: 'DRIVER_ALREADY_ASSIGNED',
+
+  // Ride/Delivery
+  RIDE_NOT_FOUND: 'RIDE_NOT_FOUND',
+  DELIVERY_NOT_FOUND: 'DELIVERY_NOT_FOUND',
+  INVALID_RIDE_STATUS: 'INVALID_RIDE_STATUS',
+  CANNOT_CANCEL_RIDE: 'CANNOT_CANCEL_RIDE',
+  OUTSIDE_SERVICE_AREA: 'OUTSIDE_SERVICE_AREA',
+
+  // Payment
+  PAYMENT_FAILED: 'PAYMENT_FAILED',
+  INSUFFICIENT_FUNDS: 'INSUFFICIENT_FUNDS',
+  PAYMENT_METHOD_INVALID: 'PAYMENT_METHOD_INVALID',
+
+  // System
+  DATABASE_ERROR: 'DATABASE_ERROR',
+  EXTERNAL_SERVICE_ERROR: 'EXTERNAL_SERVICE_ERROR',
+  RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
+} as const;
+
+// User Roles
+export const USER_ROLES = {
+  CUSTOMER: 'CUSTOMER',
+  DRIVER: 'DRIVER',
+  ADMIN: 'ADMIN',
+  SUPER_ADMIN: 'SUPER_ADMIN',
+} as const;
+
+// Ride Status
+export const RIDE_STATUS = {
+  REQUESTED: 'REQUESTED',
+  ACCEPTED: 'ACCEPTED',
+  DRIVER_ARRIVING: 'DRIVER_ARRIVING',
+  DRIVER_ARRIVED: 'DRIVER_ARRIVED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+// Delivery Status
+export const DELIVERY_STATUS = {
+  REQUESTED: 'REQUESTED',
+  ACCEPTED: 'ACCEPTED',
+  DRIVER_ASSIGNED: 'DRIVER_ASSIGNED',
+  PICKED_UP: 'PICKED_UP',
+  IN_TRANSIT: 'IN_TRANSIT',
+  DELIVERED: 'DELIVERED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+// Payment Status
+export const PAYMENT_STATUS = {
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+  REFUNDED: 'REFUNDED',
+} as const;
+
+// Vehicle Types
+export const VEHICLE_TYPES = {
+  SEDAN: 'SEDAN',
+  SUV: 'SUV',
+  HATCHBACK: 'HATCHBACK',
+  MOTORCYCLE: 'MOTORCYCLE',
+  BICYCLE: 'BICYCLE',
+  TRUCK: 'TRUCK',
+  VAN: 'VAN',
+} as const;
+
+// Notification Types
+export const NOTIFICATION_TYPES = {
+  RIDE_REQUEST: 'RIDE_REQUEST',
+  RIDE_ACCEPTED: 'RIDE_ACCEPTED',
+  RIDE_STARTED: 'RIDE_STARTED',
+  RIDE_COMPLETED: 'RIDE_COMPLETED',
+  DELIVERY_REQUEST: 'DELIVERY_REQUEST',
+  DELIVERY_ACCEPTED: 'DELIVERY_ACCEPTED',
+  DELIVERY_PICKED_UP: 'DELIVERY_PICKED_UP',
+  DELIVERY_DELIVERED: 'DELIVERY_DELIVERED',
+  PAYMENT_RECEIVED: 'PAYMENT_RECEIVED',
+  WALLET_CREDITED: 'WALLET_CREDITED',
+  PROMOTIONAL: 'PROMOTIONAL',
+  SYSTEM_ALERT: 'SYSTEM_ALERT',
+} as const;
+
+// Cache Keys
+export const CACHE_KEYS = {
+  USER_SESSION: (userId: string) => `user:session:${userId}`,
+  DRIVER_LOCATION: (driverId: string) => `driver:location:${driverId}`,
+  RIDE_REQUEST: (rideId: string) => `ride:request:${rideId}`,
+  VERIFICATION_CODE: (phoneNumber: string) => `verification:${phoneNumber}`,
+  RATE_LIMIT: (key: string) => `rate_limit:${key}`,
+  NEARBY_DRIVERS: (lat: number, lon: number) => `drivers:nearby:${lat}:${lon}`,
+} as const;
+
+// WebSocket Events
+export const SOCKET_EVENTS = {
+  CONNECTION: 'connection',
+  DISCONNECT: 'disconnect',
+  
+  // Ride Events
+  RIDE_REQUESTED: 'ride:requested',
+  RIDE_ACCEPTED: 'ride:accepted',
+  RIDE_CANCELLED: 'ride:cancelled',
+  RIDE_STARTED: 'ride:started',
+  RIDE_COMPLETED: 'ride:completed',
+  
+  // Location Events
+  DRIVER_LOCATION_UPDATE: 'driver:location:update',
+  RIDE_LOCATION_UPDATE: 'ride:location:update',
+  
+  // Driver Events
+  DRIVER_ONLINE: 'driver:online',
+  DRIVER_OFFLINE: 'driver:offline',
+  
+  // System Events
+  NOTIFICATION: 'notification',
+  ERROR: 'error',
+} as const;
+
+// Queue Names
+export const QUEUE_NAMES = {
+  EMAIL_QUEUE: 'email-queue',
+  SMS_QUEUE: 'sms-queue',
+  PUSH_NOTIFICATION_QUEUE: 'push-notification-queue',
+  RIDE_MATCHING_QUEUE: 'ride-matching-queue',
+  PAYMENT_PROCESSING_QUEUE: 'payment-processing-queue',
+  LOCATION_UPDATE_QUEUE: 'location-update-queue',
+} as const;
+
+// Business Constants
+export const BUSINESS_CONSTANTS = {
+  DEFAULT_SEARCH_RADIUS_KM: 5,
+  MAX_SEARCH_RADIUS_KM: 20,
+  DRIVER_RESPONSE_TIMEOUT_SECONDS: 30,
+  VERIFICATION_CODE_EXPIRY_MINUTES: 5,
+  MAX_VERIFICATION_ATTEMPTS: 3,
+  SESSION_EXPIRY_DAYS: 7,
+  MINIMUM_FARE: 5.00,
+  COMMISSION_RATE: 0.20, // 20%
+  CANCELLATION_FEE: 2.00,
+} as const;
+
+// File Upload Constants
+export const FILE_UPLOAD = {
+  MAX_SIZE_MB: 10,
+  ALLOWED_MIME_TYPES: {
+    IMAGES: ['image/jpeg', 'image/png', 'image/webp'],
+    DOCUMENTS: ['application/pdf', 'image/jpeg', 'image/png'],
+  },
+  UPLOAD_PATHS: {
+    PROFILE_PICTURES: 'uploads/profiles/',
+    DRIVER_DOCUMENTS: 'uploads/documents/drivers/',
+    VEHICLE_DOCUMENTS: 'uploads/documents/vehicles/',
+    PROOF_OF_DELIVERY: 'uploads/deliveries/proof/',
+  },
+} as const;

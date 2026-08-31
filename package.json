@@ -1,0 +1,42 @@
+{
+  "name": "ride-deliva-platform",
+  "version": "1.0.0",
+  "description": "Ride Deliva - Mobility and Logistics Platform",
+  "main": "index.js",
+  "scripts": {
+    "setup": "node setup-infrastructure.js",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:customer\" \"npm run dev:driver\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:customer": "cd flutter/customer_app && flutter run",
+    "dev:driver": "cd flutter/driver_app && flutter run",
+    "build": "npm run build:backend",
+    "build:backend": "cd backend && npm run build",
+    "test": "npm run test:backend",
+    "test:backend": "cd backend && npm test",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "db:migrate": "cd backend && npx prisma migrate deploy",
+    "db:push": "cd backend && npx prisma db push",
+    "db:studio": "cd backend && npx prisma studio",
+    "db:seed": "cd backend && npm run seed",
+    "db:reset": "cd backend && npx prisma migrate reset"
+  },
+  "workspaces": [
+    "backend"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "ride-sharing",
+    "delivery",
+    "logistics",
+    "mobility",
+    "flutter",
+    "nodejs",
+    "typescript"
+  ],
+  "author": "Ride Deliva Team",
+  "license": "MIT"
+}
