@@ -1,4 +1,4 @@
-import { Ride, RideStatus, Prisma } from '@prisma/client';
+import { Ride, RideStatus, Prisma } from '@/generated/prisma';
 import { BaseRepository } from './base.repository';
 
 export class RideRepository extends BaseRepository<Ride> {

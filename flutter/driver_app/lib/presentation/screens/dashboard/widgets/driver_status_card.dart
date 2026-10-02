@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/constants/app_constants.dart';
 
 class DriverStatusCard extends StatelessWidget {
   final String status;
@@ -25,13 +24,13 @@ class DriverStatusCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: isOnline 
               ? AppColors.onlineGradient
-              : [AppColors.statusOffline, AppColors.statusOffline.withOpacity(0.8)],
+              : [AppColors.statusOffline, AppColors.statusOffline.withValues(alpha: 0.8)],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: (isOnline ? AppColors.primaryGreen : AppColors.statusOffline)
-                .withOpacity(0.3),
+                .withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -49,7 +48,7 @@ class DriverStatusCard extends StatelessWidget {
                     'Driver Status',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -80,16 +79,16 @@ class DriverStatusCard extends StatelessWidget {
               // Status toggle switch
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(25),
                 ),
                 child: Switch(
                   value: isOnline,
                   onChanged: (_) => onStatusToggle(),
-                  activeColor: Colors.white,
-                  activeTrackColor: Colors.white.withOpacity(0.3),
-                  inactiveThumbColor: Colors.white.withOpacity(0.7),
-                  inactiveTrackColor: Colors.white.withOpacity(0.2),
+                  activeThumbColor: Colors.white,
+                  activeTrackColor: Colors.white.withValues(alpha: 0.3),
+                  inactiveThumbColor: Colors.white.withValues(alpha: 0.7),
+                  inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
                 ),
               ),
             ],
@@ -141,15 +140,15 @@ class DriverStatusCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                 ),
               ),
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.info_outline,
                     color: Colors.white,
                     size: 16,
@@ -160,7 +159,7 @@ class DriverStatusCard extends StatelessWidget {
                       'You are visible to nearby customers and will receive ride requests.',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -192,10 +191,10 @@ class _StatusButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             width: 1,
           ),
         ),

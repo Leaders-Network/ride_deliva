@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class ActiveTripsSection extends StatelessWidget {
-  const ActiveTripsSection({super.key});
+  const ActiveTripsSection({super.key, this.hasActiveTrips = false});
+
+  final bool hasActiveTrips;
 
   @override
   Widget build(BuildContext context) {
-    // Mock data - no active trips for now
-    final hasActiveTrips = false;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -58,14 +57,14 @@ class ActiveTripsSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
+      child: const Column(
         children: [
           Icon(
             Icons.route_outlined,
             size: 48,
             color: AppColors.textTertiary,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
             'No Active Trips',
             style: TextStyle(
@@ -74,7 +73,7 @@ class ActiveTripsSection extends StatelessWidget {
               color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             'Go online to start receiving ride requests',
             textAlign: TextAlign.center,

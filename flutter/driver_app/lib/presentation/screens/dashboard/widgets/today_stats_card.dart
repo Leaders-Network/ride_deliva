@@ -7,19 +7,19 @@ class TodayStatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stats = [
-      StatItem(
+      const StatItem(
         icon: Icons.directions_car,
         label: 'Trips',
         value: '12',
         color: AppColors.primaryBlue,
       ),
-      StatItem(
+      const StatItem(
         icon: Icons.schedule,
         label: 'Online Time',
         value: '6h 30m',
         color: AppColors.warning,
       ),
-      StatItem(
+      const StatItem(
         icon: Icons.star,
         label: 'Rating',
         value: '4.9',
@@ -69,7 +69,7 @@ class _StatColumn extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: stat.color.withOpacity(0.1),
+            color: stat.color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
@@ -90,7 +90,7 @@ class _StatColumn extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           stat.label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
             color: AppColors.textSecondary,
           ),

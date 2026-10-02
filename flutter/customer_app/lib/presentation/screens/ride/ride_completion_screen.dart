@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
-import 'ride_booking_screen.dart';
+import '../../../core/models/location_data.dart';
 import 'vehicle_selection_screen.dart';
 import 'ride_confirmation_screen.dart';
 
@@ -30,11 +30,9 @@ class RideCompletionScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-          icon: const Icon(
-            Icons.close,
-            color: AppColors.textPrimary,
-          ),
+          onPressed: () =>
+              Navigator.of(context).popUntil((route) => route.isFirst),
+          icon: const Icon(Icons.close, color: AppColors.textPrimary),
         ),
         title: const Text(
           'Trip Completed',
@@ -68,10 +66,7 @@ class RideCompletionScreen extends StatelessWidget {
             Text(
               'Foundation completed - ready for detailed implementation',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
             ),
           ],
         ),

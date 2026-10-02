@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../ride_confirmation_screen.dart';
 import '../vehicle_selection_screen.dart';
@@ -28,12 +27,12 @@ class DriverInfoCard extends StatelessWidget {
         color: AppColors.backgroundCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.primaryBlue.withOpacity(0.3),
+          color: AppColors.primaryBlue.withValues(alpha: 0.3),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -52,19 +51,15 @@ class DriverInfoCard extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: [
                       AppColors.primaryBlue,
-                      AppColors.primaryBlue.withOpacity(0.7),
+                      AppColors.primaryBlue.withValues(alpha: 0.7),
                     ],
                   ),
                 ),
-                child: const Icon(
-                  Icons.person,
-                  color: Colors.white,
-                  size: 24,
-                ),
+                child: const Icon(Icons.person, color: Colors.white, size: 24),
               ),
-              
+
               const SizedBox(width: 12),
-              
+
               // Driver info
               Expanded(
                 child: Column(
@@ -88,7 +83,7 @@ class DriverInfoCard extends StatelessWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryBlue.withOpacity(0.1),
+                            color: AppColors.primaryBlue.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -102,9 +97,9 @@ class DriverInfoCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 4),
-                    
+
                     Row(
                       children: [
                         const Icon(
@@ -131,9 +126,9 @@ class DriverInfoCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 2),
-                    
+
                     Text(
                       '${driver.vehicleModel} • ${driver.plateNumber}',
                       style: TextStyle(
@@ -146,13 +141,13 @@ class DriverInfoCard extends StatelessWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           const Divider(color: AppColors.border, height: 1),
-          
+
           const SizedBox(height: 12),
-          
+
           // Action buttons
           Row(
             children: [
@@ -212,20 +207,13 @@ class _ActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1,
-          ),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
         ),
         child: Column(
           children: [
-            Icon(
-              icon,
-              color: color,
-              size: 18,
-            ),
+            Icon(icon, color: color, size: 18),
             const SizedBox(height: 4),
             Text(
               label,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../ride_booking_screen.dart';
+import '../../../../core/models/location_data.dart';
 
 class RideBookingBottomSheet extends StatelessWidget {
   final LocationData? pickupLocation;
@@ -22,7 +22,7 @@ class RideBookingBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canProceed = pickupLocation != null && destinationLocation != null;
-    
+
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -69,10 +69,7 @@ class RideBookingBottomSheet extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.backgroundSecondary,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.border,
-                          width: 1,
-                        ),
+                        border: Border.all(color: AppColors.border, width: 1),
                       ),
                       child: Row(
                         children: [
@@ -98,7 +95,8 @@ class RideBookingBottomSheet extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  pickupLocation?.address ?? 'Choose pickup location',
+                                  pickupLocation?.address ??
+                                      'Choose pickup location',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
@@ -110,7 +108,7 @@ class RideBookingBottomSheet extends StatelessWidget {
                                 if (pickupLocation?.subAddress != null) ...[
                                   const SizedBox(height: 2),
                                   Text(
-                                    pickupLocation!.subAddress,
+                                    pickupLocation!.subAddress ?? '',
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: AppColors.textTertiary,
@@ -136,15 +134,18 @@ class RideBookingBottomSheet extends StatelessWidget {
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 22),
                     child: Column(
-                      children: List.generate(3, (index) => Container(
-                        margin: const EdgeInsets.symmetric(vertical: 2),
-                        width: 2,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: AppColors.border,
-                          borderRadius: BorderRadius.circular(1),
+                      children: List.generate(
+                        3,
+                        (index) => Container(
+                          margin: const EdgeInsets.symmetric(vertical: 2),
+                          width: 2,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: AppColors.border,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
                         ),
-                      )),
+                      ),
                     ),
                   ),
 
@@ -158,10 +159,7 @@ class RideBookingBottomSheet extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.backgroundSecondary,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.border,
-                          width: 1,
-                        ),
+                        border: Border.all(color: AppColors.border, width: 1),
                       ),
                       child: Row(
                         children: [
@@ -187,7 +185,8 @@ class RideBookingBottomSheet extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  destinationLocation?.address ?? 'Where are you going?',
+                                  destinationLocation?.address ??
+                                      'Where are you going?',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
@@ -196,10 +195,11 @@ class RideBookingBottomSheet extends StatelessWidget {
                                         : AppColors.textTertiary,
                                   ),
                                 ),
-                                if (destinationLocation?.subAddress != null) ...[
+                                if (destinationLocation?.subAddress !=
+                                    null) ...[
                                   const SizedBox(height: 2),
                                   Text(
-                                    destinationLocation!.subAddress,
+                                    destinationLocation!.subAddress ?? '',
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: AppColors.textTertiary,
@@ -258,7 +258,7 @@ class RideBookingBottomSheet extends StatelessWidget {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 20),
               ],
 
@@ -282,7 +282,9 @@ class RideBookingBottomSheet extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        canProceed ? 'Choose Vehicle' : 'Select Locations First',
+                        canProceed
+                            ? 'Choose Vehicle'
+                            : 'Select Locations First',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -318,9 +320,7 @@ class RideBookingBottomSheet extends StatelessWidget {
                       ),
                     ),
                   ],
-                )
-                    .animate()
-                    .fadeIn(delay: 300.ms, duration: 600.ms),
+                ).animate().fadeIn(delay: 300.ms, duration: 600.ms),
               ],
             ],
           ),
@@ -350,18 +350,11 @@ class _QuickActionButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.backgroundSecondary,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: AppColors.border,
-            width: 1,
-          ),
+          border: Border.all(color: AppColors.border, width: 1),
         ),
         child: Column(
           children: [
-            Icon(
-              icon,
-              color: AppColors.textSecondary,
-              size: 20,
-            ),
+            Icon(icon, color: AppColors.textSecondary, size: 20),
             const SizedBox(height: 4),
             Text(
               label,

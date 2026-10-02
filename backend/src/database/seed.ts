@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/prisma';
 import bcrypt from 'bcrypt';
 import { logger } from '@/config/logger';
 
@@ -94,6 +94,13 @@ async function main() {
             },
           },
         },
+        include: {
+          customerProfile: {
+            include: {
+              wallet: true,
+            },
+          },
+        },
       }),
       prisma.user.create({
         data: {
@@ -113,6 +120,13 @@ async function main() {
                   currency: 'NGN',
                 },
               },
+            },
+          },
+        },
+        include: {
+          customerProfile: {
+            include: {
+              wallet: true,
             },
           },
         },
@@ -210,6 +224,13 @@ async function main() {
             },
           },
         },
+        include: {
+          driverProfile: {
+            include: {
+              wallet: true,
+            },
+          },
+        },
       }),
       prisma.user.create({
         data: {
@@ -242,6 +263,13 @@ async function main() {
                   currency: 'NGN',
                 },
               },
+            },
+          },
+        },
+        include: {
+          driverProfile: {
+            include: {
+              wallet: true,
             },
           },
         },

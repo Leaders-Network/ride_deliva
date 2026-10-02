@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "lib": ["ES2022"],
     "outDir": "./dist",
     "rootDir": "./src",
@@ -27,7 +27,9 @@
       "@/config/*": ["./config/*"],
       "@/modules/*": ["./modules/*"],
       "@/shared/*": ["./shared/*"],
-      "@/types/*": ["./types/*"]
+      "@/types/*": ["./types/*"],
+      "@/generated/*": ["./generated/*"],
+      "@/generated/*": ["./generated/*"]
     },
     "types": ["node", "jest"],
     "declaration": true,
@@ -41,9 +43,7 @@
     "node_modules",
     "dist",
     "**/*.test.ts",
-    "**/*.spec.ts"
-  ],
-  "ts-node": {
-    "esm": true
-  }
+    "**/*.spec.ts",
+    "src/shared/examples/**/*"
+  ]
 }

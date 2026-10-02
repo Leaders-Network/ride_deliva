@@ -512,7 +512,7 @@ export const SystemQueueHelpers = {
       return stats;
     } catch (error) {
       logger.error('Failed to get queue health status', { error });
-      return { status: 'unhealthy', error: error.message };
+      return { status: 'unhealthy', error: error instanceof Error ? error.message : String(error) };
     }
   },
 };

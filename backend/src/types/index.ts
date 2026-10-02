@@ -1,13 +1,12 @@
 import { Request } from 'express';
+import { User } from '../../generated/prisma';
 
-// Extend Express Request interface
+// Extend Express Request interface  
 export interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    phoneNumber: string;
-    email?: string;
-    role: string;
-    isVerified: boolean;
+  user?: User & {
+    customerProfile?: any;
+    driverProfile?: any;
+    adminProfile?: any;
   };
 }
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
 import '../dashboard/dashboard_screen.dart';
 
 class DocumentVerificationScreen extends StatelessWidget {
@@ -9,25 +8,25 @@ class DocumentVerificationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final documents = [
-      DocumentItem(
+      const DocumentItem(
         title: 'Driver\'s License',
         subtitle: 'Upload a clear photo of your license',
         icon: Icons.credit_card,
         status: DocumentStatus.pending,
       ),
-      DocumentItem(
+      const DocumentItem(
         title: 'Vehicle Registration',
         subtitle: 'Vehicle papers and registration',
         icon: Icons.description,
         status: DocumentStatus.pending,
       ),
-      DocumentItem(
+      const DocumentItem(
         title: 'Insurance Certificate',
         subtitle: 'Valid vehicle insurance',
         icon: Icons.security,
         status: DocumentStatus.pending,
       ),
-      DocumentItem(
+      const DocumentItem(
         title: 'Profile Photo',
         subtitle: 'Clear photo of yourself',
         icon: Icons.person,
@@ -54,10 +53,10 @@ class DocumentVerificationScreen extends StatelessWidget {
                 color: AppColors.backgroundCard,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppColors.primaryGreen.withOpacity(0.3),
+                  color: AppColors.primaryGreen.withValues(alpha: 0.3),
                 ),
               ),
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -67,8 +66,8 @@ class DocumentVerificationScreen extends StatelessWidget {
                         color: AppColors.primaryGreen,
                         size: 24,
                       ),
-                      const SizedBox(width: 12),
-                      const Expanded(
+                      SizedBox(width: 12),
+                      Expanded(
                         child: Text(
                           'Document Verification',
                           style: TextStyle(
@@ -80,7 +79,7 @@ class DocumentVerificationScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     'Upload the required documents to complete your driver registration. All documents will be reviewed within 24 hours.',
                     style: TextStyle(
@@ -153,7 +152,7 @@ class DocumentVerificationScreen extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: _getStatusColor(document.status).withOpacity(0.1),
+              color: _getStatusColor(document.status).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -178,7 +177,7 @@ class DocumentVerificationScreen extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   document.subtitle,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     color: AppColors.textSecondary,
                   ),
@@ -198,9 +197,9 @@ class DocumentVerificationScreen extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.warning.withOpacity(0.1),
+            color: AppColors.warning.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+            border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
           ),
           child: const Text(
             'Upload',
@@ -215,9 +214,9 @@ class DocumentVerificationScreen extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.info.withOpacity(0.1),
+            color: AppColors.info.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.info.withOpacity(0.3)),
+            border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
           ),
           child: const Text(
             'Reviewing',
@@ -232,9 +231,9 @@ class DocumentVerificationScreen extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.success.withOpacity(0.1),
+            color: AppColors.success.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.success.withOpacity(0.3)),
+            border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
           ),
           child: const Text(
             'Approved',
@@ -249,9 +248,9 @@ class DocumentVerificationScreen extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.error.withOpacity(0.1),
+            color: AppColors.error.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.error.withOpacity(0.3)),
+            border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
           ),
           child: const Text(
             'Rejected',

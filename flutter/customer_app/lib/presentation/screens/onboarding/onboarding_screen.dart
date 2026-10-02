@@ -131,7 +131,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         end: Alignment.bottomCenter,
                         colors: [
                           page.backgroundColor,
-                          page.backgroundColor.withOpacity(0.8),
+                          page.backgroundColor.withValues(alpha: 0.8),
                         ],
                       ),
                     ),
@@ -148,8 +148,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               shape: BoxShape.circle,
                               gradient: LinearGradient(
                                 colors: [
-                                  page.accentColor.withOpacity(0.2),
-                                  page.accentColor.withOpacity(0.1),
+                                  page.accentColor.withValues(alpha: 0.2),
+                                  page.accentColor.withValues(alpha: 0.1),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
@@ -240,7 +240,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         decoration: BoxDecoration(
                           color: _currentPage == index
                               ? AppColors.primaryBlue
-                              : AppColors.textSecondary.withOpacity(0.3),
+                              : AppColors.textSecondary.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),

@@ -1,4 +1,4 @@
-import { User, Prisma } from '@prisma/client';
+import { User, Prisma } from '@/generated/prisma';
 import { BaseRepository } from './base.repository';
 import { sanitize } from '@/shared/utils/validation';
 

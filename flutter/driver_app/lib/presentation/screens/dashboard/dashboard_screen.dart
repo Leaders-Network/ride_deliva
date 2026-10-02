@@ -119,7 +119,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -136,7 +136,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               gradient: LinearGradient(
                 colors: [
                   AppColors.primaryGreen,
-                  AppColors.primaryGreen.withOpacity(0.7),
+                  AppColors.primaryGreen.withValues(alpha: 0.7),
                 ],
               ),
             ),
@@ -150,7 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           const SizedBox(width: 12),
 
           // Greeting and Driver Info
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -163,15 +163,15 @@ class _DashboardScreenState extends State<DashboardScreen>
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    const Text(
+                    SizedBox(width: 4),
+                    Text(
                       '👋',
                       style: TextStyle(fontSize: 14),
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
-                const Text(
+                SizedBox(height: 2),
+                Text(
                   'Ahmed Ibrahim',
                   style: TextStyle(
                     fontSize: 18,
@@ -179,7 +179,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Row(
                   children: [
                     Icon(
@@ -187,7 +187,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                       size: 14,
                       color: AppColors.warning,
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
                       '4.9 • 1,247 trips',
                       style: TextStyle(
@@ -209,8 +209,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: _isOnline 
-                      ? AppColors.statusOnline.withOpacity(0.1)
-                      : AppColors.statusOffline.withOpacity(0.1),
+                      ? AppColors.statusOnline.withValues(alpha: 0.1)
+                      : AppColors.statusOffline.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: _isOnline 

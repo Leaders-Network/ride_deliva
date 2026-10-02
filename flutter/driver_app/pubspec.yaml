@@ -40,11 +40,10 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   shared_preferences: ^2.2.2
-  secure_storage: ^3.0.5
+  flutter_secure_storage: ^9.2.2
   
   # File & Media Handling
   image_picker: ^1.0.4
-  file_picker: ^6.1.1
   path_provider: ^2.1.1
   
   # Permissions
@@ -59,16 +58,9 @@ dependencies:
   
   # Background Services
   flutter_background_service: ^5.0.5
-  workmanager: ^0.5.1
-  
-  # Notifications
-  flutter_local_notifications: ^16.3.0
   
   # Charts & Analytics
   fl_chart: ^0.65.0
-  
-  # Camera & QR Code
-  qr_code_scanner: ^1.0.1
   
   # Audio
   audioplayers: ^5.2.1
@@ -86,7 +78,6 @@ dev_dependencies:
   
   # Testing
   mockito: ^5.4.2
-  bloc_test: ^9.1.5
   integration_test:
     sdk: flutter
 

@@ -151,7 +151,7 @@ export const redisUtils = {
     unit: 'm' | 'km' | 'mi' | 'ft' = 'm'
   ): Promise<string[]> {
     const result = await redis.georadius(key, longitude, latitude, radius, unit);
-    return result;
+    return result as string[];
   },
 };
 

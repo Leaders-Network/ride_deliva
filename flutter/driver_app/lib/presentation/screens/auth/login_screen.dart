@@ -55,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Login failed. Please try again.'),
             backgroundColor: AppColors.error,
           ),
@@ -143,9 +143,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 24),
                       
                       // Welcome text
-                      Text(
+                      const Text(
                         'Welcome Back',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
@@ -158,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 8),
                       
                       // Subtitle
-                      Text(
+                      const Text(
                         'Ready to start earning? Sign in to your driver account',
                         style: TextStyle(
                           fontSize: 16,
@@ -294,7 +294,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             },
                             activeColor: AppColors.primaryGreen,
                           ),
-                          Text(
+                          const Text(
                             'Remember me',
                             style: TextStyle(
                               color: AppColors.textSecondary,
@@ -368,7 +368,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
+                        const Text(
                           "Don't have an account? ",
                           style: TextStyle(
                             color: AppColors.textSecondary,
@@ -401,24 +401,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: AppColors.backgroundCard,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColors.primaryGreen.withOpacity(0.3),
+                        color: AppColors.primaryGreen.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
                     child: Column(
                       children: [
-                        Row(
+                        const Row(
                           children: [
                             Icon(
                               Icons.info_outline,
                               color: AppColors.primaryGreen,
                               size: 20,
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 'Driver Requirements',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.textPrimary,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -456,7 +456,7 @@ class _LoginScreenState extends State<LoginScreen> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.check_circle_outline,
             color: AppColors.primaryGreen,
             size: 16,
@@ -465,7 +465,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 14,
               ),

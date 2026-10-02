@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
-import 'ride_booking_screen.dart';
+import '../../../core/models/location_data.dart';
 import 'vehicle_selection_screen.dart';
 import 'ride_tracking_screen.dart';
 
@@ -34,7 +34,7 @@ class _RideConfirmationScreenState extends State<RideConfirmationScreen> {
   void _searchForDriver() async {
     // Simulate driver search
     await Future.delayed(const Duration(seconds: 3));
-    
+
     if (mounted) {
       setState(() {
         _isSearchingDriver = false;
@@ -49,12 +49,12 @@ class _RideConfirmationScreenState extends State<RideConfirmationScreen> {
           estimatedArrival: '3 mins',
         );
       });
-      
+
       // Navigate to tracking after a short delay
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
+            MaterialPageRoute<void>(
               builder: (context) => RideTrackingScreen(
                 pickupLocation: widget.pickupLocation,
                 destinationLocation: widget.destinationLocation,
@@ -77,10 +77,7 @@ class _RideConfirmationScreenState extends State<RideConfirmationScreen> {
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(
-            Icons.close,
-            color: AppColors.textPrimary,
-          ),
+          icon: const Icon(Icons.close, color: AppColors.textPrimary),
         ),
         title: Text(
           _isSearchingDriver ? 'Finding Your Driver' : 'Driver Found',
@@ -98,22 +95,22 @@ class _RideConfirmationScreenState extends State<RideConfirmationScreen> {
           child: Column(
             children: [
               const SizedBox(height: 40),
-              
+
               // Status animation
               if (_isSearchingDriver) ...[
                 Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primaryBlue.withOpacity(0.1),
-                  ),
-                  child: const Icon(
-                    Icons.search,
-                    size: 60,
-                    color: AppColors.primaryBlue,
-                  ),
-                )
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                      ),
+                      child: const Icon(
+                        Icons.search,
+                        size: 60,
+                        color: AppColors.primaryBlue,
+                      ),
+                    )
                     .animate(onPlay: (controller) => controller.repeat())
                     .scale(
                       begin: const Offset(1.0, 1.0),
@@ -126,9 +123,9 @@ class _RideConfirmationScreenState extends State<RideConfirmationScreen> {
                       end: const Offset(1.0, 1.0),
                       duration: 1000.ms,
                     ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 const Text(
                   'Searching for nearby drivers...',
                   style: TextStyle(
@@ -137,9 +134,9 @@ class _RideConfirmationScreenState extends State<RideConfirmationScreen> {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 Text(
                   'This usually takes a few seconds',
                   style: TextStyle(
@@ -147,7 +144,6 @@ class _RideConfirmationScreenState extends State<RideConfirmationScreen> {
                     color: AppColors.textSecondary,
                   ),
                 ),
-                
               ] else if (_assignedDriver != null) ...[
                 // Driver found animation
                 Container(
@@ -155,19 +151,17 @@ class _RideConfirmationScreenState extends State<RideConfirmationScreen> {
                   height: 100,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.success.withOpacity(0.1),
+                    color: AppColors.success.withValues(alpha: 0.1),
                   ),
                   child: const Icon(
                     Icons.check,
                     size: 50,
                     color: AppColors.success,
                   ),
-                )
-                    .animate()
-                    .scale(duration: 500.ms, curve: Curves.elasticOut),
-                
+                ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
+
                 const SizedBox(height: 32),
-                
+
                 const Text(
                   'Driver Found!',
                   style: TextStyle(
@@ -175,291 +169,298 @@ class _RideConfirmationScreenState extends State<RideConfirmationScreen> {
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
                   ),
-                )
-                    .animate()
-                    .fadeIn(delay: 200.ms, duration: 600.ms),
-                
+                ).animate().fadeIn(delay: 200.ms, duration: 600.ms),
+
                 const SizedBox(height: 8),
-                
+
                 Text(
                   'Your driver is on the way',
                   style: TextStyle(
                     fontSize: 16,
                     color: AppColors.textSecondary,
                   ),
-                )
-                    .animate()
-                    .fadeIn(delay: 400.ms, duration: 600.ms),
+                ).animate().fadeIn(delay: 400.ms, duration: 600.ms),
               ],
-              
+
               const Spacer(),
-              
+
               // Trip details
               Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppColors.backgroundCard,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Route
-                    Row(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundCard,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
+                        // Route
+                        Row(
                           children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: AppColors.success,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            Container(
-                              width: 2,
-                              height: 30,
-                              color: AppColors.border,
-                            ),
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: AppColors.error,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.pickupLocation.address,
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                widget.destinationLocation.address,
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-                    const Divider(color: AppColors.border, height: 1),
-                    const SizedBox(height: 20),
-
-                    // Vehicle and price
-                    Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppColors.backgroundSecondary,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Center(
-                            child: Text(
-                              widget.vehicleType.icon,
-                              style: const TextStyle(fontSize: 20),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.vehicleType.name,
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                '5.2 km • 12 mins',
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          '₦${widget.vehicleType.price.toStringAsFixed(0)}',
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // Driver info (when found)
-                    if (_assignedDriver != null) ...[
-                      const SizedBox(height: 20),
-                      const Divider(color: AppColors.border, height: 1),
-                      const SizedBox(height: 20),
-
-                      Row(
-                        children: [
-                          Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.primaryBlue.withOpacity(0.1),
-                            ),
-                            child: const Icon(
-                              Icons.person,
-                              color: AppColors.primaryBlue,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            Column(
                               children: [
-                                Text(
-                                  _assignedDriver!.name,
-                                  style: const TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.success,
+                                    shape: BoxShape.circle,
                                   ),
                                 ),
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.star,
-                                      color: AppColors.warning,
-                                      size: 14,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '${_assignedDriver!.rating} • ${_assignedDriver!.tripCount} trips',
-                                      style: TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
+                                Container(
+                                  width: 2,
+                                  height: 30,
+                                  color: AppColors.border,
                                 ),
-                                Text(
-                                  '${_assignedDriver!.vehicleModel} • ${_assignedDriver!.plateNumber}',
-                                  style: TextStyle(
-                                    color: AppColors.textTertiary,
-                                    fontSize: 12,
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.error,
+                                    shape: BoxShape.circle,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.success.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  'Arrives in ${_assignedDriver!.estimatedArrival}',
-                                  style: const TextStyle(
-                                    color: AppColors.success,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Container(
-                                    width: 32,
-                                    height: 32,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primaryBlue.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: IconButton(
-                                      onPressed: () {
-                                        // TODO: Call driver
-                                      },
-                                      icon: const Icon(
-                                        Icons.phone,
-                                        color: AppColors.primaryBlue,
-                                        size: 16,
-                                      ),
-                                      padding: EdgeInsets.zero,
+                                  Text(
+                                    widget.pickupLocation.address,
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    width: 32,
-                                    height: 32,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.success.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: IconButton(
-                                      onPressed: () {
-                                        // TODO: Message driver
-                                      },
-                                      icon: const Icon(
-                                        Icons.message,
-                                        color: AppColors.success,
-                                        size: 16,
-                                      ),
-                                      padding: EdgeInsets.zero,
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    widget.destinationLocation.address,
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
+                        const Divider(color: AppColors.border, height: 1),
+                        const SizedBox(height: 20),
+
+                        // Vehicle and price
+                        Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.backgroundSecondary,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  widget.vehicleType.icon,
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.vehicleType.name,
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    '5.2 km • 12 mins',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              '₦${widget.vehicleType.price.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Driver info (when found)
+                        if (_assignedDriver != null) ...[
+                          const SizedBox(height: 20),
+                          const Divider(color: AppColors.border, height: 1),
+                          const SizedBox(height: 20),
+
+                          Row(
+                                children: [
+                                  Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.primaryBlue.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.person,
+                                      color: AppColors.primaryBlue,
+                                      size: 24,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          _assignedDriver!.name,
+                                          style: const TextStyle(
+                                            color: AppColors.textPrimary,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.star,
+                                              color: AppColors.warning,
+                                              size: 14,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${_assignedDriver!.rating} • ${_assignedDriver!.tripCount} trips',
+                                              style: TextStyle(
+                                                color: AppColors.textSecondary,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Text(
+                                          '${_assignedDriver!.vehicleModel} • ${_assignedDriver!.plateNumber}',
+                                          style: TextStyle(
+                                            color: AppColors.textTertiary,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.success.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'Arrives in ${_assignedDriver!.estimatedArrival}',
+                                          style: const TextStyle(
+                                            color: AppColors.success,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 32,
+                                            height: 32,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primaryBlue
+                                                  .withValues(alpha: 0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: IconButton(
+                                              onPressed: () {
+                                                // TODO: Call driver
+                                              },
+                                              icon: const Icon(
+                                                Icons.phone,
+                                                color: AppColors.primaryBlue,
+                                                size: 16,
+                                              ),
+                                              padding: EdgeInsets.zero,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            width: 32,
+                                            height: 32,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.success
+                                                  .withValues(alpha: 0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: IconButton(
+                                              onPressed: () {
+                                                // TODO: Message driver
+                                              },
+                                              icon: const Icon(
+                                                Icons.message,
+                                                color: AppColors.success,
+                                                size: 16,
+                                              ),
+                                              padding: EdgeInsets.zero,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              )
+                              .animate()
+                              .fadeIn(delay: 600.ms, duration: 600.ms)
+                              .slideY(begin: 0.3, end: 0),
                         ],
-                      )
-                          .animate()
-                          .fadeIn(delay: 600.ms, duration: 600.ms)
-                          .slideY(begin: 0.3, end: 0),
-                    ],
-                  ],
-                ),
-              )
+                      ],
+                    ),
+                  )
                   .animate()
                   .fadeIn(delay: 400.ms, duration: 600.ms)
                   .slideY(begin: 0.3, end: 0),
-              
+
               const SizedBox(height: 24),
-              
+
               // Cancel button
               SizedBox(
                 width: double.infinity,
@@ -477,15 +478,10 @@ class _RideConfirmationScreenState extends State<RideConfirmationScreen> {
                   ),
                   child: const Text(
                     'Cancel Ride',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
-              )
-                  .animate()
-                  .fadeIn(delay: 800.ms, duration: 600.ms),
+              ).animate().fadeIn(delay: 800.ms, duration: 600.ms),
             ],
           ),
         ),

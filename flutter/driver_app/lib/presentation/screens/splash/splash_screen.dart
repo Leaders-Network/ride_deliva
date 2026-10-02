@@ -81,7 +81,7 @@ class _SplashScreenState extends State<SplashScreen>
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primaryGreen.withOpacity(0.3),
+                        color: AppColors.primaryGreen.withValues(alpha: 0.3),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -107,9 +107,9 @@ class _SplashScreenState extends State<SplashScreen>
                 // App name
                 Column(
                   children: [
-                    Text(
+                    const Text(
                       AppConstants.appName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
@@ -121,7 +121,7 @@ class _SplashScreenState extends State<SplashScreen>
 
                     const SizedBox(height: 8),
 
-                    Text(
+                    const Text(
                       'Drive. Earn. Succeed.',
                       style: TextStyle(
                         fontSize: 16,
@@ -142,7 +142,7 @@ class _SplashScreenState extends State<SplashScreen>
             // Loading indicator
             Column(
               children: [
-                SizedBox(
+                const SizedBox(
                   width: 40,
                   height: 40,
                   child: CircularProgressIndicator(
@@ -157,7 +157,7 @@ class _SplashScreenState extends State<SplashScreen>
 
                 const SizedBox(height: 24),
 
-                Text(
+                const Text(
                   'Starting your journey...',
                   style: TextStyle(
                     fontSize: 14,
@@ -175,7 +175,7 @@ class _SplashScreenState extends State<SplashScreen>
             // Footer
             Padding(
               padding: const EdgeInsets.only(bottom: 40),
-              child: Column(
+              child: const Column(
                 children: [
                   Text(
                     'Version ${AppConstants.appVersion}',
@@ -184,7 +184,7 @@ class _SplashScreenState extends State<SplashScreen>
                       color: AppColors.textTertiary,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     '© 2024 ${AppConstants.companyName}',
                     style: TextStyle(

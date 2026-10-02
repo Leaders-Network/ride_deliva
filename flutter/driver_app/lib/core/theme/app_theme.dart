@@ -18,8 +18,6 @@ class AppTheme {
         onSecondary: Colors.white,
         surface: AppColors.backgroundCard,
         onSurface: AppColors.textPrimary,
-        background: AppColors.backgroundDark,
-        onBackground: AppColors.textPrimary,
         error: AppColors.error,
         onError: Colors.white,
       ),
@@ -47,7 +45,7 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.backgroundDark,
 
       // Card Theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.backgroundCard,
         elevation: 4,
         shadowColor: Colors.black26,
@@ -62,7 +60,7 @@ class AppTheme {
           backgroundColor: AppColors.primaryGreen,
           foregroundColor: Colors.white,
           elevation: 2,
-          shadowColor: AppColors.primaryGreen.withOpacity(0.3),
+          shadowColor: AppColors.primaryGreen.withValues(alpha: 0.3),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -149,27 +147,27 @@ class AppTheme {
 
       // Checkbox Theme
       checkboxTheme: CheckboxThemeData(
-        fillColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return AppColors.primaryGreen;
           }
           return Colors.transparent;
         }),
-        checkColor: MaterialStateProperty.all(Colors.white),
+        checkColor: WidgetStateProperty.all(Colors.white),
         side: const BorderSide(color: AppColors.border, width: 2),
       ),
 
       // Switch Theme
       switchTheme: SwitchThemeData(
-        thumbColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return AppColors.primaryGreen;
           }
           return AppColors.textTertiary;
         }),
-        trackColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
-            return AppColors.primaryGreen.withOpacity(0.5);
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primaryGreen.withValues(alpha: 0.5);
           }
           return AppColors.border;
         }),
@@ -195,7 +193,7 @@ class AppTheme {
       ),
 
       // Tab Bar Theme
-      tabBarTheme: const TabBarTheme(
+      tabBarTheme: const TabBarThemeData(
         labelColor: AppColors.primaryGreen,
         unselectedLabelColor: AppColors.textSecondary,
         indicatorColor: AppColors.primaryGreen,
@@ -233,7 +231,7 @@ class AppTheme {
       ),
 
       // Dialog Theme
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: AppColors.backgroundCard,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(

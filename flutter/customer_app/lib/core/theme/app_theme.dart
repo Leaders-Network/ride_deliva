@@ -9,7 +9,7 @@ class AppTheme {
     primarySwatch: AppMaterialColors.primarySwatch,
     primaryColor: AppColors.primaryBlue,
     scaffoldBackgroundColor: AppColors.backgroundDark,
-    
+
     // Color scheme
     colorScheme: const ColorScheme.dark(
       primary: AppColors.primaryBlue,
@@ -21,7 +21,7 @@ class AppTheme {
       error: AppColors.error,
       onError: Colors.white,
     ),
-    
+
     // App bar theme
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.backgroundCard,
@@ -39,17 +39,17 @@ class AppTheme {
         fontWeight: FontWeight.w600,
       ),
     ),
-    
+
     // Card theme
-    cardTheme: CardTheme(
+    cardTheme: const CardThemeData(
       color: AppColors.backgroundCard,
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
       ),
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     ),
-    
+
     // Button themes
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -57,42 +57,29 @@ class AppTheme {
         foregroundColor: Colors.white,
         elevation: 2,
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        textStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     ),
-    
+
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primaryBlue,
         side: const BorderSide(color: AppColors.primaryBlue),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        textStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     ),
-    
+
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: AppColors.primaryBlue,
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        textStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
       ),
     ),
-    
+
     // Input decoration theme
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
@@ -114,34 +101,28 @@ class AppTheme {
         borderSide: const BorderSide(color: AppColors.error),
       ),
       contentPadding: const EdgeInsets.all(16),
-      hintStyle: const TextStyle(
-        color: AppColors.textSecondary,
-        fontSize: 16,
-      ),
-      labelStyle: const TextStyle(
-        color: AppColors.textSecondary,
-        fontSize: 16,
-      ),
+      hintStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 16),
+      labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 16),
     ),
-    
+
     // Bottom navigation bar theme
-    bottomNavigationBarTheme: const BottomNavigationBarTheme(
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: AppColors.backgroundCard,
       selectedItemColor: AppColors.primaryBlue,
       unselectedItemColor: AppColors.textSecondary,
       type: BottomNavigationBarType.fixed,
       elevation: 8,
     ),
-    
+
     // Tab bar theme
-    tabBarTheme: const TabBarTheme(
+    tabBarTheme: const TabBarThemeData(
       labelColor: AppColors.primaryBlue,
       unselectedLabelColor: AppColors.textSecondary,
       indicatorColor: AppColors.primaryBlue,
       labelStyle: TextStyle(fontWeight: FontWeight.w600),
       unselectedLabelStyle: TextStyle(fontWeight: FontWeight.w400),
     ),
-    
+
     // Chip theme
     chipTheme: ChipThemeData(
       backgroundColor: AppColors.backgroundSecondary,
@@ -149,40 +130,33 @@ class AppTheme {
       selectedColor: AppColors.primaryBlue,
       disabledColor: AppColors.disabled,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     ),
-    
+
     // Dialog theme
-    dialogTheme: DialogTheme(
+    dialogTheme: const DialogThemeData(
       backgroundColor: AppColors.backgroundCard,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.all(Radius.circular(16)),
       ),
-      titleTextStyle: const TextStyle(
+      titleTextStyle: TextStyle(
         color: AppColors.textPrimary,
         fontSize: 20,
         fontWeight: FontWeight.w600,
       ),
-      contentTextStyle: const TextStyle(
-        color: AppColors.textSecondary,
-        fontSize: 16,
-      ),
+      contentTextStyle: TextStyle(color: AppColors.textSecondary, fontSize: 16),
     ),
-    
+
     // Bottom sheet theme
     bottomSheetTheme: const BottomSheetThemeData(
       backgroundColor: AppColors.backgroundCard,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       modalBackgroundColor: AppColors.backgroundCard,
       modalBarrierColor: AppColors.modalBarrier,
     ),
-    
+
     // Snackbar theme
     snackBarTheme: SnackBarThemeData(
       backgroundColor: AppColors.backgroundCard,
@@ -190,19 +164,17 @@ class AppTheme {
         color: AppColors.textPrimary,
         fontSize: 14,
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       behavior: SnackBarBehavior.floating,
     ),
-    
+
     // Divider theme
     dividerTheme: const DividerThemeData(
       color: AppColors.divider,
       thickness: 1,
       space: 1,
     ),
-    
+
     // List tile theme
     listTileTheme: const ListTileThemeData(
       tileColor: Colors.transparent,
@@ -219,7 +191,7 @@ class AppTheme {
         fontSize: 14,
       ),
     ),
-    
+
     // Switch theme
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith<Color>((states) {
@@ -230,12 +202,12 @@ class AppTheme {
       }),
       trackColor: WidgetStateProperty.resolveWith<Color>((states) {
         if (states.contains(WidgetState.selected)) {
-          return AppColors.primaryBlue.withOpacity(0.3);
+          return AppColors.primaryBlue.withValues(alpha: 0.3);
         }
-        return AppColors.disabled.withOpacity(0.3);
+        return AppColors.disabled.withValues(alpha: 0.3);
       }),
     ),
-    
+
     // Checkbox theme
     checkboxTheme: CheckboxThemeData(
       fillColor: WidgetStateProperty.resolveWith<Color>((states) {
@@ -247,7 +219,7 @@ class AppTheme {
       checkColor: WidgetStateProperty.all(Colors.white),
       side: const BorderSide(color: AppColors.border),
     ),
-    
+
     // Radio theme
     radioTheme: RadioThemeData(
       fillColor: WidgetStateProperty.resolveWith<Color>((states) {
@@ -257,13 +229,13 @@ class AppTheme {
         return AppColors.textSecondary;
       }),
     ),
-    
+
     // Slider theme
     sliderTheme: SliderThemeData(
       activeTrackColor: AppColors.primaryBlue,
       inactiveTrackColor: AppColors.disabled,
       thumbColor: AppColors.primaryBlue,
-      overlayColor: AppColors.primaryBlue.withOpacity(0.2),
+      overlayColor: AppColors.primaryBlue.withValues(alpha: 0.2),
       valueIndicatorColor: AppColors.primaryBlue,
       valueIndicatorTextStyle: const TextStyle(
         color: Colors.white,
@@ -271,24 +243,18 @@ class AppTheme {
         fontWeight: FontWeight.w500,
       ),
     ),
-    
+
     // Progress indicator theme
     progressIndicatorTheme: const ProgressIndicatorThemeData(
       color: AppColors.primaryBlue,
       linearTrackColor: AppColors.disabled,
       circularTrackColor: AppColors.disabled,
     ),
-    
+
     // Icon theme
-    iconTheme: const IconThemeData(
-      color: AppColors.textSecondary,
-      size: 24,
-    ),
-    
-    primaryIconTheme: const IconThemeData(
-      color: Colors.white,
-      size: 24,
-    ),
+    iconTheme: const IconThemeData(color: AppColors.textSecondary, size: 24),
+
+    primaryIconTheme: const IconThemeData(color: Colors.white, size: 24),
   );
 }
 
@@ -300,7 +266,7 @@ extension AppThemeExtension on ThemeData {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
+
   /// Get gradient for backgrounds
   LinearGradient get backgroundGradient => const LinearGradient(
     colors: AppColors.darkGradient,

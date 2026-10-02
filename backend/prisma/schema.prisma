@@ -1,6 +1,7 @@
 // Prisma schema for Ride Deliva platform
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {

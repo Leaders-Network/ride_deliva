@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:async';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
 import '../permissions/permissions_screen.dart';
 
 class VerifyPhoneScreen extends StatefulWidget {
@@ -23,11 +22,15 @@ class VerifyPhoneScreen extends StatefulWidget {
 }
 
 class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
-  final List<TextEditingController> _otpControllers = 
-      List.generate(6, (index) => TextEditingController());
-  final List<FocusNode> _otpFocusNodes = 
-      List.generate(6, (index) => FocusNode());
-  
+  final List<TextEditingController> _otpControllers = List.generate(
+    6,
+    (index) => TextEditingController(),
+  );
+  final List<FocusNode> _otpFocusNodes = List.generate(
+    6,
+    (index) => FocusNode(),
+  );
+
   bool _isLoading = false;
   bool _isResending = false;
   int _resendCountdown = 60;
@@ -76,16 +79,10 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
     if (value.isNotEmpty && index < 5) {
       _otpFocusNodes[index + 1].requestFocus();
     }
-    
+
     // Auto-verify when all fields are filled
     if (_otpCode.length == 6) {
       _verifyOtp();
-    }
-  }
-
-  void _onOtpBackspace(int index) {
-    if (_otpControllers[index].text.isEmpty && index > 0) {
-      _otpFocusNodes[index - 1].requestFocus();
     }
   }
 
@@ -102,15 +99,13 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
     try {
       // Simulate API call
       await Future.delayed(const Duration(seconds: 2));
-      
+
       // For demo purposes, accept any 6-digit code
       if (_otpCode == '123456' || _otpCode.length == 6) {
         if (mounted) {
           // Navigate to permissions screen
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => const PermissionsScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const PermissionsScreen()),
           );
         }
       } else {
@@ -146,7 +141,7 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
     try {
       // Simulate API call
       await Future.delayed(const Duration(seconds: 1));
-      
+
       _startCountdown();
       _showSuccessSnackBar('Verification code sent successfully');
     } catch (e) {
@@ -162,25 +157,21 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.error,
-      ),
+      SnackBar(content: Text(message), backgroundColor: AppColors.error),
     );
   }
 
   void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.success,
-      ),
+      SnackBar(content: Text(message), backgroundColor: AppColors.success),
     );
   }
 
   String get _maskedPhoneNumber {
     if (widget.phoneNumber.length >= 4) {
-      final lastFour = widget.phoneNumber.substring(widget.phoneNumber.length - 4);
+      final lastFour = widget.phoneNumber.substring(
+        widget.phoneNumber.length - 4,
+      );
       final masked = '*' * (widget.phoneNumber.length - 4);
       return '+234 $masked$lastFour';
     }
@@ -195,10 +186,7 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: AppColors.textPrimary,
-          ),
+          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
         ),
         title: const Text(
           'Verify Your Number',
@@ -215,10 +203,7 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              AppColors.backgroundDark,
-              AppColors.backgroundCard,
-            ],
+            colors: [AppColors.backgroundDark, AppColors.backgroundCard],
           ),
         ),
         child: SafeArea(
@@ -228,16 +213,16 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 32),
-                
+
                 // Icon
                 Container(
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.primaryBlue.withOpacity(0.1),
+                    color: AppColors.primaryBlue.withValues(alpha: 0.1),
                     border: Border.all(
-                      color: AppColors.primaryBlue.withOpacity(0.3),
+                      color: AppColors.primaryBlue.withValues(alpha: 0.3),
                       width: 2,
                     ),
                   ),
@@ -246,125 +231,136 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
                     size: 40,
                     color: AppColors.primaryBlue,
                   ),
-                )
-                    .animate()
-                    .scale(duration: 600.ms, curve: Curves.elasticOut),
-                
+                ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
+
                 const SizedBox(height: 32),
-                
+
                 // Title and description
                 Column(
                   children: [
                     const Text(
-                      'Verify Your Number',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    )
+                          'Verify Your Number',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        )
                         .animate()
                         .fadeIn(delay: 200.ms, duration: 600.ms)
                         .slideY(begin: 0.3, end: 0),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     RichText(
-                      textAlign: TextAlign.center,
-                      text: TextSpan(
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: AppColors.textSecondary,
-                          height: 1.5,
-                        ),
-                        children: [
-                          const TextSpan(
-                            text: 'Enter the 6-digit code sent to ',
-                          ),
-                          TextSpan(
-                            text: _maskedPhoneNumber,
-                            style: const TextStyle(
-                              color: AppColors.primaryBlue,
-                              fontWeight: FontWeight.w600,
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppColors.textSecondary,
+                              height: 1.5,
                             ),
+                            children: [
+                              const TextSpan(
+                                text: 'Enter the 6-digit code sent to ',
+                              ),
+                              TextSpan(
+                                text: _maskedPhoneNumber,
+                                style: const TextStyle(
+                                  color: AppColors.primaryBlue,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    )
+                        )
                         .animate()
                         .fadeIn(delay: 400.ms, duration: 600.ms)
                         .slideY(begin: 0.2, end: 0),
                   ],
                 ),
-                
+
                 const SizedBox(height: 48),
-                
+
                 // OTP input fields
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: List.generate(6, (index) {
-                    return SizedBox(
-                      width: 45,
-                      height: 55,
-                      child: TextFormField(
-                        controller: _otpControllers[index],
-                        focusNode: _otpFocusNodes[index],
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(1),
-                        ],
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: AppColors.backgroundSecondary,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.border),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.border),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppColors.primaryBlue,
-                              width: 2,
-                            ),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.error),
-                          ),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        onChanged: (value) => _onOtpChanged(value, index),
-                        onTap: () {
-                          _otpControllers[index].selection = TextSelection.fromPosition(
-                            TextPosition(offset: _otpControllers[index].text.length),
-                          );
-                        },
-                        onEditingComplete: () {
-                          if (index < 5 && _otpControllers[index].text.isNotEmpty) {
-                            _otpFocusNodes[index + 1].requestFocus();
-                          }
-                        },
-                      ),
-                    );
-                  })
-                      .animate(interval: 100.ms)
-                      .fadeIn(delay: 600.ms, duration: 400.ms)
-                      .slideY(begin: 0.3, end: 0),
+                  children:
+                      List.generate(6, (index) {
+                            return SizedBox(
+                              width: 45,
+                              height: 55,
+                              child: TextFormField(
+                                controller: _otpControllers[index],
+                                focusNode: _otpFocusNodes[index],
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  LengthLimitingTextInputFormatter(1),
+                                ],
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: AppColors.backgroundSecondary,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: AppColors.border,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: AppColors.border,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: AppColors.primaryBlue,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  errorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: AppColors.error,
+                                    ),
+                                  ),
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                                onChanged: (value) =>
+                                    _onOtpChanged(value, index),
+                                onTap: () {
+                                  _otpControllers[index]
+                                      .selection = TextSelection.fromPosition(
+                                    TextPosition(
+                                      offset:
+                                          _otpControllers[index].text.length,
+                                    ),
+                                  );
+                                },
+                                onEditingComplete: () {
+                                  if (index < 5 &&
+                                      _otpControllers[index].text.isNotEmpty) {
+                                    _otpFocusNodes[index + 1].requestFocus();
+                                  }
+                                },
+                              ),
+                            );
+                          })
+                          .animate(interval: 100.ms)
+                          .fadeIn(delay: 600.ms, duration: 400.ms)
+                          .slideY(begin: 0.3, end: 0),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Resend code section
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -408,55 +404,48 @@ class _VerifyPhoneScreenState extends State<VerifyPhoneScreen> {
                               ),
                       ),
                   ],
-                )
-                    .animate()
-                    .fadeIn(delay: 800.ms, duration: 600.ms),
-                
+                ).animate().fadeIn(delay: 800.ms, duration: 600.ms),
+
                 const Spacer(),
-                
+
                 // Verify button
                 SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _verifyOtp,
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _verifyOtp,
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Text(
+                                'Verify & Continue',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                          )
-                        : const Text(
-                            'Verify & Continue',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                  ),
-                )
+                      ),
+                    )
                     .animate()
                     .fadeIn(delay: 1000.ms, duration: 600.ms)
                     .slideY(begin: 0.3, end: 0),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Help text
                 Text(
                   'Having trouble? Contact support for assistance.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textTertiary,
-                  ),
-                )
-                    .animate()
-                    .fadeIn(delay: 1200.ms, duration: 400.ms),
-                
+                  style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
+                ).animate().fadeIn(delay: 1200.ms, duration: 400.ms),
+
                 const SizedBox(height: 32),
               ],
             ),

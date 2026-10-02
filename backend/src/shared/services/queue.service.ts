@@ -1,6 +1,6 @@
 import { Queue, Worker, Job, QueueEvents, JobsOptions } from 'bullmq';
 import { Redis } from 'ioredis';
-import { redisClient } from '../../config/redis';
+import { redis as redisClient } from '../../config/redis';
 import { logger } from '../../config/logger';
 
 export interface JobData {
@@ -117,8 +117,10 @@ export class QueueService {
     }, {
       connection: this.redis,
       concurrency,
-      removeOnComplete: 100,
-      removeOnFail: 50,
+      settings: {
+        stalledInterval: 30000,
+        maxStalledCount: 1,
+      },
     });
 
     // Set up worker events
@@ -392,10 +394,13 @@ export class QueueService {
       throw new Error(`Queue ${queueName} not found`);
     }
 
-    const jobs = await queue.clean(grace, limit, type);
-    logger.info(`Cleaned ${jobs.length} ${type} jobs from queue ${queueName}`);
+    // Map waiting to wait for BullMQ compatibility
+    const bullMQType = type === 'waiting' ? 'wait' : type;
+    
+    const jobs = await queue.clean(grace, limit, bullMQType);
+    logger.info(`Cleaned ${Array.isArray(jobs) ? jobs.length : jobs} ${type} jobs from queue ${queueName}`);
 
-    return jobs;
+    return Array.isArray(jobs) ? jobs : [];
   }
 
   /**

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../ride_booking_screen.dart';
+import '../../../../core/models/location_data.dart';
 import '../vehicle_selection_screen.dart';
 import '../ride_confirmation_screen.dart';
 import '../ride_tracking_screen.dart';
@@ -126,10 +126,7 @@ class RideStatusSheet extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: onEmergency,
-                      icon: const Icon(
-                        Icons.warning_outlined,
-                        size: 18,
-                      ),
+                      icon: const Icon(Icons.warning_outlined, size: 18),
                       label: const Text('Emergency'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.error,
@@ -144,22 +141,22 @@ class RideStatusSheet extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: status == RideStatus.inProgress ||
+                      onPressed:
+                          status == RideStatus.inProgress ||
                               status == RideStatus.nearingDestination
                           ? null
                           : onCancel,
-                      icon: const Icon(
-                        Icons.close,
-                        size: 18,
-                      ),
+                      icon: const Icon(Icons.close, size: 18),
                       label: const Text('Cancel'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: status == RideStatus.inProgress ||
+                        foregroundColor:
+                            status == RideStatus.inProgress ||
                                 status == RideStatus.nearingDestination
                             ? AppColors.textTertiary
                             : AppColors.textSecondary,
                         side: BorderSide(
-                          color: status == RideStatus.inProgress ||
+                          color:
+                              status == RideStatus.inProgress ||
                                   status == RideStatus.nearingDestination
                               ? AppColors.border
                               : AppColors.textSecondary,
@@ -180,10 +177,10 @@ class RideStatusSheet extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.1),
+                    color: AppColors.success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: AppColors.success.withOpacity(0.3),
+                      color: AppColors.success.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -206,10 +203,7 @@ class RideStatusSheet extends StatelessWidget {
                       ),
                     ],
                   ),
-                )
-                    .animate()
-                    .fadeIn(duration: 400.ms)
-                    .slideY(begin: 0.3, end: 0),
+                ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.3, end: 0),
               ],
             ],
           ),
@@ -279,18 +273,18 @@ class RideStatusSheet extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.success.withOpacity(0.1),
-          ),
-          child: const Icon(
-            Icons.local_taxi,
-            color: AppColors.success,
-            size: 30,
-          ),
-        )
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.success.withValues(alpha: 0.1),
+              ),
+              child: const Icon(
+                Icons.local_taxi,
+                color: AppColors.success,
+                size: 30,
+              ),
+            )
             .animate(onPlay: (controller) => controller.repeat())
             .scale(
               begin: const Offset(1.0, 1.0),
@@ -303,9 +297,9 @@ class RideStatusSheet extends StatelessWidget {
               end: const Offset(1.0, 1.0),
               duration: 1000.ms,
             ),
-        
+
         const SizedBox(height: 16),
-        
+
         const Text(
           'Your driver has arrived!',
           style: TextStyle(
@@ -314,15 +308,12 @@ class RideStatusSheet extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        
+
         const SizedBox(height: 4),
-        
+
         Text(
           '${driver.vehicleModel} • ${driver.plateNumber}',
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-          ),
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
         ),
       ],
     );
@@ -344,11 +335,7 @@ class RideStatusSheet extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                 ),
-                Container(
-                  width: 2,
-                  height: 24,
-                  color: AppColors.border,
-                ),
+                Container(width: 2, height: 24, color: AppColors.border),
                 Container(
                   width: 8,
                   height: 8,
@@ -397,10 +384,7 @@ class RideStatusSheet extends StatelessWidget {
                 ),
                 Text(
                   'remaining',
-                  style: TextStyle(
-                    color: AppColors.textTertiary,
-                    fontSize: 10,
-                  ),
+                  style: TextStyle(color: AppColors.textTertiary, fontSize: 10),
                 ),
               ],
             ),
@@ -418,17 +402,13 @@ class RideStatusSheet extends StatelessWidget {
           height: 60,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.info.withOpacity(0.1),
+            color: AppColors.info.withValues(alpha: 0.1),
           ),
-          child: const Icon(
-            Icons.location_on,
-            color: AppColors.info,
-            size: 30,
-          ),
+          child: const Icon(Icons.location_on, color: AppColors.info, size: 30),
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         const Text(
           'Almost there!',
           style: TextStyle(
@@ -437,16 +417,13 @@ class RideStatusSheet extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        
+
         const SizedBox(height: 4),
-        
+
         Text(
           'You\'ll arrive at your destination in $estimatedTime',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-          ),
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
         ),
       ],
     );

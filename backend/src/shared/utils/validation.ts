@@ -2,6 +2,17 @@ import Joi from 'joi';
 import { Request, Response, NextFunction } from 'express';
 import { createError } from '@/shared/middleware/error-handler';
 
+// Custom validation error class
+export class ValidationError extends Error {
+  public details: any[];
+
+  constructor(message: string, details?: any[]) {
+    super(message);
+    this.name = 'ValidationError';
+    this.details = details || [];
+  }
+}
+
 // Common validation patterns
 export const commonPatterns = {
   uuid: Joi.string().uuid({ version: 'uuidv4' }),

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { QueueController } from './controllers/queue.controller';
-import { requireAuth, requireAdmin } from '../../shared/middleware/auth.middleware';
+import { authenticate as requireAuth, requireAdmin } from '../../shared/middleware/auth.middleware';
 import { rateLimiter } from '../../shared/middleware/rate-limiter';
 
 const router = Router();

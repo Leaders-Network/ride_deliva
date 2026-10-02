@@ -40,6 +40,23 @@ export class ResponseUtil {
     return res.status(statusCode).json(response);
   }
 
+  static error(
+    res: Response,
+    message: string = 'An error occurred',
+    statusCode: number = 500,
+    errors?: any
+  ): Response<ApiResponse<null>> {
+    const response: ApiResponse<null> = {
+      success: false,
+      message,
+      data: null,
+      meta: errors ? { errors } : undefined,
+      timestamp: new Date().toISOString(),
+    };
+
+    return res.status(statusCode).json(response);
+  }
+
   static created<T>(
     res: Response,
     data?: T,
@@ -79,6 +96,9 @@ export class ResponseUtil {
     });
   }
 }
+
+// Alias for backward compatibility
+export const ApiResponse = ResponseUtil;
 
 // Utility functions for common response patterns
 export const sendSuccess = <T>(

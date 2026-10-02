@@ -3,8 +3,8 @@ import Stripe from 'stripe';
 import { logger } from '../../../config/logger';
 import { config } from '../../../config';
 
-const stripe = new Stripe(config.stripe.secretKey, {
-  apiVersion: '2024-06-20',
+const stripe = new Stripe(config.services.stripe.secretKey as string, {
+  apiVersion: '2023-10-16',
 });
 
 export class StripeWebhookController {
@@ -13,7 +13,7 @@ export class StripeWebhookController {
    */
   public async handleWebhook(req: Request, res: Response): Promise<void> {
     const sig = req.headers['stripe-signature'] as string;
-    const endpointSecret = config.stripe.webhookSecret;
+    const endpointSecret = config.services.stripe.webhookSecret;
 
     let event: Stripe.Event;
 

@@ -1,10 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@/generated/prisma/client';
 import { testDatabaseConnection, checkDatabaseHealth } from '@/config/database';
 import { dbService } from '@/shared/services/database';
 import { userRepository } from '@/shared/repositories';
 
 // Mock Prisma for tests
-jest.mock('@prisma/client');
+jest.mock('@/generated/prisma/client');
 
 describe('Database Service', () => {
   describe('Connection Tests', () => {

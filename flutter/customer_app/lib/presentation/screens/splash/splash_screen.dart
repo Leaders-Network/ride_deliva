@@ -83,7 +83,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primaryBlue.withOpacity(0.3),
+                          color: AppColors.primaryBlue.withValues(alpha: 0.3),
                           blurRadius: 20,
                           spreadRadius: 5,
                         ),
@@ -103,7 +103,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       .then()
                       .shimmer(
                         duration: 1500.ms,
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                       ),
                   
                   const SizedBox(height: 32),
@@ -168,7 +168,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: AppColors.primaryBlue.withOpacity(0.3),
+                        color: AppColors.primaryBlue.withValues(alpha: 0.3),
                         width: 3,
                       ),
                     ),

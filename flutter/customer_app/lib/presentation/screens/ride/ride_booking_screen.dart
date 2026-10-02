@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'dart:async';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
+import '../../../core/models/location_data.dart';
 import 'widgets/location_search_sheet.dart';
 import 'widgets/ride_booking_bottom_sheet.dart';
 import 'vehicle_selection_screen.dart';
@@ -15,24 +14,16 @@ class RideBookingScreen extends StatefulWidget {
   State<RideBookingScreen> createState() => _RideBookingScreenState();
 }
 
-class _RideBookingScreenState extends State<RideBookingScreen> {
-  late GoogleMapController _mapController;
-  final Completer<GoogleMapController> _controller = Completer();
-  
-  // Default location (Lagos, Nigeria)
-  static const CameraPosition _defaultLocation = CameraPosition(
-    target: LatLng(6.5244, 3.3792),
-    zoom: 14.0,
-  );
-
-  Set<Marker> _markers = {};
-  Set<Polyline> _polylines = {};
-  
+class _RideBookingScreenState extends State<RideBookingScreen>
+    with TickerProviderStateMixin {
   LocationData? _pickupLocation;
   LocationData? _destinationLocation;
-  bool _isLoadingRoute = false;
-  bool _showLocationSearch = false;
+  final bool _isLoadingRoute = false;
+  bool _isShowingLocationSearch = false;
   String _searchType = 'pickup'; // 'pickup' or 'destination'
+
+  final Set<Marker> _markers = {};
+  final Set<Polyline> _polylines = {};
 
   @override
   void initState() {
@@ -41,128 +32,52 @@ class _RideBookingScreenState extends State<RideBookingScreen> {
   }
 
   void _initializeMap() {
-    // Set default pickup location
-    _pickupLocation = LocationData(
-      address: 'Victoria Island, Lagos',
-      subAddress: 'Near Civic Centre',
-      latLng: const LatLng(6.4281, 3.4219),
+    // Initialize with current location or default
+    _pickupLocation = const LocationData(
+      address: "Current Location",
+      latitude: 6.5244, // Lagos coordinates as default
+      longitude: 3.3792,
     );
+
     _updateMarkers();
   }
 
   void _updateMarkers() {
-    Set<Marker> markers = {};
-
-    if (_pickupLocation != null) {
-      markers.add(
-        Marker(
-          markerId: const MarkerId('pickup'),
-          position: _pickupLocation!.latLng,
-          infoWindow: InfoWindow(
-            title: 'Pickup Location',
-            snippet: _pickupLocation!.address,
-          ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        ),
-      );
-    }
-
-    if (_destinationLocation != null) {
-      markers.add(
-        Marker(
-          markerId: const MarkerId('destination'),
-          position: _destinationLocation!.latLng,
-          infoWindow: InfoWindow(
-            title: 'Destination',
-            snippet: _destinationLocation!.address,
-          ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-        ),
-      );
-    }
-
     setState(() {
-      _markers = markers;
-    });
+      _markers.clear();
 
-    _updateMapCamera();
-  }
-
-  void _updateMapCamera() {
-    if (_pickupLocation != null && _destinationLocation != null) {
-      _fitMarkersInCamera();
-    } else if (_pickupLocation != null) {
-      _animateToLocation(_pickupLocation!.latLng);
-    }
-  }
-
-  void _animateToLocation(LatLng location) {
-    _mapController.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(target: location, zoom: 16.0),
-      ),
-    );
-  }
-
-  void _fitMarkersInCamera() {
-    if (_pickupLocation != null && _destinationLocation != null) {
-      LatLngBounds bounds = LatLngBounds(
-        southwest: LatLng(
-          _pickupLocation!.latLng.latitude < _destinationLocation!.latLng.latitude
-              ? _pickupLocation!.latLng.latitude
-              : _destinationLocation!.latLng.latitude,
-          _pickupLocation!.latLng.longitude < _destinationLocation!.latLng.longitude
-              ? _pickupLocation!.latLng.longitude
-              : _destinationLocation!.latLng.longitude,
-        ),
-        northeast: LatLng(
-          _pickupLocation!.latLng.latitude > _destinationLocation!.latLng.latitude
-              ? _pickupLocation!.latLng.latitude
-              : _destinationLocation!.latLng.latitude,
-          _pickupLocation!.latLng.longitude > _destinationLocation!.latLng.longitude
-              ? _pickupLocation!.latLng.longitude
-              : _destinationLocation!.latLng.longitude,
-        ),
-      );
-
-      _mapController.animateCamera(
-        CameraUpdate.newLatLngBounds(bounds, 100.0),
-      );
-      
-      _drawRoute();
-    }
-  }
-
-  void _drawRoute() {
-    if (_pickupLocation != null && _destinationLocation != null) {
-      setState(() {
-        _isLoadingRoute = true;
-      });
-
-      // Simulate route drawing (in real app, use Google Directions API)
-      Future.delayed(const Duration(seconds: 1), () {
-        final polyline = Polyline(
-          polylineId: const PolylineId('route'),
-          color: AppColors.primaryBlue,
-          width: 4,
-          points: [
-            _pickupLocation!.latLng,
-            _destinationLocation!.latLng,
-          ],
+      if (_pickupLocation != null) {
+        _markers.add(
+          Marker(
+            markerId: const MarkerId('pickup'),
+            position: LatLng(
+              _pickupLocation!.latitude,
+              _pickupLocation!.longitude,
+            ),
+            infoWindow: InfoWindow(title: _pickupLocation!.address),
+          ),
         );
+      }
 
-        setState(() {
-          _polylines = {polyline};
-          _isLoadingRoute = false;
-        });
-      });
-    }
+      if (_destinationLocation != null) {
+        _markers.add(
+          Marker(
+            markerId: const MarkerId('destination'),
+            position: LatLng(
+              _destinationLocation!.latitude,
+              _destinationLocation!.longitude,
+            ),
+            infoWindow: InfoWindow(title: _destinationLocation!.address),
+          ),
+        );
+      }
+    });
   }
 
   void _showLocationSearch(String type) {
     setState(() {
       _searchType = type;
-      _showLocationSearch = true;
+      _isShowingLocationSearch = true;
     });
   }
 
@@ -173,27 +88,21 @@ class _RideBookingScreenState extends State<RideBookingScreen> {
       } else {
         _destinationLocation = location;
       }
-      _showLocationSearch = false;
+      _isShowingLocationSearch = false;
     });
-    
+
     _updateMarkers();
   }
 
   void _proceedToVehicleSelection() {
     if (_pickupLocation != null && _destinationLocation != null) {
-      Navigator.of(context).push(
+      Navigator.push(
+        context,
         MaterialPageRoute(
           builder: (context) => VehicleSelectionScreen(
             pickupLocation: _pickupLocation!,
             destinationLocation: _destinationLocation!,
           ),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select both pickup and destination locations'),
-          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -204,14 +113,12 @@ class _RideBookingScreenState extends State<RideBookingScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Google Map
+          // Google Maps
           GoogleMap(
-            mapType: MapType.normal,
-            initialCameraPosition: _defaultLocation,
-            onMapCreated: (GoogleMapController controller) {
-              _controller.complete(controller);
-              _mapController = controller;
-            },
+            initialCameraPosition: const CameraPosition(
+              target: LatLng(6.5244, 3.3792), // Lagos coordinates
+              zoom: 14,
+            ),
             markers: _markers,
             polylines: _polylines,
             myLocationEnabled: true,
@@ -220,36 +127,52 @@ class _RideBookingScreenState extends State<RideBookingScreen> {
             mapToolbarEnabled: false,
           ),
 
-          // App Bar
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+          // Top App Bar
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 8,
+                left: 16,
+                right: 16,
+                bottom: 16,
+              ),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.backgroundDark,
+                    AppColors.backgroundDark.withValues(alpha: 0.8),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
               child: Row(
                 children: [
                   Container(
-                    width: 40,
-                    height: 40,
                     decoration: BoxDecoration(
                       color: AppColors.backgroundCard,
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
                     child: IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () => Navigator.pop(context),
                       icon: const Icon(
-                        Icons.arrow_back_ios,
+                        Icons.arrow_back,
                         color: AppColors.textPrimary,
-                        size: 18,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -261,7 +184,7 @@ class _RideBookingScreenState extends State<RideBookingScreen> {
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 10,
                             offset: const Offset(0, 2),
                           ),
@@ -270,38 +193,16 @@ class _RideBookingScreenState extends State<RideBookingScreen> {
                       child: const Text(
                         'Book a Ride',
                         style: TextStyle(
+                          color: AppColors.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
                   ),
                 ],
-              )
-                  .animate()
-                  .fadeIn(duration: 600.ms)
-                  .slideY(begin: -0.5, end: 0),
-            ),
-          ),
-
-          // My Location Button
-          Positioned(
-            bottom: 200,
-            right: 16,
-            child: FloatingActionButton(
-              mini: true,
-              backgroundColor: AppColors.backgroundCard,
-              foregroundColor: AppColors.textPrimary,
-              onPressed: () {
-                // TODO: Get current location and animate to it
-                _animateToLocation(_defaultLocation.target);
-              },
-              child: const Icon(Icons.my_location),
-            )
-                .animate()
-                .fadeIn(delay: 400.ms, duration: 600.ms)
-                .scale(begin: 0.8, end: 1.0),
+              ),
+            ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.5, end: 0),
           ),
 
           // Loading Route Indicator
@@ -317,15 +218,15 @@ class _RideBookingScreenState extends State<RideBookingScreen> {
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),
                   ],
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    const SizedBox(
+                    SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
@@ -335,64 +236,49 @@ class _RideBookingScreenState extends State<RideBookingScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Text(
                       'Finding best route...',
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: AppColors.textPrimary,
                         fontSize: 14,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
-              )
-                  .animate()
-                  .fadeIn(duration: 300.ms)
-                  .slideY(begin: -0.3, end: 0),
+              ).animate().fadeIn(duration: 300.ms).slideY(begin: -0.3, end: 0),
             ),
 
           // Bottom Sheet
-          if (!_showLocationSearch)
+          if (!_isShowingLocationSearch)
             Positioned(
               bottom: 0,
               left: 0,
               right: 0,
-              child: RideBookingBottomSheet(
-                pickupLocation: _pickupLocation,
-                destinationLocation: _destinationLocation,
-                onPickupTap: () => _showLocationSearch('pickup'),
-                onDestinationTap: () => _showLocationSearch('destination'),
-                onProceed: _proceedToVehicleSelection,
-              )
-                  .animate()
-                  .fadeIn(delay: 600.ms, duration: 600.ms)
-                  .slideY(begin: 1, end: 0),
+              child:
+                  RideBookingBottomSheet(
+                        pickupLocation: _pickupLocation,
+                        destinationLocation: _destinationLocation,
+                        onPickupTap: () => _showLocationSearch('pickup'),
+                        onDestinationTap: () =>
+                            _showLocationSearch('destination'),
+                        onProceed: _proceedToVehicleSelection,
+                      )
+                      .animate()
+                      .fadeIn(delay: 600.ms, duration: 600.ms)
+                      .slideY(begin: 1, end: 0),
             ),
 
           // Location Search Sheet
-          if (_showLocationSearch)
+          if (_isShowingLocationSearch)
             LocationSearchSheet(
               searchType: _searchType,
               onLocationSelected: _onLocationSelected,
-              onClose: () => setState(() => _showLocationSearch = false),
-            )
-                .animate()
-                .fadeIn(duration: 300.ms)
-                .slideY(begin: 1, end: 0),
+              onClose: () => setState(() => _isShowingLocationSearch = false),
+            ).animate().fadeIn(duration: 300.ms).slideY(begin: 1, end: 0),
         ],
       ),
     );
   }
-}
-
-class LocationData {
-  final String address;
-  final String subAddress;
-  final LatLng latLng;
-
-  const LocationData({
-    required this.address,
-    required this.subAddress,
-    required this.latLng,
-  });
 }

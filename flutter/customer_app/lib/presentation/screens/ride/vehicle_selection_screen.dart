@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
-import 'ride_booking_screen.dart';
+import '../../../core/models/location_data.dart';
 import 'ride_confirmation_screen.dart';
 
 class VehicleSelectionScreen extends StatefulWidget {
@@ -82,7 +82,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
     try {
       // Simulate booking API call
       await Future.delayed(const Duration(seconds: 2));
-      
+
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
@@ -121,10 +121,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: AppColors.textPrimary,
-          ),
+          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
         ),
         title: const Text(
           'Choose Vehicle',
@@ -159,11 +156,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                         shape: BoxShape.circle,
                       ),
                     ),
-                    Container(
-                      width: 2,
-                      height: 20,
-                      color: AppColors.border,
-                    ),
+                    Container(width: 2, height: 20, color: AppColors.border),
                     Container(
                       width: 8,
                       height: 8,
@@ -220,10 +213,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 ),
               ],
             ),
-          )
-              .animate()
-              .fadeIn(duration: 600.ms)
-              .slideY(begin: -0.3, end: 0),
+          ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.3, end: 0),
 
           // Vehicle options
           Expanded(
@@ -235,13 +225,13 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 final isSelected = _selectedVehicle?.id == vehicle.id;
 
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: _VehicleCard(
-                    vehicle: vehicle,
-                    isSelected: isSelected,
-                    onTap: () => _selectVehicle(vehicle),
-                  ),
-                )
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: _VehicleCard(
+                        vehicle: vehicle,
+                        isSelected: isSelected,
+                        onTap: () => _selectVehicle(vehicle),
+                      ),
+                    )
                     .animate(delay: (index * 100).ms)
                     .fadeIn(duration: 600.ms)
                     .slideX(begin: 0.3, end: 0);
@@ -251,108 +241,109 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
 
           // Bottom section
           Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: AppColors.backgroundCard,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-              ),
-            ),
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Selected vehicle info
-                  if (_selectedVehicle != null) ...[
-                    Row(
-                      children: [
-                        Text(
-                          _selectedVehicle!.icon,
-                          style: const TextStyle(fontSize: 24),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _selectedVehicle!.name,
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                'Arrives in ${_selectedVehicle!.estimatedTime}',
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          '₦${_selectedVehicle!.price.toStringAsFixed(0)}',
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-                  ],
-
-                  // Confirm booking button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _selectedVehicle != null && !_isLoading
-                          ? _confirmBooking
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryBlue,
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: AppColors.backgroundSecondary,
-                        disabledForegroundColor: AppColors.textTertiary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: _selectedVehicle != null ? 2 : 0,
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
-                            )
-                          : Text(
-                              _selectedVehicle != null
-                                  ? 'Confirm Booking'
-                                  : 'Select a Vehicle',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: AppColors.backgroundCard,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Selected vehicle info
+                      if (_selectedVehicle != null) ...[
+                        Row(
+                          children: [
+                            Text(
+                              _selectedVehicle!.icon,
+                              style: const TextStyle(fontSize: 24),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _selectedVehicle!.name,
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Arrives in ${_selectedVehicle!.estimatedTime}',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                    ),
+                            Text(
+                              '₦${_selectedVehicle!.price.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+                      ],
+
+                      // Confirm booking button
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _selectedVehicle != null && !_isLoading
+                              ? _confirmBooking
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryBlue,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor:
+                                AppColors.backgroundSecondary,
+                            disabledForegroundColor: AppColors.textTertiary,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: _selectedVehicle != null ? 2 : 0,
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : Text(
+                                  _selectedVehicle != null
+                                      ? 'Confirm Booking'
+                                      : 'Select a Vehicle',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          )
+                ),
+              )
               .animate()
               .fadeIn(delay: 600.ms, duration: 600.ms)
               .slideY(begin: 1, end: 0),
@@ -381,8 +372,8 @@ class _VehicleCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected 
-              ? AppColors.primaryBlue.withOpacity(0.1)
+          color: isSelected
+              ? AppColors.primaryBlue.withValues(alpha: 0.1)
               : AppColors.backgroundCard,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
@@ -536,7 +527,7 @@ class _VehicleCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryBlue.withOpacity(0.1),
+                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(

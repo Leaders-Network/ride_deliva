@@ -16,25 +16,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
 
   final List<OnboardingPage> _pages = [
-    OnboardingPage(
+    const OnboardingPage(
       title: 'Drive & Earn',
       subtitle: 'Turn your car into a money-making machine. Drive when you want, earn what you deserve.',
       icon: Icons.directions_car,
       gradient: AppColors.onlineGradient,
     ),
-    OnboardingPage(
+    const OnboardingPage(
       title: 'Flexible Schedule',
       subtitle: 'Work on your own terms. Choose your hours, take breaks whenever you need.',
       icon: Icons.schedule,
       gradient: AppColors.tripGradient,
     ),
-    OnboardingPage(
+    const OnboardingPage(
       title: 'Track Earnings',
       subtitle: 'Monitor your daily, weekly, and monthly earnings. Get detailed insights into your performance.',
       icon: Icons.analytics,
       gradient: AppColors.earningsGradient,
     ),
-    OnboardingPage(
+    const OnboardingPage(
       title: 'Safe & Secure',
       subtitle: 'Verified customers, secure payments, and 24/7 support. Your safety is our priority.',
       icon: Icons.security,
@@ -183,7 +183,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
+                      const Text(
                         'Already have an account? ',
                         style: TextStyle(
                           color: AppColors.textSecondary,
@@ -231,7 +231,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: page.gradient.first.withOpacity(0.3),
+                  color: page.gradient.first.withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -274,7 +274,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Text(
             page.subtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16,
               color: AppColors.textSecondary,
               height: 1.5,

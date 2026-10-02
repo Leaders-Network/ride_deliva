@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@/generated/prisma';
 import prisma from '@/config/database';
 import { logger } from '@/config/logger';
 

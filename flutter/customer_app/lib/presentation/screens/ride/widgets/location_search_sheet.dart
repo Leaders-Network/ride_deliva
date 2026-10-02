@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../ride_booking_screen.dart';
+import '../../../../core/models/location_data.dart';
 
 class LocationSearchSheet extends StatefulWidget {
   final String searchType;
@@ -49,22 +47,26 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
       const LocationData(
         address: 'Victoria Island',
         subAddress: 'Lagos Island, Lagos',
-        latLng: LatLng(6.4281, 3.4219),
+        latitude: 6.4281,
+        longitude: 3.4219,
       ),
       const LocationData(
         address: 'Ikeja GRA',
         subAddress: 'Ikeja, Lagos',
-        latLng: LatLng(6.5947, 3.3405),
+        latitude: 6.5947,
+        longitude: 3.3405,
       ),
       const LocationData(
         address: 'Lekki Phase 1',
         subAddress: 'Lekki Peninsula, Lagos',
-        latLng: LatLng(6.4698, 3.5852),
+        latitude: 6.4698,
+        longitude: 3.5852,
       ),
       const LocationData(
         address: 'Maryland Mall',
         subAddress: 'Maryland, Lagos',
-        latLng: LatLng(6.5568, 3.3515),
+        latitude: 6.5568,
+        longitude: 3.3515,
       ),
     ];
   }
@@ -99,46 +101,57 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
       const LocationData(
         address: 'Murtala Muhammed Airport',
         subAddress: 'International Airport Road, Lagos',
-        latLng: LatLng(6.5773, 3.3213),
+        latitude: 6.5773,
+        longitude: 3.3213,
       ),
       const LocationData(
         address: 'National Theatre',
         subAddress: 'Iganmu, Lagos',
-        latLng: LatLng(6.4641, 3.3896),
+        latitude: 6.4641,
+        longitude: 3.3896,
       ),
       const LocationData(
         address: 'Tafawa Balewa Square',
         subAddress: 'Lagos Island, Lagos',
-        latLng: LatLng(6.4511, 3.3899),
+        latitude: 6.4511,
+        longitude: 3.3899,
       ),
       const LocationData(
         address: 'Computer Village',
         subAddress: 'Ikeja, Lagos',
-        latLng: LatLng(6.5467, 3.3515),
+        latitude: 6.5467,
+        longitude: 3.3515,
       ),
       const LocationData(
         address: 'Palms Shopping Mall',
         subAddress: 'Lekki, Lagos',
-        latLng: LatLng(6.4218, 3.4881),
+        latitude: 6.4218,
+        longitude: 3.4881,
       ),
       const LocationData(
         address: 'University of Lagos',
         subAddress: 'Akoka, Lagos',
-        latLng: LatLng(6.5158, 3.3881),
+        latitude: 6.5158,
+        longitude: 3.3881,
       ),
     ];
 
     return allLocations
-        .where((location) =>
-            location.address.toLowerCase().contains(query.toLowerCase()) ||
-            location.subAddress.toLowerCase().contains(query.toLowerCase()))
+        .where(
+          (location) =>
+              location.address.toLowerCase().contains(query.toLowerCase()) ||
+              (location.subAddress?.toLowerCase().contains(
+                    query.toLowerCase(),
+                  ) ??
+                  false),
+        )
         .toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final isPickup = widget.searchType == 'pickup';
-    
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
       decoration: const BoxDecoration(
@@ -249,7 +262,7 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withOpacity(0.1),
+                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
@@ -267,17 +280,15 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
               ),
               subtitle: Text(
                 'Victoria Island, Lagos',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
               ),
               onTap: () {
                 widget.onLocationSelected(
                   const LocationData(
                     address: 'Current Location',
                     subAddress: 'Victoria Island, Lagos',
-                    latLng: LatLng(6.4281, 3.4219),
+                    latitude: 6.4281,
+                    longitude: 3.4219,
                   ),
                 );
               },
@@ -310,12 +321,12 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        ..._searchResults
-                            .map((location) => _LocationTile(
-                                  location: location,
-                                  onTap: () => widget.onLocationSelected(location),
-                                ))
-                            .toList(),
+                        ..._searchResults.map(
+                          (location) => _LocationTile(
+                            location: location,
+                            onTap: () => widget.onLocationSelected(location),
+                          ),
+                        ),
                       ] else if (_searchController.text.isEmpty) ...[
                         const SizedBox(height: 16),
                         Text(
@@ -327,13 +338,13 @@ class _LocationSearchSheetState extends State<LocationSearchSheet> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        ..._recentLocations
-                            .map((location) => _LocationTile(
-                                  location: location,
-                                  onTap: () => widget.onLocationSelected(location),
-                                  showHistory: true,
-                                ))
-                            .toList(),
+                        ..._recentLocations.map(
+                          (location) => _LocationTile(
+                            location: location,
+                            onTap: () => widget.onLocationSelected(location),
+                            showHistory: true,
+                          ),
+                        ),
                       ] else if (_searchResults.isEmpty &&
                           _searchController.text.isNotEmpty) ...[
                         const SizedBox(height: 32),
@@ -394,7 +405,7 @@ class _LocationTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: showHistory
               ? AppColors.backgroundSecondary
-              : AppColors.primaryBlue.withOpacity(0.1),
+              : AppColors.primaryBlue.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
@@ -411,11 +422,8 @@ class _LocationTile extends StatelessWidget {
         ),
       ),
       subtitle: Text(
-        location.subAddress,
-        style: TextStyle(
-          color: AppColors.textSecondary,
-          fontSize: 12,
-        ),
+        location.subAddress ?? '',
+        style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
       ),
       onTap: onTap,
     );

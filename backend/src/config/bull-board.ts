@@ -5,7 +5,7 @@ import { Queue } from 'bullmq';
 import { Request, Response, NextFunction } from 'express';
 import { queueService, QUEUE_NAMES } from './queues';
 import { logger } from './logger';
-import { verifyToken } from '../shared/middleware/auth.middleware';
+import { authenticate as verifyToken } from '../shared/middleware/auth.middleware';
 
 // Create the Express adapter for Bull Board
 const serverAdapter = new ExpressAdapter();
@@ -141,16 +141,19 @@ export async function getQueueStatistics(): Promise<any> {
       timestamp: new Date().toISOString(),
     };
 
-    // Calculate totals
+    // Calculate totals - properly discriminate the union type
     for (const queueStats of stats) {
-      if (queueStats.counts) {
-        summary.totalJobs += Object.values(queueStats.counts).reduce((sum: number, count: number) => sum + count, 0);
-        summary.activeJobs += queueStats.counts.active;
-        summary.completedJobs += queueStats.counts.completed;
-        summary.failedJobs += queueStats.counts.failed;
-        summary.waitingJobs += queueStats.counts.waiting;
-        summary.delayedJobs += queueStats.counts.delayed;
+      // Check if this is a successful result (has counts property)
+      if ('counts' in queueStats && queueStats.counts) {
+        const counts = queueStats.counts as Record<string, number>;
+        summary.totalJobs += Object.values(counts).reduce((sum: number, count: number) => sum + count, 0);
+        summary.activeJobs += counts.active || 0;
+        summary.completedJobs += counts.completed || 0;
+        summary.failedJobs += counts.failed || 0;
+        summary.waitingJobs += counts.waiting || 0;
+        summary.delayedJobs += counts.delayed || 0;
       }
+      // If it's an error result, we skip it (already in the stats array)
     }
 
     return summary;

@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { User, Session, VerificationCode } from '@prisma/client';
+import { User, Session, VerificationCode } from '@/generated/prisma';
 import { config } from '@/config';
 import { logger } from '@/config/logger';
 import { redis } from '@/config/redis';
@@ -87,7 +87,7 @@ export class AuthService {
     }
 
     // Create user with profile
-    const profileData = role === 'driver' 
+    const profileData = role === 'DRIVER' 
       ? { status: 'PENDING' as const }
       : {};
 

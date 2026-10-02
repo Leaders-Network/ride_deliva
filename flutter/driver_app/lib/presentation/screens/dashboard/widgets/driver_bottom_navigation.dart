@@ -14,22 +14,22 @@ class DriverBottomNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      BottomNavItem(
+      const BottomNavItem(
         icon: Icons.dashboard_outlined,
         activeIcon: Icons.dashboard,
         label: 'Dashboard',
       ),
-      BottomNavItem(
+      const BottomNavItem(
         icon: Icons.route_outlined,
         activeIcon: Icons.route,
         label: 'Trips',
       ),
-      BottomNavItem(
+      const BottomNavItem(
         icon: Icons.analytics_outlined,
         activeIcon: Icons.analytics,
         label: 'Earnings',
       ),
-      BottomNavItem(
+      const BottomNavItem(
         icon: Icons.person_outline,
         activeIcon: Icons.person,
         label: 'Profile',
@@ -46,7 +46,7 @@ class DriverBottomNavigation extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -73,7 +73,7 @@ class DriverBottomNavigation extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected 
-                        ? AppColors.primaryGreen.withOpacity(0.1)
+                        ? AppColors.primaryGreen.withValues(alpha: 0.1)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                   ),

@@ -603,7 +603,7 @@ export class JobScheduler {
 /**
  * Job Status Checker Utility
  */
-export class JobStatusChecker {
+class JobStatusChecker {
   /**
    * Wait for job completion
    */
@@ -665,7 +665,7 @@ export class JobStatusChecker {
       }
 
       return {
-        progress: job.progress || 0,
+        progress: typeof job.progress === 'number' ? job.progress : 0,
         status,
         data: {
           id: job.id,

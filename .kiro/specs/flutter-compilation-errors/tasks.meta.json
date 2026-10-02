@@ -1,0 +1,80 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Write bug condition exploration test": [
+      {
+        "executionId": "8e15705f-d9ba-4e3b-9e8f-922ae113ff9c",
+        "chatSessionId": "sess_fbfd16d8-8689-4eb9-aa2c-371e745b3a0c",
+        "timestamp": 1788271815487
+      },
+      {
+        "executionId": "8e15705f-d9ba-4e3b-9e8f-922ae113ff9c",
+        "chatSessionId": "sess_fbfd16d8-8689-4eb9-aa2c-371e745b3a0c",
+        "timestamp": 1788271824953
+      }
+    ],
+    "2. Write preservation property tests (BEFORE implementing fix)": [
+      {
+        "executionId": "8e15705f-d9ba-4e3b-9e8f-922ae113ff9c",
+        "chatSessionId": "sess_fbfd16d8-8689-4eb9-aa2c-371e745b3a0c",
+        "timestamp": 1788271815584
+      }
+    ],
+    "3.1 Fix missing Flutter framework imports": [
+      {
+        "executionId": "8e15705f-d9ba-4e3b-9e8f-922ae113ff9c",
+        "chatSessionId": "sess_fbfd16d8-8689-4eb9-aa2c-371e745b3a0c",
+        "timestamp": 1788271815691
+      }
+    ],
+    "3.2 Fix flutter_animate package imports  ": [
+      {
+        "executionId": "8e15705f-d9ba-4e3b-9e8f-922ae113ff9c",
+        "chatSessionId": "sess_fbfd16d8-8689-4eb9-aa2c-371e745b3a0c",
+        "timestamp": 1788271815748
+      }
+    ],
+    "3.3 Fix RideTrackingScreen class structure": [
+      {
+        "executionId": "8e15705f-d9ba-4e3b-9e8f-922ae113ff9c",
+        "chatSessionId": "sess_fbfd16d8-8689-4eb9-aa2c-371e745b3a0c",
+        "timestamp": 1788271815803
+      }
+    ],
+    "3.4 Fix map controller declaration in ride_booking_screen.dart": [
+      {
+        "executionId": "8e15705f-d9ba-4e3b-9e8f-922ae113ff9c",
+        "chatSessionId": "sess_fbfd16d8-8689-4eb9-aa2c-371e745b3a0c",
+        "timestamp": 1788271815851
+      }
+    ],
+    "3.5 Fix type mismatch in ride_confirmation_screen.dart navigation": [
+      {
+        "executionId": "8e15705f-d9ba-4e3b-9e8f-922ae113ff9c",
+        "chatSessionId": "sess_fbfd16d8-8689-4eb9-aa2c-371e745b3a0c",
+        "timestamp": 1788271815908
+      }
+    ],
+    "3.6 Verify bug condition exploration test now passes": [
+      {
+        "executionId": "8e15705f-d9ba-4e3b-9e8f-922ae113ff9c",
+        "chatSessionId": "sess_fbfd16d8-8689-4eb9-aa2c-371e745b3a0c",
+        "timestamp": 1788271815957
+      }
+    ],
+    "3.7 Verify preservation tests still pass": [
+      {
+        "executionId": "8e15705f-d9ba-4e3b-9e8f-922ae113ff9c",
+        "chatSessionId": "sess_fbfd16d8-8689-4eb9-aa2c-371e745b3a0c",
+        "timestamp": 1788271816011
+      }
+    ],
+    "4. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "8e15705f-d9ba-4e3b-9e8f-922ae113ff9c",
+        "chatSessionId": "sess_fbfd16d8-8689-4eb9-aa2c-371e745b3a0c",
+        "timestamp": 1788271816061
+      }
+    ]
+  }
+}

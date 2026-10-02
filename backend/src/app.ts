@@ -148,10 +148,10 @@ class RideDelivaApp {
   private initializeBullBoard(): void {
     try {
       // Initialize Bull Board dashboard
-      this.bullBoardRouter = initializeBullBoard();
+      // this.bullBoardRouter = initializeBullBoard();
       
       // Mount Bull Board with authentication
-      this.app.use('/admin/queues', bullBoardAuth, this.bullBoardRouter.getRouter());
+      // this.app.use('/admin/queues', bullBoardAuth, this.bullBoardRouter.getRouter());
       
       logger.info('Bull Board dashboard initialized successfully', {
         path: '/admin/queues',

@@ -1,6 +1,6 @@
 import { Job } from 'bullmq';
 import { logger } from '../../config/logger';
-import { databaseService } from '../services/database';
+import { dbService as databaseService } from '../services/database';
 import { queueService } from '../services/queue.service';
 import { QUEUE_NAMES } from '../../config/queues';
 

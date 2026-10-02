@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import '../../../core/theme/app_colors.dart';
-import 'ride_booking_screen.dart';
+import '../../../core/models/location_data.dart';
 import 'vehicle_selection_screen.dart';
 import 'ride_confirmation_screen.dart';
 import 'widgets/ride_status_sheet.dart';
@@ -33,19 +33,19 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
     with TickerProviderStateMixin {
   late GoogleMapController _mapController;
   final Completer<GoogleMapController> _controller = Completer();
-  
+
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
-  
+
   RideStatus _currentStatus = RideStatus.driverEnRoute;
   LatLng? _driverCurrentLocation;
   Timer? _driverLocationTimer;
   Timer? _statusTimer;
-  
+
   double _progress = 0.0;
   String _estimatedTime = '3 mins';
   double _distanceRemaining = 5.2;
-  
+
   late AnimationController _pulseController;
   late AnimationController _progressController;
 
@@ -72,7 +72,7 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
       duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat();
-    
+
     _progressController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -80,7 +80,9 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
   }
 
   void _initializeMap() {
-    _driverCurrentLocation = _generateRandomNearbyLocation(widget.pickupLocation.latLng);
+    _driverCurrentLocation = _generateRandomNearbyLocation(
+      widget.pickupLocation.latLng,
+    );
     _updateMarkers();
     _drawRoute();
   }
@@ -137,11 +139,11 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
   void _drawRoute() {
     // Create route polyline
     List<LatLng> routePoints = [];
-    
+
     if (_driverCurrentLocation != null) {
       routePoints.add(_driverCurrentLocation!);
     }
-    
+
     if (_currentStatus == RideStatus.driverEnRoute) {
       routePoints.add(widget.pickupLocation.latLng);
     } else {
@@ -153,7 +155,7 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
       color: AppColors.primaryBlue,
       width: 4,
       points: routePoints,
-      patterns: _currentStatus == RideStatus.driverEnRoute 
+      patterns: _currentStatus == RideStatus.driverEnRoute
           ? [PatternItem.dash(20), PatternItem.gap(10)]
           : [],
     );
@@ -165,7 +167,7 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
 
   void _startDriverLocationUpdates() {
     _driverLocationTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (_currentStatus != RideStatus.completed && 
+      if (_currentStatus != RideStatus.completed &&
           _currentStatus != RideStatus.cancelled) {
         _updateDriverLocation();
       }
@@ -180,18 +182,18 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
 
   void _updateDriverLocation() {
     if (_driverCurrentLocation == null) return;
-    
+
     LatLng targetLocation = _currentStatus == RideStatus.driverEnRoute
         ? widget.pickupLocation.latLng
         : widget.destinationLocation.latLng;
-    
+
     // Simulate driver moving towards target
     _driverCurrentLocation = _moveTowardsTarget(
       _driverCurrentLocation!,
       targetLocation,
       0.0005, // Movement step
     );
-    
+
     _updateMarkers();
     _drawRoute();
     _updateProgress();
@@ -199,23 +201,24 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
 
   void _updateProgress() {
     if (_driverCurrentLocation == null) return;
-    
+
     LatLng startLocation = _currentStatus == RideStatus.driverEnRoute
         ? widget.pickupLocation.latLng
         : widget.destinationLocation.latLng;
-    
+
     double totalDistance = _calculateDistance(
       _driverCurrentLocation!,
       startLocation,
     );
-    
+
     setState(() {
       _progress = 1.0 - (totalDistance / 0.01); // Normalize progress
       _progress = _progress.clamp(0.0, 1.0);
       _distanceRemaining = totalDistance * 111; // Convert to approximate km
-      _estimatedTime = '${(_distanceRemaining / 0.5).ceil()} mins'; // Rough estimate
+      _estimatedTime =
+          '${(_distanceRemaining / 0.5).ceil()} mins'; // Rough estimate
     });
-    
+
     _progressController.animateTo(_progress);
   }
 
@@ -223,7 +226,7 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
     setState(() {
       _currentStatus = newStatus;
     });
-    
+
     switch (newStatus) {
       case RideStatus.driverArrived:
         _statusTimer = Timer(const Duration(seconds: 5), () {
@@ -246,7 +249,7 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
       default:
         break;
     }
-    
+
     _drawRoute();
   }
 
@@ -273,25 +276,22 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
     final random = math.Random();
     final latOffset = (random.nextDouble() - 0.5) * 0.01;
     final lngOffset = (random.nextDouble() - 0.5) * 0.01;
-    
-    return LatLng(
-      center.latitude + latOffset,
-      center.longitude + lngOffset,
-    );
+
+    return LatLng(center.latitude + latOffset, center.longitude + lngOffset);
   }
 
   LatLng _moveTowardsTarget(LatLng current, LatLng target, double step) {
     final latDiff = target.latitude - current.latitude;
     final lngDiff = target.longitude - current.longitude;
-    
+
     final distance = math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
-    
+
     if (distance <= step) {
       return target;
     }
-    
+
     final ratio = step / distance;
-    
+
     return LatLng(
       current.latitude + (latDiff * ratio),
       current.longitude + (lngDiff * ratio),
@@ -308,10 +308,7 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
     if (_driverCurrentLocation != null) {
       _mapController.animateCamera(
         CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: _driverCurrentLocation!,
-            zoom: 16.0,
-          ),
+          CameraPosition(target: _driverCurrentLocation!, zoom: 16.0),
         ),
       );
     }
@@ -321,18 +318,28 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
     if (_driverCurrentLocation != null) {
       final bounds = LatLngBounds(
         southwest: LatLng(
-          math.min(_driverCurrentLocation!.latitude, widget.destinationLocation.latLng.latitude),
-          math.min(_driverCurrentLocation!.longitude, widget.destinationLocation.latLng.longitude),
+          math.min(
+            _driverCurrentLocation!.latitude,
+            widget.destinationLocation.latLng.latitude,
+          ),
+          math.min(
+            _driverCurrentLocation!.longitude,
+            widget.destinationLocation.latLng.longitude,
+          ),
         ),
         northeast: LatLng(
-          math.max(_driverCurrentLocation!.latitude, widget.destinationLocation.latLng.latitude),
-          math.max(_driverCurrentLocation!.longitude, widget.destinationLocation.latLng.longitude),
+          math.max(
+            _driverCurrentLocation!.latitude,
+            widget.destinationLocation.latLng.latitude,
+          ),
+          math.max(
+            _driverCurrentLocation!.longitude,
+            widget.destinationLocation.latLng.longitude,
+          ),
         ),
       );
 
-      _mapController.animateCamera(
-        CameraUpdate.newLatLngBounds(bounds, 100.0),
-      );
+      _mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100.0));
     }
   }
 
@@ -371,7 +378,7 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -380,20 +387,26 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
               child: Row(
                 children: [
                   Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(_currentStatus),
-                      shape: BoxShape.circle,
-                    ),
-                  )
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(_currentStatus),
+                          shape: BoxShape.circle,
+                        ),
+                      )
                       .animate(controller: _pulseController)
-                      .scale(begin: const Offset(1.0, 1.0), end: const Offset(1.3, 1.3))
+                      .scale(
+                        begin: const Offset(1.0, 1.0),
+                        end: const Offset(1.3, 1.3),
+                      )
                       .then()
-                      .scale(begin: const Offset(1.3, 1.3), end: const Offset(1.0, 1.0)),
-                  
+                      .scale(
+                        begin: const Offset(1.3, 1.3),
+                        end: const Offset(1.0, 1.0),
+                      ),
+
                   const SizedBox(width: 8),
-                  
+
                   Expanded(
                     child: Text(
                       _getStatusText(_currentStatus),
@@ -404,7 +417,7 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
                       ),
                     ),
                   ),
-                  
+
                   Text(
                     _estimatedTime,
                     style: TextStyle(
@@ -415,40 +428,41 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
                   ),
                 ],
               ),
-            )
-                .animate()
-                .fadeIn(duration: 600.ms)
-                .slideY(begin: -0.5, end: 0),
+            ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.5, end: 0),
           ),
 
           // Map controls
           Positioned(
             bottom: 200,
             right: 16,
-            child: Column(
-              children: [
-                FloatingActionButton(
-                  mini: true,
-                  backgroundColor: AppColors.backgroundCard,
-                  foregroundColor: AppColors.textPrimary,
-                  onPressed: _centerMapOnDriver,
-                  heroTag: "center_driver",
-                  child: const Icon(Icons.my_location),
-                ),
-                const SizedBox(height: 8),
-                FloatingActionButton(
-                  mini: true,
-                  backgroundColor: AppColors.backgroundCard,
-                  foregroundColor: AppColors.textPrimary,
-                  onPressed: _showFullRoute,
-                  heroTag: "show_route",
-                  child: const Icon(Icons.route),
-                ),
-              ],
-            )
-                .animate()
-                .fadeIn(delay: 400.ms, duration: 600.ms)
-                .scale(begin: 0.8, end: 1.0),
+            child:
+                Column(
+                      children: [
+                        FloatingActionButton(
+                          mini: true,
+                          backgroundColor: AppColors.backgroundCard,
+                          foregroundColor: AppColors.textPrimary,
+                          onPressed: _centerMapOnDriver,
+                          heroTag: "center_driver",
+                          child: const Icon(Icons.my_location),
+                        ),
+                        const SizedBox(height: 8),
+                        FloatingActionButton(
+                          mini: true,
+                          backgroundColor: AppColors.backgroundCard,
+                          foregroundColor: AppColors.textPrimary,
+                          onPressed: _showFullRoute,
+                          heroTag: "show_route",
+                          child: const Icon(Icons.route),
+                        ),
+                      ],
+                    )
+                    .animate()
+                    .fadeIn(delay: 400.ms, duration: 600.ms)
+                    .scale(
+                      begin: const Offset(0.8, 0.8),
+                      end: const Offset(1.0, 1.0),
+                    ),
           ),
 
           // Driver info card (when driver is en route)
@@ -457,20 +471,21 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
               top: 100,
               left: 16,
               right: 16,
-              child: DriverInfoCard(
-                driver: widget.driver,
-                vehicleType: widget.vehicleType,
-                estimatedArrival: _estimatedTime,
-                onCall: () {
-                  // TODO: Call driver
-                },
-                onMessage: () {
-                  // TODO: Message driver
-                },
-              )
-                  .animate()
-                  .fadeIn(delay: 600.ms, duration: 600.ms)
-                  .slideY(begin: -0.3, end: 0),
+              child:
+                  DriverInfoCard(
+                        driver: widget.driver,
+                        vehicleType: widget.vehicleType,
+                        estimatedArrival: _estimatedTime,
+                        onCall: () {
+                          // TODO: Call driver
+                        },
+                        onMessage: () {
+                          // TODO: Message driver
+                        },
+                      )
+                      .animate()
+                      .fadeIn(delay: 600.ms, duration: 600.ms)
+                      .slideY(begin: -0.3, end: 0),
             ),
 
           // Bottom sheet with ride status
@@ -478,28 +493,31 @@ class _RideTrackingScreenState extends State<RideTrackingScreen>
             bottom: 0,
             left: 0,
             right: 0,
-            child: RideStatusSheet(
-              status: _currentStatus,
-              progress: _progress,
-              pickupLocation: widget.pickupLocation,
-              destinationLocation: widget.destinationLocation,
-              driver: widget.driver,
-              vehicleType: widget.vehicleType,
-              estimatedTime: _estimatedTime,
-              distanceRemaining: _distanceRemaining,
-              onCancel: () {
-                setState(() {
-                  _currentStatus = RideStatus.cancelled;
-                });
-                Navigator.of(context).popUntil((route) => route.isFirst);
-              },
-              onEmergency: () {
-                // TODO: Handle emergency
-              },
-            )
-                .animate()
-                .fadeIn(delay: 800.ms, duration: 600.ms)
-                .slideY(begin: 1, end: 0),
+            child:
+                RideStatusSheet(
+                      status: _currentStatus,
+                      progress: _progress,
+                      pickupLocation: widget.pickupLocation,
+                      destinationLocation: widget.destinationLocation,
+                      driver: widget.driver,
+                      vehicleType: widget.vehicleType,
+                      estimatedTime: _estimatedTime,
+                      distanceRemaining: _distanceRemaining,
+                      onCancel: () {
+                        setState(() {
+                          _currentStatus = RideStatus.cancelled;
+                        });
+                        Navigator.of(
+                          context,
+                        ).popUntil((route) => route.isFirst);
+                      },
+                      onEmergency: () {
+                        // TODO: Handle emergency
+                      },
+                    )
+                    .animate()
+                    .fadeIn(delay: 800.ms, duration: 600.ms)
+                    .slideY(begin: 1, end: 0),
           ),
         ],
       ),
@@ -549,3 +567,4 @@ enum RideStatus {
   completed,
   cancelled,
 }
+
