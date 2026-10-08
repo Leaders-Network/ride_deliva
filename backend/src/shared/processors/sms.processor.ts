@@ -86,7 +86,7 @@ async function handleVerificationSMS(job: Job<SMSJobData>) {
   await job.updateProgress(30);
 
   try {
-    const result = await smsService.sendSMS(to, message);
+    const result = await smsService.sendSMS({ to, message });
     
     await job.updateProgress(80);
     
@@ -120,7 +120,7 @@ async function handleNotificationSMS(job: Job<SMSJobData>) {
   await job.updateProgress(30);
 
   try {
-    const result = await smsService.sendSMS(to, message);
+    const result = await smsService.sendSMS({ to, message });
     
     await job.updateProgress(80);
     
@@ -161,7 +161,7 @@ async function handleAlertSMS(job: Job<SMSJobData>) {
 
   try {
     // For alerts, we might want to use a different service or priority
-    const result = await smsService.sendSMS(to, message);
+    const result = await smsService.sendSMS({ to, message });
     
     await job.updateProgress(80);
     
@@ -200,7 +200,7 @@ async function handleMarketingSMS(job: Job<SMSJobData>) {
     // Check if user has opted out of marketing messages
     // This would typically check a database flag
     
-    const result = await smsService.sendSMS(to, message);
+    const result = await smsService.sendSMS({ to, message });
     
     await job.updateProgress(80);
     

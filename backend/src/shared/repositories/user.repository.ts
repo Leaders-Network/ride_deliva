@@ -8,9 +8,11 @@ export class UserRepository extends BaseRepository<User> {
   }
 
   // Find user by phone number
-  async findByPhoneNumber(phoneNumber: string, include?: any): Promise<User | null> {
+  findByPhoneNumber(phoneNumber: string): Promise<User | null>;
+  findByPhoneNumber<I extends Prisma.UserInclude>(phoneNumber: string, include: I): Promise<Prisma.UserGetPayload<{ include: I }> | null>;
+  async findByPhoneNumber(phoneNumber: string, include?: Prisma.UserInclude): Promise<User | null> {
     const sanitizedPhone = sanitize.phoneNumber(phoneNumber);
-    return this.findFirst({ phoneNumber: sanitizedPhone }, include);
+    return this.prisma.user.findFirst({ where: { phoneNumber: sanitizedPhone }, include });
   }
 
   // Find user by email

@@ -1,6 +1,8 @@
-import { Job } from 'bullmq';
+import type { ProcessorJob } from './processor-job';
 import { logger } from '../../config/logger';
 import { dbService as databaseService } from '../services/database';
+import prisma from '../../config/database';
+import { Prisma, DeliveryStatus } from '../../generated/prisma';
 import { queueService } from '../services/queue.service';
 import { QUEUE_NAMES } from '../../config/queues';
 
@@ -17,7 +19,7 @@ export interface DeliveryJobData {
  * Delivery Job Processor
  * Handles all delivery-related background jobs
  */
-export async function deliveryProcessor(job: Job<DeliveryJobData>): Promise<any> {
+export async function deliveryProcessor(job: ProcessorJob<DeliveryJobData>): Promise<any> {
   const { type, deliveryId, userId, courierId } = job.data;
 
   await job.updateProgress(10);
@@ -86,7 +88,7 @@ export async function deliveryProcessor(job: Job<DeliveryJobData>): Promise<any>
 /**
  * Handle courier assignment for delivery requests
  */
-async function handleCourierAssignment(job: Job<DeliveryJobData>) {
+async function handleCourierAssignment(job: ProcessorJob<DeliveryJobData>) {
   const { deliveryId, data } = job.data;
   const { pickupLatitude, pickupLongitude, maxDistance = 7000 } = data || {};
 
@@ -94,9 +96,9 @@ async function handleCourierAssignment(job: Job<DeliveryJobData>) {
 
   try {
     // Get delivery details
-    const delivery = await databaseService.findFirst('Delivery', {
-      where: { id: deliveryId, status: 'PENDING' },
-      include: { user: true }
+    const delivery = await prisma.delivery.findFirst({
+      where: { id: deliveryId, status: 'REQUESTED' },
+      include: { customer: { include: { user: true } }, driver: { include: { user: true } }, pickupAddress: true }
     });
 
     if (!delivery) {
@@ -106,36 +108,7 @@ async function handleCourierAssignment(job: Job<DeliveryJobData>) {
     await job.updateProgress(40);
 
     // Find available couriers within radius
-    const availableCouriers = await databaseService.rawQuery(`
-      SELECT 
-        u.id,
-        u.firstName,
-        u.lastName,
-        u.phone,
-        u.averageRating,
-        d.vehicleType,
-        d.currentLatitude,
-        d.currentLongitude,
-        ST_Distance(
-          ST_Point($1, $2)::geography,
-          ST_Point(d.currentLatitude, d.currentLongitude)::geography
-        ) as distance
-      FROM "User" u
-      JOIN "Driver" d ON u.id = d.userId
-      WHERE 
-        u.role = 'DRIVER' 
-        AND u.isActive = true
-        AND d.isOnline = true
-        AND d.status = 'AVAILABLE'
-        AND d.vehicleType IN ('MOTORCYCLE', 'BICYCLE', 'VAN')
-        AND ST_DWithin(
-          ST_Point($1, $2)::geography,
-          ST_Point(d.currentLatitude, d.currentLongitude)::geography,
-          $3
-        )
-      ORDER BY distance ASC, u.averageRating DESC
-      LIMIT 8
-    `, [pickupLatitude, pickupLongitude, maxDistance]);
+    const availableCouriers = await databaseService.findNearbyDrivers(pickupLatitude, pickupLongitude, maxDistance, ['MOTORCYCLE', 'VAN']);
 
     await job.updateProgress(70);
 
@@ -184,7 +157,7 @@ async function handleCourierAssignment(job: Job<DeliveryJobData>) {
             pickupLatitude,
             pickupLongitude,
             estimatedDistance: courier.distance,
-            deliveryType: delivery.packageType,
+            deliveryType: delivery.deliveryType,
           },
           priority: 'high',
           ttl: 300, // 5 minutes
@@ -200,11 +173,11 @@ async function handleCourierAssignment(job: Job<DeliveryJobData>) {
       });
     }
 
-    // Update delivery status to ASSIGNING
-    await databaseService.update('Delivery', deliveryId, {
-      status: 'ASSIGNING',
+    // Keep the delivery requested until a courier accepts.
+    await prisma.delivery.update({ where: { id: deliveryId }, data: {
+      status: 'REQUESTED',
       updatedAt: new Date(),
-    });
+    } });
 
     await job.updateProgress(90);
 
@@ -233,22 +206,23 @@ async function handleCourierAssignment(job: Job<DeliveryJobData>) {
 /**
  * Handle delivery status updates
  */
-async function handleDeliveryStatusUpdate(job: Job<DeliveryJobData>) {
+async function handleDeliveryStatusUpdate(job: ProcessorJob<DeliveryJobData>) {
   const { deliveryId, data } = job.data;
   const { status, location, courierId, proofOfDelivery } = data || {};
+  if (!Object.values(DeliveryStatus).some(value => value === status)) throw new Error('Invalid delivery status');
 
   await job.updateProgress(30);
 
   try {
     // Update delivery status
-    const updateData: any = {
+    const updateData: Prisma.DeliveryUpdateInput = {
       status,
       updatedAt: new Date(),
     };
 
     // Add status-specific fields
-    if (status === 'COURIER_ASSIGNED') {
-      updateData.courierAssignedAt = new Date();
+    if (status === 'DRIVER_ASSIGNED') {
+      updateData.acceptedAt = new Date();
     } else if (status === 'PICKED_UP') {
       updateData.pickedUpAt = new Date();
     } else if (status === 'DELIVERED') {
@@ -258,17 +232,14 @@ async function handleDeliveryStatusUpdate(job: Job<DeliveryJobData>) {
       }
     }
 
-    await databaseService.update('Delivery', deliveryId, updateData);
+    await prisma.delivery.update({ where: { id: deliveryId }, data: updateData });
 
     await job.updateProgress(60);
 
     // Get delivery details for notifications
-    const delivery = await databaseService.findFirst('Delivery', {
+    const delivery = await prisma.delivery.findFirst({
       where: { id: deliveryId },
-      include: { 
-        user: true, 
-        courier: { include: { user: true } }
-      }
+      include: { customer: { include: { user: true } }, driver: { include: { user: true } }, pickupAddress: true }
     });
 
     if (delivery) {
@@ -282,7 +253,7 @@ async function handleDeliveryStatusUpdate(job: Job<DeliveryJobData>) {
           'push',
           {
             type: 'push',
-            userId: delivery.userId,
+            userId: delivery.customer.userId,
             title: 'Delivery Update',
             body: getDeliveryStatusMessage(status),
             data: { deliveryId, status },
@@ -292,17 +263,17 @@ async function handleDeliveryStatusUpdate(job: Job<DeliveryJobData>) {
       );
 
       // Send SMS for critical updates
-      if (['COURIER_ASSIGNED', 'PICKED_UP', 'DELIVERED'].includes(status)) {
+      if (['DRIVER_ASSIGNED', 'PICKED_UP', 'DELIVERED'].includes(status)) {
         notifications.push(
           queueService.addJob(
             QUEUE_NAMES.SMS,
             'notification',
             {
               type: 'notification',
-              to: delivery.user.phone,
+              to: delivery.customer.user.phoneNumber,
               message: `Your delivery is ${status.toLowerCase().replace('_', ' ')}. Track in the app.`,
               deliveryId,
-              userId: delivery.userId,
+              userId: delivery.customer.userId,
             }
           )
         );
@@ -339,7 +310,7 @@ async function handleDeliveryStatusUpdate(job: Job<DeliveryJobData>) {
 /**
  * Handle delivery fee calculation
  */
-async function handleDeliveryFeeCalculation(job: Job<DeliveryJobData>) {
+async function handleDeliveryFeeCalculation(job: ProcessorJob<DeliveryJobData>) {
   const { deliveryId, data } = job.data;
   const { 
     distance, 
@@ -391,16 +362,9 @@ async function handleDeliveryFeeCalculation(job: Job<DeliveryJobData>) {
     await job.updateProgress(70);
 
     // Update delivery with fee details
-    await databaseService.update('Delivery', deliveryId, {
-      baseFee,
-      distanceFee: Math.round(distanceFee),
-      weightFee,
-      priorityMultiplier,
-      surgeMultiplier,
-      surgeAmount: Math.round(surgeAmount),
-      deliveryFee: totalFee,
-      feeCalculatedAt: new Date(),
-    });
+    await prisma.delivery.update({ where: { id: deliveryId }, data: {
+      estimatedFare: totalFee / 100,
+    } });
 
     await job.updateProgress(90);
 
@@ -440,7 +404,7 @@ async function handleDeliveryFeeCalculation(job: Job<DeliveryJobData>) {
 /**
  * Handle delivery route optimization
  */
-async function handleDeliveryRouteOptimization(job: Job<DeliveryJobData>) {
+async function handleDeliveryRouteOptimization(job: ProcessorJob<DeliveryJobData>) {
   const { deliveryId, data } = job.data;
   const { waypoints, courierLocation } = data || {};
 
@@ -461,12 +425,10 @@ async function handleDeliveryRouteOptimization(job: Job<DeliveryJobData>) {
     await job.updateProgress(80);
 
     // Update delivery with optimized route
-    await databaseService.update('Delivery', deliveryId, {
-      estimatedDistance: optimizedRoute.distance,
-      estimatedDuration: optimizedRoute.duration,
-      routePolyline: optimizedRoute.polyline,
-      routeOptimizedAt: new Date(),
-    });
+    await prisma.delivery.update({ where: { id: deliveryId }, data: {
+      estimatedDistance: optimizedRoute.distance / 1000,
+      estimatedDuration: Math.ceil(optimizedRoute.duration / 60),
+    } });
 
     await job.updateProgress(90);
 
@@ -494,24 +456,24 @@ async function handleDeliveryRouteOptimization(job: Job<DeliveryJobData>) {
 /**
  * Handle delivery completion
  */
-async function handleDeliveryCompletion(job: Job<DeliveryJobData>) {
+async function handleDeliveryCompletion(job: ProcessorJob<DeliveryJobData>) {
   const { deliveryId } = job.data;
 
   await job.updateProgress(30);
 
   try {
     // Update delivery status
-    await databaseService.update('Delivery', deliveryId, {
+    await prisma.delivery.update({ where: { id: deliveryId }, data: {
       status: 'DELIVERED',
       deliveredAt: new Date(),
-    });
+    } });
 
     await job.updateProgress(50);
 
     // Trigger payment processing
-    const delivery = await databaseService.findFirst('Delivery', {
+    const delivery = await prisma.delivery.findFirst({
       where: { id: deliveryId },
-      include: { user: true, courier: { include: { user: true } } }
+      include: { customer: { include: { user: true } }, driver: { include: { user: true } }, pickupAddress: true }
     });
 
     if (delivery) {
@@ -520,10 +482,10 @@ async function handleDeliveryCompletion(job: Job<DeliveryJobData>) {
         QUEUE_NAMES.PAYMENT,
         'process_delivery_payment',
         {
-          type: 'delivery_payment',
+          type: 'process_ride_payment',
           deliveryId,
-          amount: delivery.deliveryFee,
-          courierId: delivery.courierId,
+          amount: Math.round(Number(delivery.finalFare ?? delivery.estimatedFare) * 100),
+          courierId: delivery.driverId,
         }
       );
 
@@ -537,7 +499,7 @@ async function handleDeliveryCompletion(job: Job<DeliveryJobData>) {
           'push',
           {
             type: 'push',
-            userId: delivery.userId,
+            userId: delivery.customer.userId,
             title: 'Delivery Completed',
             body: 'Your package has been delivered successfully!',
             data: { deliveryId },
@@ -551,17 +513,17 @@ async function handleDeliveryCompletion(job: Job<DeliveryJobData>) {
           'receipt',
           {
             type: 'receipt',
-            to: delivery.user.email,
+            to: delivery.customer.user.email,
             subject: 'Your Delivery Receipt',
             templateId: 'delivery_receipt',
             variables: {
-              customerName: `${delivery.user.firstName} ${delivery.user.lastName}`,
+              customerName: `${delivery.customer.user.firstName} ${delivery.customer.user.lastName}`,
               deliveryId,
-              deliveryFee: (delivery.deliveryFee / 100).toFixed(2),
+              deliveryFee: (Number(delivery.finalFare ?? delivery.estimatedFare)).toFixed(2),
               date: new Date().toLocaleDateString(),
             },
             deliveryId,
-            userId: delivery.userId,
+            userId: delivery.customer.userId,
           }
         ),
       ];
@@ -573,14 +535,14 @@ async function handleDeliveryCompletion(job: Job<DeliveryJobData>) {
 
     logger.info(`Delivery completed successfully`, {
       deliveryId,
-      deliveryFee: delivery?.deliveryFee,
+      deliveryFee: delivery ? Number(delivery.finalFare ?? delivery.estimatedFare) : undefined,
     });
 
     return {
       success: true,
       deliveryId,
       completedAt: new Date().toISOString(),
-      deliveryFee: delivery?.deliveryFee,
+      deliveryFee: delivery ? Number(delivery.finalFare ?? delivery.estimatedFare) : undefined,
     };
 
   } catch (error) {
@@ -595,7 +557,7 @@ async function handleDeliveryCompletion(job: Job<DeliveryJobData>) {
 /**
  * Handle failed delivery
  */
-async function handleFailedDelivery(job: Job<DeliveryJobData>) {
+async function handleFailedDelivery(job: ProcessorJob<DeliveryJobData>) {
   const { deliveryId, data } = job.data;
   const { reason, nextAttemptTime, maxAttempts = 3 } = data || {};
 
@@ -603,28 +565,27 @@ async function handleFailedDelivery(job: Job<DeliveryJobData>) {
 
   try {
     // Get current delivery details
-    const delivery = await databaseService.findFirst('Delivery', {
+    const delivery = await prisma.delivery.findFirst({
       where: { id: deliveryId },
-      include: { user: true, courier: { include: { user: true } } }
+      include: { customer: { include: { user: true } }, driver: { include: { user: true } }, pickupAddress: true }
     });
 
     if (!delivery) {
       throw new Error(`Delivery ${deliveryId} not found`);
     }
 
-    const currentAttempts = delivery.deliveryAttempts || 0;
+    const currentAttempts = typeof data?.attemptNumber === 'number' ? data.attemptNumber - 1 : job.attemptsMade;
     const newAttempts = currentAttempts + 1;
 
     await job.updateProgress(60);
 
     if (newAttempts >= maxAttempts) {
-      // Max attempts reached - mark as failed
-      await databaseService.update('Delivery', deliveryId, {
-        status: 'FAILED',
-        deliveryAttempts: newAttempts,
-        failureReason: reason,
-        failedAt: new Date(),
-      });
+      // Max attempts reached - cancel using the schema lifecycle.
+      await prisma.delivery.update({ where: { id: deliveryId }, data: {
+        status: 'CANCELLED',
+        cancellationReason: reason,
+        cancelledAt: new Date(),
+      } });
 
       // Notify customer of failed delivery
       await queueService.addJob(
@@ -632,7 +593,7 @@ async function handleFailedDelivery(job: Job<DeliveryJobData>) {
         'push',
         {
           type: 'push',
-          userId: delivery.userId,
+          userId: delivery.customer.userId,
           title: 'Delivery Failed',
           body: `Unable to deliver your package after ${maxAttempts} attempts. Please contact support.`,
           data: { deliveryId, reason },
@@ -649,11 +610,10 @@ async function handleFailedDelivery(job: Job<DeliveryJobData>) {
 
     } else {
       // Schedule retry
-      await databaseService.update('Delivery', deliveryId, {
-        status: 'RETRY_SCHEDULED',
-        deliveryAttempts: newAttempts,
-        lastAttemptFailureReason: reason,
-      });
+      await prisma.delivery.update({ where: { id: deliveryId }, data: {
+        status: 'REQUESTED',
+        notes: reason,
+      } });
 
       // Schedule next delivery attempt
       const retryDelay = nextAttemptTime 
@@ -667,8 +627,8 @@ async function handleFailedDelivery(job: Job<DeliveryJobData>) {
           type: 'assign_courier',
           deliveryId,
           data: { 
-            pickupLatitude: delivery.pickupLatitude,
-            pickupLongitude: delivery.pickupLongitude,
+            pickupLatitude: Number(delivery.pickupAddress.latitude),
+            pickupLongitude: Number(delivery.pickupAddress.longitude),
             isRetry: true,
             attemptNumber: newAttempts + 1,
           }

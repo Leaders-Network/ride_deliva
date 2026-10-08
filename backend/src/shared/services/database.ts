@@ -2,6 +2,17 @@ import { PrismaClient, Prisma } from '@/generated/prisma';
 import { logger } from '@/config/logger';
 import prisma from '@/config/database';
 
+export interface NearbyDriver {
+  id: string;
+  driverId: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  averageRating: number;
+  vehicleType: string;
+  distance: number;
+}
+
 export class DatabaseService {
   private client: PrismaClient;
 
@@ -162,7 +173,7 @@ export class DatabaseService {
   }
 
   // Transaction wrapper
-  async transaction<T>(fn: (prisma: PrismaClient) => Promise<T>): Promise<T> {
+  async transaction<T>(fn: (prisma: Prisma.TransactionClient) => Promise<T>): Promise<T> {
     try {
       const result = await this.client.$transaction(fn);
       logger.debug('Transaction completed successfully');
@@ -200,37 +211,29 @@ export class DatabaseService {
   async findNearbyDrivers(
     latitude: number,
     longitude: number,
-    radiusMeters: number = 5000
-  ): Promise<any[]> {
-    const sql = `
-      SELECT 
-        dp.id as driver_id,
-        u.first_name,
-        u.last_name,
-        dp.rating,
-        dp.is_online,
-        dp.is_available,
-        ST_Distance(
-          ST_GeogFromText('POINT(' || $2 || ' ' || $1 || ')'),
-          ST_GeogFromWKB(dl.last_location)
-        ) as distance_meters,
-        dl.last_location
+    radiusMeters: number = 5000,
+    vehicleTypes: string[] = []
+  ): Promise<NearbyDriver[]> {
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180 || !Number.isFinite(radiusMeters) || radiusMeters <= 0) {
+      throw new Error('Invalid nearby-driver coordinates or radius');
+    }
+    return this.queryRaw<NearbyDriver>(`
+      SELECT u.id, dp.id AS "driverId", u.first_name AS "firstName",
+        u.last_name AS "lastName", u.phone_number AS phone,
+        dp.rating::float8 AS "averageRating", v.type AS "vehicleType",
+        ST_Distance(ST_SetSRID(ST_MakePoint($2, $1), 4326)::geography,
+          ST_SetSRID(ST_MakePoint(dl.longitude::float8, dl.latitude::float8), 4326)::geography) AS distance
       FROM driver_profiles dp
-      JOIN users u ON dp.user_id = u.id
-      JOIN driver_locations dl ON dp.id = dl.driver_id
-      WHERE dp.is_online = true 
-        AND dp.is_available = true
-        AND dp.status = 'APPROVED'
-        AND ST_DWithin(
-          ST_GeogFromText('POINT(' || $2 || ' ' || $1 || ')'),
-          ST_GeogFromWKB(dl.last_location),
-          $3
-        )
-      ORDER BY distance_meters ASC
-      LIMIT 20;
-    `;
-
-    return this.queryRaw(sql, [latitude, longitude, radiusMeters]);
+      JOIN users u ON u.id = dp.user_id
+      JOIN driver_locations dl ON dl.driver_id = dp.id
+      JOIN LATERAL (SELECT type FROM vehicles WHERE driver_id = dp.id AND is_active = true
+        AND (cardinality($4::text[]) = 0 OR type::text = ANY($4::text[])) LIMIT 1) v ON true
+      WHERE u.is_active = true AND dp.status = 'APPROVED'
+        AND dp.is_online = true AND dp.is_available = true
+        AND ST_DWithin(ST_SetSRID(ST_MakePoint($2, $1), 4326)::geography,
+          ST_SetSRID(ST_MakePoint(dl.longitude::float8, dl.latitude::float8), 4326)::geography, $3)
+      ORDER BY distance ASC, dp.rating DESC LIMIT 20
+    `, [latitude, longitude, radiusMeters, vehicleTypes]);
   }
 
   async calculateDistance(

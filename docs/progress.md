@@ -47,7 +47,7 @@ Status definitions: **Implemented** means code exists; **verified** means a rele
 - [x] Repair Jest aliases and identified Prisma import paths; rerun existing suites.
 - [x] Repair missing repository/processor imports and queue rate-limit construction.
 - [x] Repair Bull Board authentication and verify access rules with six focused tests.
-- [ ] Reach zero compiler diagnostics without suppressing checks or weakening types.
+- [x] Reach zero compiler diagnostics without suppressing checks or weakening types (backend source typecheck and production build verified October 8, 2026; legacy test-suite errors remain separate).
 - [ ] Reconcile worker models, relations, statuses, and service contracts.
 - [ ] Verify compiled production startup; TypeScript path aliases require runtime resolution.
 - [ ] Restore environment validation and dependency-aware health/readiness.
@@ -110,7 +110,18 @@ Status definitions: **Implemented** means code exists; **verified** means a rele
 - The five pre-existing suites remain blocked before test execution. Reported blockers include JWT expiry typing, authentication/repository contracts, undeclared socket-test fixtures, and queue-test type/import errors.
 - The focused dashboard test initially exposed a local dependency-resolution issue: @bull-board/api could not resolve bullmq. Dashboard dependencies are mocked in the access-control test; real dashboard startup remains unverified and the dependency installation needs inspection.
 
-Next task: repair JWT expiry configuration and authentication/repository contracts, then rerun auth/app tests. Continue socket-controller and worker/schema repairs after that. Startup, external services, and end-to-end readiness remain pending.
+### October 8, 2026 - Compiler milestone completed
+
+- Backend source diagnostics reduced from 100 to zero. `npm run typecheck` and `npm run build` pass. Strict compiler settings and existing compilation scope are unchanged; no diagnostic suppression or additional exclusions were introduced.
+- Fixed socket-handler response returns and typed access to the socket service, transaction callback types, repository ID constraints and profile inference, JWT lifetime parsing, SMS options, BullMQ worker settings/cleanup return values, response metadata, and webhook configuration/signature guards.
+- Ride, delivery, and payment workers now use generated Prisma delegates instead of untyped model-name calls. Corrected customer/driver relations, schema lifecycle values, fare fields, wallet/transaction storage, profile IDs versus notification user IDs, and payment job dispatch.
+- Queue money remains integer kobo; Prisma monetary values use naira, matching seed data. Route distance/duration conversions now match schema units.
+- Payment scaffolding uses actual Payment, Wallet, Transaction, and DriverEarning models. External payment verification and driver payout settlement explicitly fail until their integrations are implemented; mock verification no longer invents transaction amounts. Wallet trip settlement and partial refund accounting remain pending. These changes do not complete the financial milestone.
+- Added token-lifetime and worker-contract regression suites. Together with Bull Board access tests, 27 focused tests pass. Tests cover money conversion, supported payment jobs, duplicate settlement protection, invalid statuses, missing drivers, and refusal to credit wallets from mock verification.
+- The full pre-existing test suite is still failing: queue/socket fixture compilation issues, circular Joi login-schema dependencies, and a database test failure. Full-suite run after source fixes: 1 suite passed, 5 failed; 14 tests passed, 1 failed. New focused suites were validated separately afterward.
+- Real PostgreSQL/PostGIS, Redis workers, provider integration, dashboard dependencies, and compiled production startup remain unverified.
+
+Next task: repair the existing test fixtures and circular login validation, then verify runtime startup and dependency-aware health. Worker lifecycle authorization/concurrency and external-service integration remain open acceptance work.
 
 ## Next milestone
 

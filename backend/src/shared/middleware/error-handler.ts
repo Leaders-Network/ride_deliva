@@ -57,7 +57,7 @@ export const createError = {
     new HttpError(503, message, 'SERVICE_UNAVAILABLE'),
 };
 
-const handlePrismaError = (error: Prisma.PrismaClientKnownRequestError): ApiError => {
+const handlePrismaError = (error: Prisma.PrismaClientKnownRequestError): HttpError => {
   switch (error.code) {
     case 'P2002':
       // Unique constraint failed
@@ -93,7 +93,7 @@ const handlePrismaError = (error: Prisma.PrismaClientKnownRequestError): ApiErro
   }
 };
 
-const handleValidationError = (error: any): ApiError => {
+const handleValidationError = (error: any): HttpError => {
   if (error.details) {
     // Joi validation error
     const validationDetails = error.details.map((detail: any) => ({
@@ -125,7 +125,7 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ): void => {
-  let apiError: ApiError;
+  let apiError: HttpError;
 
   // Handle different types of errors
   if (error instanceof HttpError) {

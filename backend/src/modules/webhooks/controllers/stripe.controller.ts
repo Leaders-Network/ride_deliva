@@ -12,8 +12,17 @@ export class StripeWebhookController {
    * Handle Stripe webhook events
    */
   public async handleWebhook(req: Request, res: Response): Promise<void> {
-    const sig = req.headers['stripe-signature'] as string;
+    const sig = req.headers['stripe-signature'];
     const endpointSecret = config.services.stripe.webhookSecret;
+
+    if (!endpointSecret) {
+      res.status(503).json({ error: 'Webhook verification is not configured' });
+      return;
+    }
+    if (typeof sig !== 'string') {
+      res.status(400).json({ error: 'Missing signature' });
+      return;
+    }
 
     let event: Stripe.Event;
 

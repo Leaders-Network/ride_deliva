@@ -11,6 +11,7 @@ import { TokenPayload, RegisterData, LoginCredentials } from '@/types';
 import { CACHE_KEYS, BUSINESS_CONSTANTS } from '@/shared/constants';
 import { smsService } from '@/shared/services/sms.service';
 import prisma from '@/config/database';
+import { tokenLifetimeSeconds } from '@/shared/utils/token-lifetime';
 
 export class AuthService {
   // Generate verification code
@@ -34,11 +35,11 @@ export class AuthService {
     refreshToken: string;
   } {
     const accessToken = jwt.sign(payload, config.jwt.secret, {
-      expiresIn: config.jwt.expiresIn,
+      expiresIn: tokenLifetimeSeconds(config.jwt.expiresIn),
     });
 
     const refreshToken = jwt.sign(payload, config.jwt.secret, {
-      expiresIn: config.jwt.refreshExpiresIn,
+      expiresIn: tokenLifetimeSeconds(config.jwt.refreshExpiresIn),
     });
 
     return { accessToken, refreshToken };
@@ -97,7 +98,7 @@ export class AuthService {
       firstName: sanitize.name(firstName),
       lastName: sanitize.name(lastName),
       passwordHash,
-      profileType: role,
+      profileType: role === 'DRIVER' ? 'driver' : 'customer',
       profileData,
     });
 
@@ -258,7 +259,7 @@ export class AuthService {
       userId: user?.id,
     });
 
-    return { verified: true, user };
+    return { verified: true, user: user ?? undefined };
   }
 
   // Login with phone and password or verification code

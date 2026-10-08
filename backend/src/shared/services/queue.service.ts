@@ -117,10 +117,8 @@ export class QueueService {
     }, {
       connection: this.redis,
       concurrency,
-      settings: {
-        stalledInterval: 30000,
-        maxStalledCount: 1,
-      },
+      stalledInterval: 30000,
+      maxStalledCount: 1,
     });
 
     // Set up worker events
@@ -388,7 +386,7 @@ export class QueueService {
     grace: number = 0,
     limit: number = 100,
     type: 'completed' | 'failed' | 'active' | 'waiting' | 'delayed' = 'completed'
-  ): Promise<Job[]> {
+  ): Promise<string[]> {
     const queue = this.getQueue(queueName);
     if (!queue) {
       throw new Error(`Queue ${queueName} not found`);

@@ -1,8 +1,8 @@
-import { PrismaClient } from '@/generated/prisma';
+import { PrismaClient, Prisma } from '@/generated/prisma';
 import prisma from '@/config/database';
 import { logger } from '@/config/logger';
 
-export abstract class BaseRepository<T = any> {
+export abstract class BaseRepository<T extends { id: string } = { id: string }> {
   protected prisma: PrismaClient;
   protected modelName: string;
 
@@ -58,6 +58,7 @@ export abstract class BaseRepository<T = any> {
   async findMany(options: {
     where?: any;
     include?: any;
+    select?: { [K in keyof T]?: boolean };
     orderBy?: any;
     skip?: number;
     take?: number;
@@ -151,6 +152,7 @@ export abstract class BaseRepository<T = any> {
   async paginate(options: {
     where?: any;
     include?: any;
+    select?: { [K in keyof T]?: boolean };
     orderBy?: any;
     page: number;
     limit: number;
@@ -246,6 +248,7 @@ export abstract class BaseRepository<T = any> {
   async findManyWithDeleted(options: {
     where?: any;
     include?: any;
+    select?: { [K in keyof T]?: boolean };
     orderBy?: any;
     skip?: number;
     take?: number;
@@ -265,7 +268,7 @@ export abstract class BaseRepository<T = any> {
 
   // Transaction wrapper
   async transaction<R>(
-    fn: (prisma: PrismaClient) => Promise<R>
+    fn: (prisma: Prisma.TransactionClient) => Promise<R>
   ): Promise<R> {
     try {
       return await this.prisma.$transaction(fn);

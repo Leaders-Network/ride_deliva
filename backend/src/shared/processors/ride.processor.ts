@@ -1,6 +1,8 @@
-import { Job } from 'bullmq';
+import type { ProcessorJob } from './processor-job';
 import { logger } from '../../config/logger';
 import { dbService as databaseService } from '../services/database';
+import prisma from '../../config/database';
+import { RideStatus } from '../../generated/prisma';
 import { queueService } from '../services/queue.service';
 import { QUEUE_NAMES } from '../../config/queues';
 
@@ -17,7 +19,7 @@ export interface RideJobData {
  * Ride Job Processor
  * Handles all ride-related background jobs
  */
-export async function rideProcessor(job: Job<RideJobData>): Promise<any> {
+export async function rideProcessor(job: ProcessorJob<RideJobData>): Promise<any> {
   const { type, rideId, userId, driverId } = job.data;
 
   await job.updateProgress(10);
@@ -90,7 +92,7 @@ export async function rideProcessor(job: Job<RideJobData>): Promise<any> {
 /**
  * Handle driver matching for ride requests
  */
-async function handleDriverMatching(job: Job<RideJobData>) {
+async function handleDriverMatching(job: ProcessorJob<RideJobData>) {
   const { rideId, data } = job.data;
   const { pickupLatitude, pickupLongitude, maxDistance = 5000 } = data || {};
 
@@ -98,9 +100,9 @@ async function handleDriverMatching(job: Job<RideJobData>) {
 
   try {
     // Get ride details
-    const ride = await databaseService.findFirst('Ride', {
+    const ride = await prisma.ride.findFirst({
       where: { id: rideId, status: 'REQUESTED' },
-      include: { user: true }
+      include: { customer: { include: { user: true } }, driver: { include: { user: true } }, pickupAddress: true }
     });
 
     if (!ride) {
@@ -110,35 +112,7 @@ async function handleDriverMatching(job: Job<RideJobData>) {
     await job.updateProgress(40);
 
     // Find available drivers within radius
-    const availableDrivers = await databaseService.rawQuery(`
-      SELECT 
-        u.id,
-        u.firstName,
-        u.lastName,
-        u.phone,
-        u.averageRating,
-        d.vehicleType,
-        d.currentLatitude,
-        d.currentLongitude,
-        ST_Distance(
-          ST_Point($1, $2)::geography,
-          ST_Point(d.currentLatitude, d.currentLongitude)::geography
-        ) as distance
-      FROM "User" u
-      JOIN "Driver" d ON u.id = d.userId
-      WHERE 
-        u.role = 'DRIVER' 
-        AND u.isActive = true
-        AND d.isOnline = true
-        AND d.status = 'AVAILABLE'
-        AND ST_DWithin(
-          ST_Point($1, $2)::geography,
-          ST_Point(d.currentLatitude, d.currentLongitude)::geography,
-          $3
-        )
-      ORDER BY distance ASC, u.averageRating DESC
-      LIMIT 10
-    `, [pickupLatitude, pickupLongitude, maxDistance]);
+    const availableDrivers = await databaseService.findNearbyDrivers(pickupLatitude, pickupLongitude, maxDistance);
 
     await job.updateProgress(70);
 
@@ -202,11 +176,11 @@ async function handleDriverMatching(job: Job<RideJobData>) {
       });
     }
 
-    // Update ride status to MATCHING
-    await databaseService.update('Ride', rideId, {
-      status: 'MATCHING',
+    // Keep the ride requested until a driver accepts.
+    await prisma.ride.update({ where: { id: rideId }, data: {
+      status: 'REQUESTED',
       updatedAt: new Date(),
-    });
+    } });
 
     await job.updateProgress(90);
 
@@ -235,25 +209,26 @@ async function handleDriverMatching(job: Job<RideJobData>) {
 /**
  * Handle ride status updates
  */
-async function handleStatusUpdate(job: Job<RideJobData>) {
+async function handleStatusUpdate(job: ProcessorJob<RideJobData>) {
   const { rideId, data } = job.data;
   const { status, location, driverId } = data || {};
+  if (!Object.values(RideStatus).some(value => value === status)) throw new Error('Invalid ride status');
 
   await job.updateProgress(30);
 
   try {
     // Update ride status
-    const updatedRide = await databaseService.update('Ride', rideId, {
+    const updatedRide = await prisma.ride.update({ where: { id: rideId }, data: {
       status,
       updatedAt: new Date(),
-    });
+    } });
 
     await job.updateProgress(60);
 
     // Send notifications based on status
-    const ride = await databaseService.findFirst('Ride', {
+    const ride = await prisma.ride.findFirst({
       where: { id: rideId },
-      include: { user: true, driver: { include: { user: true } } }
+      include: { customer: { include: { user: true } }, driver: { include: { user: true } }, pickupAddress: true }
     });
 
     if (ride) {
@@ -263,7 +238,7 @@ async function handleStatusUpdate(job: Job<RideJobData>) {
         'push',
         {
           type: 'push',
-          userId: ride.userId,
+          userId: ride.customer.userId,
           title: 'Ride Update',
           body: getStatusMessage(status),
           data: { rideId, status },
@@ -272,16 +247,16 @@ async function handleStatusUpdate(job: Job<RideJobData>) {
       );
 
       // Send SMS for critical updates
-      if (['DRIVER_ASSIGNED', 'ARRIVED', 'COMPLETED'].includes(status)) {
+      if (['ACCEPTED', 'DRIVER_ARRIVED', 'COMPLETED'].includes(status)) {
         await queueService.addJob(
           QUEUE_NAMES.SMS,
           'notification',
           {
             type: 'notification',
-            to: ride.user.phone,
+            to: ride.customer.user.phoneNumber,
             message: `Your ride is ${status.toLowerCase()}. Track your ride in the app.`,
             rideId,
-            userId: ride.userId,
+            userId: ride.customer.userId,
           }
         );
       }
@@ -316,7 +291,7 @@ async function handleStatusUpdate(job: Job<RideJobData>) {
 /**
  * Handle fare calculation
  */
-async function handleFareCalculation(job: Job<RideJobData>) {
+async function handleFareCalculation(job: ProcessorJob<RideJobData>) {
   const { rideId, data } = job.data;
   const { distance, duration, surgeMultiplier = 1 } = data || {};
 
@@ -338,15 +313,10 @@ async function handleFareCalculation(job: Job<RideJobData>) {
     await job.updateProgress(70);
 
     // Update ride with fare details
-    const updatedRide = await databaseService.update('Ride', rideId, {
-      baseFare,
-      distanceFare: Math.round(distanceFare),
-      timeFare: Math.round(timeFare),
+    const updatedRide = await prisma.ride.update({ where: { id: rideId }, data: {
+      estimatedFare: totalFare / 100,
       surgeMultiplier,
-      surgeAmount: Math.round(surgeAmount),
-      totalFare,
-      fareCalculatedAt: new Date(),
-    });
+    } });
 
     await job.updateProgress(90);
 
@@ -383,7 +353,7 @@ async function handleFareCalculation(job: Job<RideJobData>) {
 /**
  * Handle ride cancellation
  */
-async function handleRideCancellation(job: Job<RideJobData>) {
+async function handleRideCancellation(job: ProcessorJob<RideJobData>) {
   const { rideId, data } = job.data;
   const { reason, cancelledBy, cancellationFee = 0 } = data || {};
 
@@ -391,20 +361,18 @@ async function handleRideCancellation(job: Job<RideJobData>) {
 
   try {
     // Update ride status
-    const updatedRide = await databaseService.update('Ride', rideId, {
+    const updatedRide = await prisma.ride.update({ where: { id: rideId }, data: {
       status: 'CANCELLED',
       cancellationReason: reason,
-      cancelledBy,
-      cancellationFee,
       cancelledAt: new Date(),
-    });
+    } });
 
     await job.updateProgress(60);
 
     // Get ride details for notifications
-    const ride = await databaseService.findFirst('Ride', {
+    const ride = await prisma.ride.findFirst({
       where: { id: rideId },
-      include: { user: true, driver: { include: { user: true } } }
+      include: { customer: { include: { user: true } }, driver: { include: { user: true } }, pickupAddress: true }
     });
 
     if (ride) {
@@ -418,7 +386,7 @@ async function handleRideCancellation(job: Job<RideJobData>) {
           'push',
           {
             type: 'push',
-            userId: ride.userId,
+            userId: ride.customer.userId,
             title: 'Ride Cancelled',
             body: `Your ride has been cancelled. ${reason || ''}`,
             data: { rideId, reason },
@@ -428,14 +396,14 @@ async function handleRideCancellation(job: Job<RideJobData>) {
       );
 
       // Notify driver if assigned
-      if (ride.driverId) {
+      if (ride.driver) {
         notifications.push(
           queueService.addJob(
             QUEUE_NAMES.NOTIFICATION,
             'push',
             {
               type: 'push',
-              userId: ride.driverId,
+              userId: ride.driver.userId,
               title: 'Ride Cancelled',
               body: `The ride has been cancelled. ${reason || ''}`,
               data: { rideId, reason },
@@ -478,17 +446,17 @@ async function handleRideCancellation(job: Job<RideJobData>) {
 /**
  * Handle ride completion
  */
-async function handleRideCompletion(job: Job<RideJobData>) {
+async function handleRideCompletion(job: ProcessorJob<RideJobData>) {
   const { rideId } = job.data;
 
   await job.updateProgress(30);
 
   try {
     // Update ride status
-    const updatedRide = await databaseService.update('Ride', rideId, {
+    const updatedRide = await prisma.ride.update({ where: { id: rideId }, data: {
       status: 'COMPLETED',
       completedAt: new Date(),
-    });
+    } });
 
     await job.updateProgress(50);
 
@@ -497,38 +465,38 @@ async function handleRideCompletion(job: Job<RideJobData>) {
       QUEUE_NAMES.PAYMENT,
       'process_ride_payment',
       {
-        type: 'ride_payment',
+        type: 'process_ride_payment',
         rideId,
-        amount: updatedRide.totalFare,
+        amount: Math.round(Number(updatedRide.finalFare ?? updatedRide.estimatedFare) * 100),
       }
     );
 
     await job.updateProgress(70);
 
     // Send completion notifications
-    const ride = await databaseService.findFirst('Ride', {
+    const ride = await prisma.ride.findFirst({
       where: { id: rideId },
-      include: { user: true, driver: { include: { user: true } } }
+      include: { customer: { include: { user: true } }, driver: { include: { user: true } }, pickupAddress: true }
     });
 
-    if (ride) {
+    if (ride?.customer.user.email) {
       // Send receipt email
       await queueService.addJob(
         QUEUE_NAMES.EMAIL,
         'receipt',
         {
           type: 'receipt',
-          to: ride.user.email,
+          to: ride.customer.user.email,
           subject: 'Your Ride Receipt',
           templateId: 'ride_receipt',
           variables: {
-            customerName: `${ride.user.firstName} ${ride.user.lastName}`,
+            customerName: `${ride.customer.user.firstName} ${ride.customer.user.lastName}`,
             rideId,
-            totalFare: (ride.totalFare / 100).toFixed(2), // Convert kobo to naira
+            totalFare: (Number(ride.finalFare ?? ride.estimatedFare)).toFixed(2), // Convert kobo to naira
             date: new Date().toLocaleDateString(),
           },
           rideId,
-          userId: ride.userId,
+          userId: ride.customer.userId,
         }
       );
     }
@@ -537,14 +505,14 @@ async function handleRideCompletion(job: Job<RideJobData>) {
 
     logger.info(`Ride completed successfully`, {
       rideId,
-      totalFare: updatedRide.totalFare,
+      totalFare: Number(updatedRide.finalFare ?? updatedRide.estimatedFare),
     });
 
     return {
       success: true,
       rideId,
       completedAt: new Date().toISOString(),
-      totalFare: updatedRide.totalFare,
+      totalFare: Number(updatedRide.finalFare ?? updatedRide.estimatedFare),
     };
 
   } catch (error) {
@@ -559,26 +527,24 @@ async function handleRideCompletion(job: Job<RideJobData>) {
 /**
  * Handle driver assignment
  */
-async function handleDriverAssignment(job: Job<RideJobData>) {
+async function handleDriverAssignment(job: ProcessorJob<RideJobData>) {
   const { rideId, driverId } = job.data;
+  if (!driverId) throw new Error('Driver ID is required');
 
   await job.updateProgress(30);
 
   try {
     // Assign driver to ride
-    const updatedRide = await databaseService.update('Ride', rideId, {
+    const updatedRide = await prisma.ride.update({ where: { id: rideId }, data: {
       driverId,
-      status: 'DRIVER_ASSIGNED',
-      driverAssignedAt: new Date(),
-    });
+      status: 'ACCEPTED',
+      acceptedAt: new Date(),
+    } });
 
     await job.updateProgress(60);
 
-    // Update driver status
-    await databaseService.update('Driver', driverId, {
-      status: 'ON_RIDE',
-      currentRideId: rideId,
-    });
+    // Availability is separate from document approval status.
+    await prisma.driverProfile.update({ where: { id: driverId }, data: { isAvailable: false } });
 
     await job.updateProgress(90);
 
@@ -607,7 +573,7 @@ async function handleDriverAssignment(job: Job<RideJobData>) {
 /**
  * Handle route optimization
  */
-async function handleRouteOptimization(job: Job<RideJobData>) {
+async function handleRouteOptimization(job: ProcessorJob<RideJobData>) {
   const { rideId, data } = job.data;
   const { waypoints } = data || {};
 
@@ -627,11 +593,10 @@ async function handleRouteOptimization(job: Job<RideJobData>) {
     await job.updateProgress(80);
 
     // Update ride with optimized route
-    await databaseService.update('Ride', rideId, {
-      estimatedDistance: optimizedRoute.distance,
-      estimatedDuration: optimizedRoute.duration,
-      routePolyline: optimizedRoute.polyline,
-    });
+    await prisma.ride.update({ where: { id: rideId }, data: {
+      estimatedDistance: optimizedRoute.distance / 1000,
+      estimatedDuration: Math.ceil(optimizedRoute.duration / 60),
+    } });
 
     await job.updateProgress(90);
 

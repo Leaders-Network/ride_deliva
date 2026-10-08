@@ -3,17 +3,23 @@ import { sendSuccess } from '@/shared/utils/response';
 import { asyncHandler } from '@/shared/middleware/error-handler';
 import { AuthenticatedRequest } from '@/types';
 import { logger } from '@/config/logger';
+import type { SocketService } from '@/shared/services/socket.service';
+
+declare global {
+  var socketService: SocketService | undefined;
+}
 
 export class SocketController {
   // Get Socket.IO connection status and statistics
   getStats = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const socketService = (global as any).socketService;
+    const socketService = global.socketService;
 
     if (!socketService) {
-      return sendSuccess(res, {
+      sendSuccess(res, {
         status: 'unavailable',
         message: 'Socket.IO service not initialized',
       });
+      return;
     }
 
     const stats = socketService.getStats();
@@ -28,14 +34,16 @@ export class SocketController {
 
   // Get user connection status
   getUserConnectionStatus = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    const socketService = (global as any).socketService;
+    const socketService = global.socketService;
     
     if (!req.user) {
-      return sendSuccess(res, { connected: false }, 'User not authenticated');
+      sendSuccess(res, { connected: false }, 'User not authenticated');
+      return;
     }
 
     if (!socketService) {
-      return sendSuccess(res, { connected: false }, 'Socket service unavailable');
+      sendSuccess(res, { connected: false }, 'Socket service unavailable');
+      return;
     }
 
     const isConnected = socketService.isUserConnected(req.user.id);
@@ -49,10 +57,11 @@ export class SocketController {
 
   // Get all connected drivers (for admin)
   getConnectedDrivers = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const socketService = (global as any).socketService;
+    const socketService = global.socketService;
 
     if (!socketService) {
-      return sendSuccess(res, [], 'Socket service unavailable');
+      sendSuccess(res, [], 'Socket service unavailable');
+      return;
     }
 
     const driverLocations = socketService.getAllDriverLocations();
@@ -73,17 +82,19 @@ export class SocketController {
 
   // Send test notification (for development/testing)
   sendTestNotification = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    const socketService = (global as any).socketService;
+    const socketService = global.socketService;
     const { userId, title, message, type = 'TEST' } = req.body;
 
     if (!socketService) {
-      return sendSuccess(res, { sent: false }, 'Socket service unavailable');
+      sendSuccess(res, { sent: false }, 'Socket service unavailable');
+      return;
     }
 
     const targetUserId = userId || req.user?.id;
 
     if (!targetUserId) {
-      return sendSuccess(res, { sent: false }, 'Target user ID required');
+      sendSuccess(res, { sent: false }, 'Target user ID required');
+      return;
     }
 
     const sent = await socketService.sendNotification({
@@ -102,11 +113,12 @@ export class SocketController {
 
   // Broadcast message to role (admin only)
   broadcastToRole = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const socketService = (global as any).socketService;
+    const socketService = global.socketService;
     const { role, event, data } = req.body;
 
     if (!socketService) {
-      return sendSuccess(res, { sent: false }, 'Socket service unavailable');
+      sendSuccess(res, { sent: false }, 'Socket service unavailable');
+      return;
     }
 
     socketService.broadcastToRole(role, event, data);
@@ -128,11 +140,12 @@ export class SocketController {
 
   // Send message to ride participants
   sendToRide = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const socketService = (global as any).socketService;
+    const socketService = global.socketService;
     const { rideId, event, data } = req.body;
 
     if (!socketService) {
-      return sendSuccess(res, { sent: false }, 'Socket service unavailable');
+      sendSuccess(res, { sent: false }, 'Socket service unavailable');
+      return;
     }
 
     socketService.sendToRide(rideId, event, data);
@@ -147,17 +160,19 @@ export class SocketController {
 
   // Get driver location (real-time)
   getDriverLocation = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const socketService = (global as any).socketService;
+    const socketService = global.socketService;
     const { driverId } = req.params;
 
     if (!socketService) {
-      return sendSuccess(res, null, 'Socket service unavailable');
+      sendSuccess(res, null, 'Socket service unavailable');
+      return;
     }
 
     const location = socketService.getDriverLocation(driverId);
 
     if (!location) {
-      return sendSuccess(res, null, 'Driver location not available');
+      sendSuccess(res, null, 'Driver location not available');
+      return;
     }
 
     sendSuccess(res, {
@@ -169,10 +184,10 @@ export class SocketController {
 
   // Health check for Socket.IO service
   healthCheck = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const socketService = (global as any).socketService;
+    const socketService = global.socketService;
 
     if (!socketService) {
-      return res.status(503).json({
+      res.status(503).json({
         success: false,
         error: {
           code: 'SERVICE_UNAVAILABLE',
@@ -180,6 +195,7 @@ export class SocketController {
           statusCode: 503,
         },
       });
+      return;
     }
 
     const stats = socketService.getStats();

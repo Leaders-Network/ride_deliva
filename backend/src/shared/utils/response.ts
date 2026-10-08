@@ -5,6 +5,7 @@ export interface ApiResponse<T = any> {
   message: string;
   data?: T;
   meta?: {
+    errors?: unknown;
     page?: number;
     limit?: number;
     total?: number;
