@@ -28,7 +28,6 @@
       "@/modules/*": ["./modules/*"],
       "@/shared/*": ["./shared/*"],
       "@/types/*": ["./types/*"],
-      "@/generated/*": ["./generated/*"],
       "@/generated/*": ["./generated/*"]
     },
     "types": ["node", "jest"],

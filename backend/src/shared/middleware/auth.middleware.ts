@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { User } from '../generated/prisma';
+import { User } from '@/generated/prisma';
 import { authService } from '@/shared/services/auth.service';
 import { createError } from '@/shared/middleware/error-handler';
 import { logger } from '@/config/logger';

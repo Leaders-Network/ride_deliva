@@ -5,7 +5,7 @@ import { Queue } from 'bullmq';
 import { Request, Response, NextFunction } from 'express';
 import { queueService, QUEUE_NAMES } from './queues';
 import { logger } from './logger';
-import { authenticate as verifyToken } from '../shared/middleware/auth.middleware';
+import { authService } from '../shared/services/auth.service';
 
 // Create the Express adapter for Bull Board
 const serverAdapter = new ExpressAdapter();
@@ -88,9 +88,9 @@ export const bullBoardAuth = async (req: Request, res: Response, next: NextFunct
     }
 
     // Verify token and check if user is admin
-    const decoded = await verifyToken(token);
+    const user = await authService.getUserFromToken(token);
     
-    if (!decoded || decoded.role !== 'ADMIN') {
+    if (!user || !user.isActive || !authService.hasRole(user, ['ADMIN', 'SUPER_ADMIN'])) {
       return res.status(403).json({
         success: false,
         message: 'Admin access required for queue dashboard',
@@ -98,16 +98,16 @@ export const bullBoardAuth = async (req: Request, res: Response, next: NextFunct
     }
 
     // Add user info to request for logging
-    req.user = decoded;
+    req.user = user;
     
     logger.info('Admin user accessing Bull Board dashboard', {
-      userId: decoded.id,
-      email: decoded.email,
+      userId: user.id,
+      email: user.email,
       ip: req.ip,
       userAgent: req.get('User-Agent'),
     });
 
-    next();
+    return next();
   } catch (error) {
     logger.warn('Unauthorized access attempt to Bull Board dashboard', {
       ip: req.ip,

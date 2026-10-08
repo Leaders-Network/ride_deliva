@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { QueueController } from './controllers/queue.controller';
 import { authenticate as requireAuth, requireAdmin } from '../../shared/middleware/auth.middleware';
-import { rateLimiter } from '../../shared/middleware/rate-limiter';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 const queueController = new QueueController();
@@ -16,7 +16,7 @@ router.use(requireAuth);
 router.use(requireAdmin);
 
 // Apply rate limiting to queue management operations
-router.use(rateLimiter({
+router.use(rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 100, // 100 requests per minute for admin operations
   message: 'Too many queue management requests, please try again later',
