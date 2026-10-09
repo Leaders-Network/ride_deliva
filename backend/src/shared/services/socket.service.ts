@@ -543,6 +543,10 @@ export class SocketService {
       }
     }
   }
+
+  public disconnectAll(): void {
+    this.io.disconnectSockets(true);
+  }
 }
 
 export let socketService: SocketService;

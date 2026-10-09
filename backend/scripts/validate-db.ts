@@ -201,13 +201,14 @@ class DatabaseValidator {
   async validateConstraints(): Promise<ValidationResult> {
     const name = 'Database Constraints';
     try {
-      // Test unique constraints
-      const constraints = await prisma.$queryRaw<Array<{ constraint_name: string; table_name: string }>>`
-        SELECT constraint_name, table_name
-        FROM information_schema.table_constraints
-        WHERE constraint_schema = 'public'
-        AND constraint_type = 'UNIQUE'
-        ORDER BY table_name, constraint_name;
+      // Prisma represents most uniqueness guarantees as unique indexes rather
+      // than entries in information_schema.table_constraints.
+      const constraints = await prisma.$queryRaw<Array<{ index_name: string; table_name: string }>>`
+        SELECT indexname AS index_name, tablename AS table_name
+        FROM pg_indexes
+        WHERE schemaname = 'public'
+          AND indexdef ILIKE 'CREATE UNIQUE INDEX%'
+        ORDER BY tablename, indexname;
       `;
 
       const constraintCount = constraints.length;

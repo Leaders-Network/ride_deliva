@@ -127,6 +127,8 @@ export async function initializeQueues(): Promise<void> {
       queueService.createQueue(config);
     }
 
+    await queueService.waitUntilReady();
+
     logger.info(`Successfully initialized ${queueConfigs.length} job queues`);
   } catch (error) {
     logger.error('Failed to initialize queues', { error });

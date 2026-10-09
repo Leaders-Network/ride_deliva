@@ -1,6 +1,6 @@
 ﻿# Ride Deliva - Development Progress
 
-Last updated: October 8, 2026
+Last updated: October 9, 2026
 
 ## Current position
 
@@ -49,10 +49,10 @@ Status definitions: **Implemented** means code exists; **verified** means a rele
 - [x] Repair Bull Board authentication and verify access rules with six focused tests.
 - [x] Reach zero compiler diagnostics without suppressing checks or weakening types (backend source typecheck and production build verified October 8, 2026; legacy test-suite errors remain separate).
 - [x] Reconcile worker models, relations, statuses, and service contracts.
-- [ ] Verify compiled production startup; TypeScript path aliases require runtime resolution.
-- [ ] Restore environment validation and dependency-aware health/readiness.
-- [ ] Restore PostgreSQL/Redis checks, queue initialization, Bull Board, and clean shutdown.
-- [ ] Verify Docker extensions, migrations, seed data, spatial queries, and job processing.
+- [x] Verify compiled production startup; TypeScript path aliases resolve through the production preload hook.
+- [x] Restore environment validation and dependency-aware health/readiness.
+- [x] Restore PostgreSQL/Redis checks, queue initialization, Bull Board, and clean shutdown.
+- [x] Verify Docker extensions, migrations, seed data, spatial queries, and job processing.
 
 ### 2. Align the API contract and database
 
@@ -121,7 +121,17 @@ Status definitions: **Implemented** means code exists; **verified** means a rele
 - The full pre-existing test suite is still failing: queue/socket fixture compilation issues, circular Joi login-schema dependencies, and a database test failure. Full-suite run after source fixes: 1 suite passed, 5 failed; 14 tests passed, 1 failed. New focused suites were validated separately afterward.
 - Real PostgreSQL/PostGIS, Redis workers, provider integration, dashboard dependencies, and compiled production startup remain unverified.
 
-Next task: repair the existing test fixtures and circular login validation, then verify runtime startup and dependency-aware health. Worker lifecycle authorization/concurrency and external-service integration remain open acceptance work.
+Next task: repair the existing test fixtures and response/auth mock expectations. Worker lifecycle authorization/concurrency and external-service integration remain open acceptance work.
+
+### October 9, 2026 - Runtime foundation verified
+
+- Production compilation and the `@/` runtime alias preload passed. A compiled production server started against local PostgreSQL/PostGIS and Redis, returned healthy/ready dependency checks, exposed six initialized queues, and served authenticated Bull Board.
+- Environment validation now rejects malformed PostgreSQL/Redis URLs, invalid ports, short JWT secrets, and unsafe production secrets. Production also requires a sufficiently long encryption key.
+- Startup checks Prisma plus application, pub/sub, and BullMQ Redis connections, then waits for every queue, worker, and queue-event connection before opening the HTTP listener.
+- Clean shutdown now closes HTTP and BullMQ resources before disconnecting Prisma and Redis. A programmatic start/stop completed without worker connection errors.
+- Docker Compose validated and both containers reached healthy. The initial migration deployed, seed data loaded, all six required extensions were present, custom functions and unique indexes validated, a PostGIS distance/nearby-driver query succeeded, and a real notification job completed through BullMQ.
+- Corrected `db:validate` to recognize Prisma's unique indexes instead of checking only SQL `UNIQUE` constraints. All six database validation groups now pass.
+- The full legacy Jest run is not yet green: 3 suites pass and 5 fail (53 passing, 17 failing tests), primarily from stale auth response/mocking expectations plus socket and queue fixture TypeScript errors. Focused runtime health coverage was added separately.
 
 ## Next milestone
 

@@ -18,5 +18,6 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^bullmq$': '<rootDir>/node_modules/bullmq',
   },
 };

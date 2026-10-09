@@ -256,13 +256,12 @@ export class DatabaseService {
     longitude: number
   ): Promise<void> {
     const sql = `
-      INSERT INTO driver_locations (id, driver_id, latitude, longitude, last_location, updated_at)
-      VALUES (gen_random_uuid(), $1, $2, $3, ST_SetSRID(ST_MakePoint($3, $2), 4326), NOW())
+      INSERT INTO driver_locations (id, driver_id, latitude, longitude, updated_at)
+      VALUES (gen_random_uuid(), $1, $2, $3, NOW())
       ON CONFLICT (driver_id)
       DO UPDATE SET
         latitude = $2,
         longitude = $3,
-        last_location = ST_SetSRID(ST_MakePoint($3, $2), 4326),
         updated_at = NOW();
     `;
 

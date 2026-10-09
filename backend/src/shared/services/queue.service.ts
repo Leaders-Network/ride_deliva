@@ -1,6 +1,6 @@
 import { Queue, Worker, Job, QueueEvents, JobsOptions } from 'bullmq';
 import { Redis } from 'ioredis';
-import { redis as redisClient } from '../../config/redis';
+import { redisQueue } from '../../config/redis';
 import { logger } from '../../config/logger';
 
 export interface JobData {
@@ -28,7 +28,7 @@ export class QueueService {
   private redis: Redis;
 
   constructor() {
-    this.redis = redisClient;
+    this.redis = redisQueue;
   }
 
   /**
@@ -297,6 +297,17 @@ export class QueueService {
    */
   getWorker(queueName: string): Worker | undefined {
     return this.workers.get(queueName);
+  }
+
+  /**
+   * Wait until every BullMQ connection is usable before advertising readiness.
+   */
+  async waitUntilReady(): Promise<void> {
+    await Promise.all([
+      ...Array.from(this.queues.values(), queue => queue.waitUntilReady()),
+      ...Array.from(this.workers.values(), worker => worker.waitUntilReady()),
+      ...Array.from(this.queueEvents.values(), events => events.waitUntilReady()),
+    ]);
   }
 
   /**

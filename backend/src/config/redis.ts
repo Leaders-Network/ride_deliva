@@ -15,24 +15,28 @@ export const redisConfig = {
   commandTimeout: 5000,
 };
 
+const redisUrl = process.env.REDIS_URL;
+const createRedisClient = (options: Record<string, unknown> = {}): Redis => (
+  redisUrl
+    ? new Redis(redisUrl, { ...redisConfig, ...options })
+    : new Redis({ ...redisConfig, ...options })
+);
+
 // Main Redis client for general operations
-export const redis = new Redis({
-  ...redisConfig,
+export const redis = createRedisClient({
   keyPrefix: 'ride_deliva:',
 });
 
 // Separate Redis client for pub/sub operations
-export const redisPubSub = new Redis({
-  ...redisConfig,
+export const redisPubSub = createRedisClient({
   keyPrefix: 'ride_deliva:pubsub:',
 });
 
 // Separate Redis client for BullMQ job queue
-export const redisQueue = new Redis({
-  ...redisConfig,
-  keyPrefix: 'ride_deliva:queue:',
-  db: 1, // Use different database for queue operations
-});
+const { commandTimeout: _commandTimeout, maxRetriesPerRequest: _maxRetriesPerRequest, ...queueRedisConfig } = redisConfig;
+export const redisQueue = redisUrl
+  ? new Redis(redisUrl, { ...queueRedisConfig, db: 1, maxRetriesPerRequest: null })
+  : new Redis({ ...queueRedisConfig, db: 1, maxRetriesPerRequest: null });
 
 // Redis connection event handlers
 redis.on('connect', () => {
@@ -158,8 +162,8 @@ export const redisUtils = {
 // Redis connection test function
 export const testRedisConnection = async (): Promise<boolean> => {
   try {
-    await redis.ping();
-    logger.info('Redis connection established successfully');
+    await Promise.all([redis.ping(), redisPubSub.ping(), redisQueue.ping()]);
+    logger.info('Redis application, pub/sub, and queue connections established successfully');
     return true;
   } catch (error) {
     logger.error('Failed to connect to Redis:', error);
@@ -175,7 +179,7 @@ export const checkRedisHealth = async (): Promise<{
 }> => {
   try {
     const start = Date.now();
-    await redis.ping();
+    await Promise.all([redis.ping(), redisPubSub.ping(), redisQueue.ping()]);
     const latency = Date.now() - start;
     
     return {
@@ -194,9 +198,9 @@ export const checkRedisHealth = async (): Promise<{
 export const closeRedisConnections = async (): Promise<void> => {
   try {
     await Promise.all([
-      redis.disconnect(),
-      redisPubSub.disconnect(),
-      redisQueue.disconnect(),
+      Promise.resolve(redis.disconnect()),
+      Promise.resolve(redisPubSub.disconnect()),
+      Promise.resolve(redisQueue.disconnect()),
     ]);
     logger.info('All Redis connections closed');
   } catch (error) {

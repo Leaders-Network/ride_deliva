@@ -18,9 +18,6 @@ CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
 -- Full text search extension for content search
 CREATE EXTENSION IF NOT EXISTS unaccent;
 
--- Time zone handling extension
-CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
-
 -- Verify extensions are installed
 SELECT name, installed_version 
 FROM pg_available_extensions 

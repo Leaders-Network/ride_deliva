@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import path from 'path';
+import Joi from 'joi';
 
 // Load environment variables
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
@@ -144,16 +145,40 @@ export const config = {
 
 // Validate required environment variables
 export const validateConfig = (): void => {
-  const requiredVars = [
-    'DATABASE_URL',
-    'JWT_SECRET',
-    'REDIS_URL',
-  ];
+  const schema = Joi.object({
+    NODE_ENV: Joi.string().valid('development', 'test', 'production').default('development'),
+    PORT: Joi.number().integer().min(1).max(65535).default(3000),
+    DATABASE_URL: Joi.string().uri({ scheme: ['postgresql', 'postgres'] }).required(),
+    REDIS_URL: Joi.string().uri({ scheme: ['redis', 'rediss'] }).required(),
+    JWT_SECRET: Joi.string().min(32).required(),
+    JWT_EXPIRES_IN: Joi.string().min(1).default('7d'),
+    JWT_REFRESH_EXPIRES_IN: Joi.string().min(1).default('30d'),
+    BCRYPT_SALT_ROUNDS: Joi.number().integer().min(4).max(31).default(12),
+    RATE_LIMIT_WINDOW_MS: Joi.number().integer().positive().default(900000),
+    RATE_LIMIT_MAX_REQUESTS: Joi.number().integer().positive().default(100),
+  }).unknown(true);
 
-  const missingVars = requiredVars.filter(varName => !process.env[varName]);
+  const { error } = schema.validate(process.env, {
+    abortEarly: false,
+    allowUnknown: true,
+  });
 
-  if (missingVars.length > 0) {
-    throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+  if (error) {
+    const details = error.details.map(detail => detail.message).join('; ');
+    throw new Error(`Invalid environment configuration: ${details}`);
+  }
+
+  if (config.app.env === 'production') {
+    const unsafeSecrets = [
+      'dev-jwt-secret-change-this-in-production',
+      'ride-deliva-super-secret-jwt-key-change-this-in-production',
+    ];
+    if (unsafeSecrets.includes(config.jwt.secret)) {
+      throw new Error('Invalid environment configuration: JWT_SECRET must be replaced in production');
+    }
+    if (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY.length < 32) {
+      throw new Error('Invalid environment configuration: ENCRYPTION_KEY must contain at least 32 characters in production');
+    }
   }
 
   // Warn about disabled services

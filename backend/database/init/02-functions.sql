@@ -44,18 +44,18 @@ CREATE OR REPLACE FUNCTION find_nearby_drivers(
 BEGIN
     RETURN QUERY
     SELECT 
-        d.id,
+        d.driver_id,
         ST_Distance(
-            ST_GeogFromText('POINT(' || pickup_lon || ' ' || pickup_lat || ')'),
-            ST_GeogFromWKB(d.last_location)
+            ST_SetSRID(ST_MakePoint(pickup_lon, pickup_lat), 4326)::geography,
+            ST_SetSRID(ST_MakePoint(d.longitude::float8, d.latitude::float8), 4326)::geography
         ) as distance,
-        d.last_location
+        ST_SetSRID(ST_MakePoint(d.longitude::float8, d.latitude::float8), 4326)
     FROM driver_locations d
     WHERE d.is_online = true
     AND d.is_available = true
     AND ST_DWithin(
-        ST_GeogFromText('POINT(' || pickup_lon || ' ' || pickup_lat || ')'),
-        ST_GeogFromWKB(d.last_location),
+        ST_SetSRID(ST_MakePoint(pickup_lon, pickup_lat), 4326)::geography,
+        ST_SetSRID(ST_MakePoint(d.longitude::float8, d.latitude::float8), 4326)::geography,
         radius_meters
     )
     ORDER BY distance ASC;
@@ -71,7 +71,8 @@ CREATE OR REPLACE FUNCTION update_driver_location(
 BEGIN
     UPDATE driver_locations 
     SET 
-        last_location = ST_SetSRID(ST_MakePoint(new_lon, new_lat), 4326),
+        latitude = new_lat,
+        longitude = new_lon,
         updated_at = NOW()
     WHERE driver_id = driver_uuid;
     

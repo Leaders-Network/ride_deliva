@@ -1,5 +1,6 @@
-// import { checkDatabaseHealth } from '@/config/database';
-// import { checkRedisHealth } from '@/config/redis';
+import { checkDatabaseHealth } from '@/config/database';
+import { checkRedisHealth } from '@/config/redis';
+import { config } from '@/config';
 import { logger } from '@/config/logger';
 
 export interface HealthCheckResult {
@@ -37,17 +38,19 @@ export class HealthService {
   }
 
   async checkHealth(): Promise<HealthCheckResult> {
-    logger.debug('Performing basic health check (database/redis checks disabled)');
+    logger.debug('Performing dependency-aware health check');
 
-    // Skip database and Redis health checks for now
-    const dbHealth = { status: 'unhealthy' as const, error: 'Database checks disabled for testing' };
-    const redisHealth = { status: 'unhealthy' as const, error: 'Redis checks disabled for testing' };
+    const [dbHealth, redisHealth] = await Promise.all([
+      checkDatabaseHealth(),
+      checkRedisHealth(),
+    ]);
 
     const memoryUsage = process.memoryUsage();
     const uptime = Date.now() - this.startTime;
 
-    // Application is healthy even if external services aren't available
-    const overallStatus = 'healthy';
+    const overallStatus = dbHealth.status === 'healthy' && redisHealth.status === 'healthy'
+      ? 'healthy'
+      : 'unhealthy';
 
     const result: HealthCheckResult = {
       status: overallStatus,
@@ -65,7 +68,7 @@ export class HealthService {
           },
         },
       },
-      version: '1.0.0',
+      version: config.app.version,
     };
 
     logger.debug('Health check completed', { status: overallStatus });
@@ -75,8 +78,11 @@ export class HealthService {
 
   async checkReadiness(): Promise<boolean> {
     try {
-      // For basic testing, always return ready
-      return true;
+      const [dbHealth, redisHealth] = await Promise.all([
+        checkDatabaseHealth(),
+        checkRedisHealth(),
+      ]);
+      return dbHealth.status === 'healthy' && redisHealth.status === 'healthy';
     } catch (error) {
       logger.error('Readiness check failed:', error);
       return false;

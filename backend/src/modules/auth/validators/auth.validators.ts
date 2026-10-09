@@ -16,16 +16,8 @@ export const registerSchema = Joi.object({
 // Login validation schema
 export const loginSchema = Joi.object({
   phoneNumber: commonPatterns.phoneNumber.required(),
-  password: Joi.string().min(1).when('verificationCode', {
-    is: Joi.exist(),
-    then: Joi.optional(),
-    otherwise: Joi.required(),
-  }),
-  verificationCode: Joi.string().length(6).pattern(/^\d+$/).when('password', {
-    is: Joi.exist(),
-    then: Joi.optional(),
-    otherwise: Joi.required(),
-  }),
+  password: Joi.string().min(1),
+  verificationCode: Joi.string().length(6).pattern(/^\d+$/),
 }).xor('password', 'verificationCode').messages({
   'object.xor': 'Either password or verificationCode must be provided, but not both',
 });
