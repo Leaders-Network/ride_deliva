@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
 import 'widgets/driver_status_card.dart';
 import 'widgets/earnings_summary_card.dart';
 import 'widgets/today_stats_card.dart';
-import 'widgets/active_trips_section.dart';
 import 'widgets/quick_actions_grid.dart';
 import 'widgets/driver_bottom_navigation.dart';
+import 'widgets/active_bonus_card.dart';
+import 'widgets/recent_trips_section.dart';
+import '../trips/trips_screen.dart';
+import '../wallet/wallet_screen.dart';
+import '../activity/activity_screen.dart';
+import '../profile/profile_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -16,266 +20,176 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> 
+class _DashboardScreenState extends State<DashboardScreen>
     with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
-  String _driverStatus = AppConstants.statusOffline;
-  bool _isOnline = false;
+  bool _isOnline = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       body: SafeArea(
-        child: Column(
-          children: [
-            // App Bar
-            _buildAppBar()
-                .animate()
-                .fadeIn(duration: 600.ms)
-                .slideY(begin: -0.3, end: 0),
-
-            // Main Content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16),
-
-                    // Driver Status Card
-                    DriverStatusCard(
-                      status: _driverStatus,
-                      isOnline: _isOnline,
-                      onStatusToggle: _toggleDriverStatus,
-                    )
-                        .animate()
-                        .fadeIn(delay: 200.ms, duration: 600.ms)
-                        .slideY(begin: 0.3, end: 0),
-
-                    const SizedBox(height: 16),
-
-                    // Earnings Summary
-                    const EarningsSummaryCard()
-                        .animate()
-                        .fadeIn(delay: 300.ms, duration: 600.ms)
-                        .slideY(begin: 0.3, end: 0),
-
-                    const SizedBox(height: 16),
-
-                    // Today's Stats
-                    const TodayStatsCard()
-                        .animate()
-                        .fadeIn(delay: 400.ms, duration: 600.ms)
-                        .slideY(begin: 0.3, end: 0),
-
-                    const SizedBox(height: 24),
-
-                    // Quick Actions
-                    const QuickActionsGrid()
-                        .animate()
-                        .fadeIn(delay: 500.ms, duration: 600.ms)
-                        .slideY(begin: 0.3, end: 0),
-
-                    const SizedBox(height: 24),
-
-                    // Active Trips Section
-                    const ActiveTripsSection()
-                        .animate()
-                        .fadeIn(delay: 600.ms, duration: 600.ms)
-                        .slideY(begin: 0.3, end: 0),
-
-                    const SizedBox(height: 100), // Bottom navigation space
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+        child: _currentIndex == 1
+            ? const TripsScreen()
+            : _currentIndex == 2
+                ? const WalletScreen()
+                : _currentIndex == 3
+                    ? const ActivityScreen()
+                    : _currentIndex == 4
+                        ? const ProfileScreen()
+                        : Column(
+                            children: [
+                              _buildHeader()
+                                  .animate()
+                                  .fadeIn(duration: 400.ms)
+                                  .slideY(begin: -0.15, end: 0),
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const EarningsSummaryCard()
+                                          .animate()
+                                          .fadeIn(
+                                              delay: 100.ms, duration: 400.ms)
+                                          .slideY(begin: 0.12, end: 0),
+                                      const SizedBox(height: 12),
+                                      const TodayStatsCard(),
+                                      const SizedBox(height: 16),
+                                      const QuickActionsGrid().animate().fadeIn(
+                                          delay: 180.ms, duration: 400.ms),
+                                      const SizedBox(height: 16),
+                                      DriverStatusCard(
+                                        isOnline: _isOnline,
+                                        onStatusToggle: _toggleDriverStatus,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      const ActiveBonusCard(),
+                                      const SizedBox(height: 20),
+                                      RecentTripsSection(
+                                        onSeeAll: () =>
+                                            setState(() => _currentIndex = 1),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
       ),
       bottomNavigationBar: DriverBottomNavigation(
         currentIndex: _currentIndex,
         onTap: (index) {
+          if (index > 4) return;
           setState(() {
             _currentIndex = index;
           });
         },
-      )
-          .animate()
-          .fadeIn(delay: 700.ms, duration: 600.ms)
-          .slideY(begin: 1, end: 0),
+      ).animate().fadeIn(delay: 250.ms, duration: 400.ms),
     );
   }
 
-  Widget _buildAppBar() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundCard,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
+  Widget _buildHeader() {
+    final statusColor =
+        _isOnline ? AppColors.statusOnline : AppColors.statusOffline;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 16, 8),
+      child: Column(
         children: [
-          // Profile Avatar
-          Container(
-            width: 45,
-            height: 45,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primaryGreen,
-                  AppColors.primaryGreen.withValues(alpha: 0.7),
-                ],
-              ),
-            ),
-            child: const Icon(
-              Icons.person,
-              color: Colors.white,
-              size: 24,
-            ),
-          ),
-
-          const SizedBox(width: 12),
-
-          // Greeting and Driver Info
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Good Morning,',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      '👋',
-                      style: TextStyle(fontSize: 14),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'Ahmed Ibrahim',
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Dashboard',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
                 ),
-                SizedBox(height: 2),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.star,
-                      size: 14,
-                      color: AppColors.warning,
-                    ),
-                    SizedBox(width: 4),
-                    Text(
-                      '4.9 • 1,247 trips',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Status and Notification Icons
-          Row(
-            children: [
-              // Online status indicator
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _isOnline 
-                      ? AppColors.statusOnline.withValues(alpha: 0.1)
-                      : AppColors.statusOffline.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _isOnline 
-                        ? AppColors.statusOnline
-                        : AppColors.statusOffline,
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: _isOnline 
-                            ? AppColors.statusOnline
-                            : AppColors.statusOffline,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      _isOnline ? 'Online' : 'Offline',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: _isOnline 
-                            ? AppColors.statusOnline
-                            : AppColors.statusOffline,
-                      ),
-                    ),
-                  ],
+              ),
+              IconButton(
+                tooltip: 'Notifications',
+                onPressed: () {},
+                icon: const Icon(Icons.notifications_none_rounded),
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.backgroundCard,
+                  foregroundColor: AppColors.textPrimary,
                 ),
               ),
-
-              const SizedBox(width: 12),
-
-              // Notification Icon
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: AppColors.backgroundSecondary,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: Stack(
+                child: const Icon(
+                  Icons.person_outline_rounded,
+                  color: AppColors.textSecondary,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Center(
-                      child: Icon(
-                        Icons.notifications_outlined,
-                        color: AppColors.textPrimary,
-                        size: 20,
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppColors.error,
-                          shape: BoxShape.circle,
+                    Row(
+                      children: [
+                        const Flexible(
+                          child: Text(
+                            'Good Afternoon, David',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
                         ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            _isOnline ? 'Online' : 'Offline',
+                            style: TextStyle(
+                              color: statusColor,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Stay active, keep your acceptance high, and maximize today\'s earnings.',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.35,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -291,22 +205,18 @@ class _DashboardScreenState extends State<DashboardScreen>
   void _toggleDriverStatus() {
     setState(() {
       _isOnline = !_isOnline;
-      _driverStatus = _isOnline 
-          ? AppConstants.statusOnline 
-          : AppConstants.statusOffline;
     });
 
     // Show status change feedback
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          _isOnline 
+          _isOnline
               ? 'You are now online and available for rides'
               : 'You are now offline',
         ),
-        backgroundColor: _isOnline 
-            ? AppColors.statusOnline 
-            : AppColors.statusOffline,
+        backgroundColor:
+            _isOnline ? AppColors.statusOnline : AppColors.statusOffline,
         duration: const Duration(seconds: 2),
       ),
     );

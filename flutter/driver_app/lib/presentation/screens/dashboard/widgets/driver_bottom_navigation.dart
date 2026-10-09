@@ -25,9 +25,14 @@ class DriverBottomNavigation extends StatelessWidget {
         label: 'Trips',
       ),
       const BottomNavItem(
-        icon: Icons.analytics_outlined,
-        activeIcon: Icons.analytics,
-        label: 'Earnings',
+        icon: Icons.account_balance_wallet_outlined,
+        activeIcon: Icons.account_balance_wallet,
+        label: 'Wallet',
+      ),
+      const BottomNavItem(
+        icon: Icons.notifications_none_outlined,
+        activeIcon: Icons.notifications,
+        label: 'Activity',
       ),
       const BottomNavItem(
         icon: Icons.person_outline,
@@ -37,7 +42,7 @@ class DriverBottomNavigation extends StatelessWidget {
     ];
 
     return Container(
-      height: 80,
+      height: 72,
       decoration: BoxDecoration(
         color: AppColors.backgroundCard,
         borderRadius: const BorderRadius.only(
@@ -55,52 +60,42 @@ class DriverBottomNavigation extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: items.asMap().entries.map((entry) {
               final index = entry.key;
               final item = entry.value;
               final isSelected = currentIndex == index;
 
-              return GestureDetector(
-                onTap: () => onTap(index),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected 
-                        ? AppColors.primaryGreen.withValues(alpha: 0.1)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => onTap(index),
+                  behavior: HitTestBehavior.opaque,
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
+                        duration: const Duration(milliseconds: 180),
                         child: Icon(
                           isSelected ? item.activeIcon : item.icon,
                           key: ValueKey(isSelected),
-                          color: isSelected 
-                              ? AppColors.primaryGreen 
+                          color: isSelected
+                              ? AppColors.primaryGreen
                               : AppColors.textTertiary,
-                          size: 24,
+                          size: 21,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         item.label,
+                        maxLines: 1,
                         style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: isSelected 
-                              ? FontWeight.w600 
-                              : FontWeight.w400,
-                          color: isSelected 
-                              ? AppColors.primaryGreen 
+                          fontSize: 10,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.w400,
+                          color: isSelected
+                              ? AppColors.primaryGreen
                               : AppColors.textTertiary,
                         ),
                       ),

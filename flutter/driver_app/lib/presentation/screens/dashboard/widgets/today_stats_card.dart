@@ -9,15 +9,21 @@ class TodayStatsCard extends StatelessWidget {
     final stats = [
       const StatItem(
         icon: Icons.directions_car,
-        label: 'Trips',
+        label: 'Trips Completed',
         value: '12',
         color: AppColors.primaryBlue,
       ),
       const StatItem(
         icon: Icons.schedule,
         label: 'Online Time',
-        value: '6h 30m',
+        value: '6h 24m',
         color: AppColors.warning,
+      ),
+      const StatItem(
+        icon: Icons.trending_up,
+        label: 'Acceptance Rate',
+        value: '96%',
+        color: AppColors.primaryGreen,
       ),
       const StatItem(
         icon: Icons.star,
@@ -27,75 +33,74 @@ class TodayStatsCard extends StatelessWidget {
       ),
     ];
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 2.35,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Today\'s Performance',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: stats.map((stat) => _StatColumn(stat: stat)).toList(),
-          ),
-        ],
-      ),
+      itemCount: stats.length,
+      itemBuilder: (context, index) => _StatTile(stat: stats[index]),
     );
   }
 }
 
-class _StatColumn extends StatelessWidget {
+class _StatTile extends StatelessWidget {
   final StatItem stat;
 
-  const _StatColumn({required this.stat});
+  const _StatTile({required this.stat});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: stat.color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: stat.color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(stat.icon, color: stat.color, size: 18),
           ),
-          child: Icon(
-            stat.icon,
-            color: stat.color,
-            size: 20,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  stat.value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  stat.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          stat.value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          stat.label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
