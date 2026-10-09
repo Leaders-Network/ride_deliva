@@ -482,10 +482,9 @@ async function handleDeliveryCompletion(job: ProcessorJob<DeliveryJobData>) {
         QUEUE_NAMES.PAYMENT,
         'process_delivery_payment',
         {
-          type: 'process_ride_payment',
+          type: 'process_delivery_payment',
           deliveryId,
           amount: Math.round(Number(delivery.finalFare ?? delivery.estimatedFare) * 100),
-          courierId: delivery.driverId,
         }
       );
 

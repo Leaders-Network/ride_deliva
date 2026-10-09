@@ -19,7 +19,7 @@ Status definitions: **Implemented** means code exists; **verified** means a rele
 - Application startup bypasses environment validation, dependency checks, queue initialization, and Bull Board mounting.
 - Health reports overall healthy and readiness returns true without checking PostgreSQL or Redis.
 - Payment and push notification processors use mock providers. In-app notification persistence is simulated.
-- Ride/delivery workers reference methods, tables, relations, and statuses that disagree with the database service or Prisma schema.
+- Ride/delivery/payment worker model, relation, status, money-unit, and job-discriminator contracts are covered by focused schema-contract tests; live PostgreSQL/Redis processing remains unverified.
 
 ## Backend feature inventory
 
@@ -48,7 +48,7 @@ Status definitions: **Implemented** means code exists; **verified** means a rele
 - [x] Repair missing repository/processor imports and queue rate-limit construction.
 - [x] Repair Bull Board authentication and verify access rules with six focused tests.
 - [x] Reach zero compiler diagnostics without suppressing checks or weakening types (backend source typecheck and production build verified October 8, 2026; legacy test-suite errors remain separate).
-- [ ] Reconcile worker models, relations, statuses, and service contracts.
+- [x] Reconcile worker models, relations, statuses, and service contracts.
 - [ ] Verify compiled production startup; TypeScript path aliases require runtime resolution.
 - [ ] Restore environment validation and dependency-aware health/readiness.
 - [ ] Restore PostgreSQL/Redis checks, queue initialization, Bull Board, and clean shutdown.
@@ -117,7 +117,7 @@ Status definitions: **Implemented** means code exists; **verified** means a rele
 - Ride, delivery, and payment workers now use generated Prisma delegates instead of untyped model-name calls. Corrected customer/driver relations, schema lifecycle values, fare fields, wallet/transaction storage, profile IDs versus notification user IDs, and payment job dispatch.
 - Queue money remains integer kobo; Prisma monetary values use naira, matching seed data. Route distance/duration conversions now match schema units.
 - Payment scaffolding uses actual Payment, Wallet, Transaction, and DriverEarning models. External payment verification and driver payout settlement explicitly fail until their integrations are implemented; mock verification no longer invents transaction amounts. Wallet trip settlement and partial refund accounting remain pending. These changes do not complete the financial milestone.
-- Added token-lifetime and worker-contract regression suites. Together with Bull Board access tests, 27 focused tests pass. Tests cover money conversion, supported payment jobs, duplicate settlement protection, invalid statuses, missing drivers, and refusal to credit wallets from mock verification.
+- Added token-lifetime and worker-contract regression suites. Together with Bull Board access tests, 28 focused tests pass. Tests cover money conversion, supported ride and delivery payment jobs, duplicate settlement protection, invalid statuses, missing drivers, and refusal to credit wallets from mock verification.
 - The full pre-existing test suite is still failing: queue/socket fixture compilation issues, circular Joi login-schema dependencies, and a database test failure. Full-suite run after source fixes: 1 suite passed, 5 failed; 14 tests passed, 1 failed. New focused suites were validated separately afterward.
 - Real PostgreSQL/PostGIS, Redis workers, provider integration, dashboard dependencies, and compiled production startup remain unverified.
 

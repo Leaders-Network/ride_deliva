@@ -10,7 +10,7 @@ jest.mock('@/config/database', () => ({
   __esModule: true,
   default: {
     ride: { findUnique: jest.fn(), findFirst: jest.fn(), update: jest.fn() },
-    delivery: { update: jest.fn(), findFirst: jest.fn() },
+    delivery: { update: jest.fn(), findFirst: jest.fn(), findUnique: jest.fn() },
     payment: { upsert: jest.fn() },
     wallet: { update: jest.fn() },
     driverProfile: { update: jest.fn() },
@@ -63,6 +63,14 @@ describe('Worker contracts against the Prisma schema', () => {
     jest.mocked(prisma.ride.findFirst).mockResolvedValue(null);
     await rideProcessor(job({ type: 'complete_ride', rideId: 'ride' }));
     expect(queueService.addJob).toHaveBeenCalledWith('payment', 'process_ride_payment', { type: 'process_ride_payment', rideId: 'ride', amount: 230000 });
+  });
+
+  it('processes delivery payments through their own supported job type', async () => {
+    jest.mocked(prisma.delivery.findUnique).mockResolvedValue({ id: 'delivery', customerId: 'customer' } as Awaited<ReturnType<typeof prisma.delivery.findUnique>>);
+    jest.mocked(prisma.payment.upsert).mockResolvedValue({ id: 'payment', status: 'COMPLETED' } as Awaited<ReturnType<typeof prisma.payment.upsert>>);
+    const result = await paymentProcessor(job({ type: 'process_delivery_payment', deliveryId: 'delivery', amount: 95000 }));
+    expect(result).toMatchObject({ alreadyProcessed: true });
+    expect(prisma.payment.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: { deliveryId: 'delivery' } }));
   });
 
   it('does not settle a completed payment twice', async () => {

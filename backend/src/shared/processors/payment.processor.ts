@@ -6,7 +6,7 @@ import { queueService } from '../services/queue.service';
 import { QUEUE_NAMES } from '../../config/queues';
 
 export interface PaymentJobData {
-  type: 'process_ride_payment' | 'process_refund' | 'wallet_top_up' | 'driver_payout' | 'payment_verification' | 'failed_payment_retry';
+  type: 'process_ride_payment' | 'process_delivery_payment' | 'process_refund' | 'wallet_top_up' | 'driver_payout' | 'payment_verification' | 'failed_payment_retry';
   paymentId?: string;
   rideId?: string;
   deliveryId?: string;
@@ -69,6 +69,7 @@ export async function paymentProcessor(job: ProcessorJob<PaymentJobData>) {
     let result;
     switch (job.data.type) {
       case 'process_ride_payment': result = await handleTripPayment(job.data); break;
+      case 'process_delivery_payment': result = await handleTripPayment(job.data); break;
       case 'process_refund': result = await handleRefund(job); break;
       case 'wallet_top_up': result = await handleWalletTopUp(job); break;
       case 'driver_payout': result = await handleDriverPayout(job); break;
