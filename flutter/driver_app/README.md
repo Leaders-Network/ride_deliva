@@ -1,6 +1,6 @@
 # Ride Deliva Driver
 
-**A professional driver app for the Ride Deliva platform** - enabling drivers to accept rides, manage earnings, and track performance in real-time.
+**A professional driver app for the Ride Deliva platform** - enabling drivers and Riders to accept rides, manage earnings, and track performance in real-time.
 
 ## 📱 Screenshots
 
@@ -54,33 +54,6 @@
 - Android Studio / VS Code
 - Android device or emulator (for full feature testing)
 
-### Installation
-
-Run from `flutter/driver_app`:
-
-```powershell
-flutter pub get
-flutter run -d chrome
-```
-
-Chrome must be installed and listed by `flutter devices`. No Chrome Dart package
-or ChromeDriver is required. If web support is disabled, run
-`flutter config --enable-web`.
-
-When opening the repository root in VS Code, the local launch configuration
-includes **Driver app (Chrome preview)**. For Android, start an emulator or
-connect a phone with USB debugging, select it in VS Code, and use
-**Driver app (selected Android device)**. From the terminal:
-
-```powershell
-flutter devices
-flutter run -d <android-device-id>
-flutter build apk --debug
-```
-
-Validate changes with `flutter test` and `flutter build web`. Test native
-location, notifications, background execution, and permissions on Android.
-
 ---
 
 ## ✨ Key Features
@@ -118,12 +91,6 @@ location, notifications, background execution, and permissions on Android.
 - Payout notifications
 - Bonus and rewards tracking
 
-### 👤 Profile Management
-- Driver statistics (trips, rating, member duration)
-- Personal information management
-- Vehicle details
-- Document status review
-
 ---
 
 ## 🏗️ Architecture
@@ -145,35 +112,6 @@ lib/
 │   └── widgets/        # Reusable widgets
 └── main.dart          # App entry point
 ```
-
-### Current Status
-- ✅ UI/UX Implementation Complete
-- ✅ 4-Stage Rider Verification Flow
-- ✅ Dashboard with all tabs
-- ✅ Navigation and routing
-- 🔄 Backend integration pending
-- 🔄 State management (BLoC) pending
-- 🔄 Real-time features pending
-
----
-
-## 🧪 Testing
-
-Validate changes with `flutter test` and `flutter build web`. Test native
-location, notifications, background execution, and permissions on Android.
-
-Android builds use a 2 GB Gradle heap and two workers to leave memory available
-for the IDE and emulator on an 8 GB development machine.
-
-The unused legacy `qr_code_scanner`, `file_picker`, `workmanager`, and
-`flutter_local_notifications`
-dependencies were removed because they were incompatible with the current
-Android/Flutter toolchain. Add compatible packages when implementing those
-features; do not patch files in the global Pub cache.
-
-Poppins fonts are bundled from
-[Google Fonts](https://github.com/google/fonts/tree/main/ofl/poppins), with their
-license in `assets/fonts/OFL.txt`.
 
 ---
 
@@ -212,22 +150,6 @@ driver_app/
 └── README.md
 ```
 
----
-
-## 🎨 Design System
-
-### Theme
-- **Dark Theme** optimized for outdoor visibility
-- **Primary Color**: Blue (#2563EB) for actions and navigation
-- **Accent Color**: Green (#10B981) for earnings and success states
-- **Typography**: Poppins font family
-
-### Color Palette
-- Online Status: Green (#10B981)
-- Offline Status: Gray (#6B7280)
-- Earnings: Green (#10B981)
-- Warnings: Orange (#F59E0B)
-- Errors: Red (#EF4444)
 
 ---
 
@@ -235,12 +157,6 @@ driver_app/
 
 See [progress.md](progress.md) for detailed development timeline and updates.
 
-### Recent Updates (2026-10-10)
-- ✅ Complete 4-stage rider verification flow
-- ✅ Replaced single-step upload with multi-stage process
-- ✅ Integrated verification navigation
-- ✅ All screens compile successfully
-- ✅ Comprehensive documentation
 
 ---
 
@@ -256,13 +172,9 @@ Proprietary - All rights reserved by Ride Deliva
 
 ---
 
-## 📞 Contact
 
-For development questions or support:
-- Project Lead: Ibrahim
-- Development Team: Leaders Network
 
 ---
 
-**Built with Flutter 💙 | Ride Deliva © 2024**
+**Built with Flutter 
 
