@@ -28,7 +28,7 @@ class VerifyPhoneScreen extends StatelessWidget {
             const Icon(
               Icons.phone_android,
               size: 64,
-              color: AppColors.primaryGreen,
+              color: AppColors.primaryAccent,
             ),
             const SizedBox(height: 16),
             const Text(
@@ -56,7 +56,7 @@ class VerifyPhoneScreen extends StatelessWidget {
                   ),
                 );
               },
-              child: const Text('Continue to Documents'),
+              child: const Text('Continue to Verification'),
             ),
           ],
         ),

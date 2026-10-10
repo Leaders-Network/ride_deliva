@@ -13,7 +13,7 @@ class EarningsSummaryCard extends StatelessWidget {
         color: AppColors.backgroundCard,
         borderRadius: BorderRadius.circular(14),
         border:
-            Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.25)),
+            Border.all(color: AppColors.primaryAccent.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -32,20 +32,20 @@ class EarningsSummaryCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryGreen.withValues(alpha: 0.12),
+                  color: AppColors.success.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.circle, color: AppColors.primaryGreen, size: 6),
+                    Icon(Icons.circle, color: AppColors.success, size: 6),
                     SizedBox(width: 5),
                     Text(
                       'Live',
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.primaryGreen,
+                        color: AppColors.success,
                       ),
                     ),
                   ],

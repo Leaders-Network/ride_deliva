@@ -1,6 +1,6 @@
 # Driver App Progress
 
-## Today — 2026-10-09
+## 2026-10-09
 
 ### Completed
 - Updated the driver dashboard to follow the supplied design.
@@ -11,17 +11,35 @@
 - Ran Flutter analysis across the implemented screens with no issues.
 
 ### Notes
-- Screen data is currently sample content, Still not like the exact UI/UX design forwarded yet; backend and several account actions are not connected yet.
- 
+- Screen data is currently sample content, Still not like the exact UI/UX design forwarded yet; backend and several account actions are not connected yet
 
-## Tomorrow — 2026-10-10
+
+## Day — 2026-10-10
+
+### Completed
+- Created complete 4-stage rider document verification flow matching HTML designs:
+  - Step 1: Personal Information (name, DOB, email, address, NIN, selfie check)
+  - Step 2: Driver License (front/back photo upload, license number, expiry date)
+  - Step 3: Vehicle Documents (plate, make/model, year, color, registration, insurance, roadworthiness, ownership, 4 vehicle photos)
+  - Step 4: Background Check (guarantor info, emergency contact, terms acceptance)
+- Replaced old single-step upload screen with the new 4-stage flow
+- Integrated the flow into DocumentVerificationScreen navigation
+- Updated VerifyPhoneScreen to navigate to verification overview first
+- Fixed all import references and updated tests to match new flow
+- Ran Flutter analysis - all screens compile successfully with no errors (only style warnings)
+- Created comprehensive README documentation for the rider verification flow
+
+### Notes
+- The rider verification flow is now fully functional and ready for backend integration
+- Navigation flow: Verification Overview → Step 1 → Step 2 → Step 3 → Step 4 → Back to Verification (completed)
+
+
+## Monday — 2026-10-11
 
 ### Planned
-- Update the driver app UI to match the supplied UI design exactly.
-- Schedule a meeting with Ibrahim to better understand the UI/UX pattern because it looks not organized.
-- Compare each screen against the Flowstep design and refine layout, spacing, colors, typography, icons, and component sizes.
-- Verify the screens and navigation in the app preview and run the relevant tests.
-- Ensure it looks like the main UI
+- Pair/Team review 
+- Test the complete rider verification flow on actual device/emulator
+- Work on the UI with Seun
 
 ### Additional tasks / notes
-- 
+- Schedule meeting with Ibrahim and Seun regarding river UI/UX patterns to get more context 

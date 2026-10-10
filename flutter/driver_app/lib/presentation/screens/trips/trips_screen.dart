@@ -215,14 +215,14 @@ class _TripsScreenState extends State<TripsScreen> {
         showCheckmark: false,
         onSelected: (_) => setState(() => _selectedFilter = filter),
         backgroundColor: AppColors.backgroundCard,
-        selectedColor: AppColors.primaryGreen.withValues(alpha: 0.16),
+        selectedColor: AppColors.primaryAccent.withValues(alpha: 0.16),
         side: BorderSide(
-          color: selected ? AppColors.primaryGreen : AppColors.border,
+          color: selected ? AppColors.primaryAccent : AppColors.border,
         ),
         labelStyle: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: selected ? AppColors.primaryGreen : AppColors.textSecondary,
+          color: selected ? AppColors.primaryAccent : AppColors.textSecondary,
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         visualDensity: VisualDensity.compact,
@@ -251,7 +251,7 @@ class _TripSummary extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.route_outlined, color: AppColors.primaryGreen),
+          const Icon(Icons.route_outlined, color: AppColors.primaryAccent),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

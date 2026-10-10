@@ -35,7 +35,7 @@ class TripCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusColor = switch (trip.status) {
       TripStatus.active => AppColors.primaryBlue,
-      TripStatus.completed => AppColors.primaryGreen,
+      TripStatus.completed => AppColors.success,
       TripStatus.cancelled => AppColors.error,
     };
     final statusLabel = switch (trip.status) {
@@ -119,7 +119,7 @@ class TripCard extends StatelessWidget {
                     const Icon(
                       Icons.circle,
                       size: 9,
-                      color: AppColors.primaryGreen,
+                      color: AppColors.primaryAccent,
                     ),
                     Container(
                       width: 1,

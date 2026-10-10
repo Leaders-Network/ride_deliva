@@ -20,7 +20,7 @@ class RegisterScreen extends StatelessWidget {
             Icon(
               Icons.app_registration,
               size: 64,
-              color: AppColors.primaryGreen,
+              color: AppColors.primaryAccent,
             ),
             SizedBox(height: 16),
             Text(

@@ -30,7 +30,7 @@ class ActiveTripsSection extends StatelessWidget {
                 child: const Text(
                   'View All',
                   style: TextStyle(
-                    color: AppColors.primaryGreen,
+                    color: AppColors.primaryAccent,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -39,11 +39,7 @@ class ActiveTripsSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        
-        if (!hasActiveTrips)
-          _buildEmptyState()
-        else
-          _buildActiveTrips(),
+        if (!hasActiveTrips) _buildEmptyState() else _buildActiveTrips(),
       ],
     );
   }

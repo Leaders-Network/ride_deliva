@@ -81,7 +81,7 @@ class DriverBottomNavigation extends StatelessWidget {
                           isSelected ? item.activeIcon : item.icon,
                           key: ValueKey(isSelected),
                           color: isSelected
-                              ? AppColors.primaryGreen
+                              ? AppColors.primaryAccent
                               : AppColors.textTertiary,
                           size: 21,
                         ),
@@ -95,7 +95,7 @@ class DriverBottomNavigation extends StatelessWidget {
                           fontWeight:
                               isSelected ? FontWeight.w600 : FontWeight.w400,
                           color: isSelected
-                              ? AppColors.primaryGreen
+                              ? AppColors.primaryAccent
                               : AppColors.textTertiary,
                         ),
                       ),

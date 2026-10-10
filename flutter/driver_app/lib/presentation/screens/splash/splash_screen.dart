@@ -22,7 +22,7 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(seconds: 2),
       vsync: this,
     );
-    
+
     _initializeApp();
   }
 
@@ -35,10 +35,10 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _initializeApp() async {
     // Start the animation
     _controller.forward();
-    
+
     // Simulate initialization tasks
     await Future.delayed(const Duration(seconds: 3));
-    
+
     // Check authentication status and navigate accordingly
     if (mounted) {
       Navigator.of(context).pushReplacement(
@@ -81,7 +81,7 @@ class _SplashScreenState extends State<SplashScreen>
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primaryGreen.withValues(alpha: 0.3),
+                        color: AppColors.primaryAccent.withValues(alpha: 0.3),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -92,10 +92,7 @@ class _SplashScreenState extends State<SplashScreen>
                     size: 60,
                     color: Colors.white,
                   ),
-                )
-                    .animate()
-                    .fadeIn(duration: 800.ms)
-                    .scale(
+                ).animate().fadeIn(duration: 800.ms).scale(
                       begin: const Offset(0.5, 0.5),
                       end: const Offset(1.0, 1.0),
                       duration: 800.ms,
@@ -118,9 +115,7 @@ class _SplashScreenState extends State<SplashScreen>
                         .animate()
                         .fadeIn(delay: 400.ms, duration: 600.ms)
                         .slideY(begin: 0.3, end: 0),
-
                     const SizedBox(height: 8),
-
                     const Text(
                       'Drive. Earn. Succeed.',
                       style: TextStyle(
@@ -148,15 +143,11 @@ class _SplashScreenState extends State<SplashScreen>
                   child: CircularProgressIndicator(
                     strokeWidth: 3,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      AppColors.primaryGreen,
+                      AppColors.primaryAccent,
                     ),
                   ),
-                )
-                    .animate()
-                    .fadeIn(delay: 1000.ms, duration: 600.ms),
-
+                ).animate().fadeIn(delay: 1000.ms, duration: 600.ms),
                 const SizedBox(height: 24),
-
                 const Text(
                   'Starting your journey...',
                   style: TextStyle(
@@ -164,9 +155,7 @@ class _SplashScreenState extends State<SplashScreen>
                     color: AppColors.textTertiary,
                     fontWeight: FontWeight.w500,
                   ),
-                )
-                    .animate()
-                    .fadeIn(delay: 1200.ms, duration: 600.ms),
+                ).animate().fadeIn(delay: 1200.ms, duration: 600.ms),
               ],
             ),
 
@@ -193,9 +182,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ),
                 ],
-              )
-                  .animate()
-                  .fadeIn(delay: 1400.ms, duration: 600.ms),
+              ).animate().fadeIn(delay: 1400.ms, duration: 600.ms),
             ),
           ],
         ),

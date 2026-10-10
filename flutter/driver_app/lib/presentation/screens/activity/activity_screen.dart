@@ -190,14 +190,14 @@ class _ActivityScreenState extends State<ActivityScreen> {
         showCheckmark: false,
         onSelected: (_) => setState(() => _filter = filter),
         backgroundColor: AppColors.backgroundCard,
-        selectedColor: AppColors.primaryGreen.withValues(alpha: 0.16),
+        selectedColor: AppColors.primaryAccent.withValues(alpha: 0.16),
         side: BorderSide(
-          color: selected ? AppColors.primaryGreen : AppColors.border,
+          color: selected ? AppColors.primaryAccent : AppColors.border,
         ),
         labelStyle: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: selected ? AppColors.primaryGreen : AppColors.textSecondary,
+          color: selected ? AppColors.primaryAccent : AppColors.textSecondary,
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
         visualDensity: VisualDensity.compact,
@@ -273,7 +273,7 @@ class _ActivityTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isCredit = activity.amount.startsWith('+');
     final amountColor =
-        isCredit ? AppColors.primaryGreen : AppColors.textPrimary;
+        isCredit ? AppColors.earningsGreen : AppColors.textPrimary;
     final statusColor = activity.status == 'Active'
         ? AppColors.primaryBlue
         : AppColors.textSecondary;

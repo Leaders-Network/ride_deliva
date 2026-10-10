@@ -10,7 +10,7 @@ class QuickActionsGrid extends StatelessWidget {
       QuickAction(
         icon: Icons.bar_chart_rounded,
         title: 'View Earnings',
-        color: AppColors.primaryGreen,
+        color: AppColors.primaryAccent,
         onTap: () {},
       ),
       QuickAction(

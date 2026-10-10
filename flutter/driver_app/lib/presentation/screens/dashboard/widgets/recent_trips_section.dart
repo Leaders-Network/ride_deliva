@@ -145,7 +145,7 @@ class _RecentTripTile extends StatelessWidget {
                 trip.status,
                 style: const TextStyle(
                   fontSize: 10,
-                  color: AppColors.primaryGreen,
+                  color: AppColors.success,
                 ),
               ),
             ],

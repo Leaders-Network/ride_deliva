@@ -154,7 +154,7 @@ class _DriverIdentity extends StatelessWidget {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: AppColors.primaryGreen.withValues(alpha: 0.16),
+              color: AppColors.primaryAccent.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Center(
@@ -163,7 +163,7 @@ class _DriverIdentity extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.primaryGreen,
+                  color: AppColors.primaryAccent,
                 ),
               ),
             ),
@@ -212,7 +212,7 @@ class _DriverIdentity extends StatelessWidget {
           ),
           const Icon(
             Icons.verified_rounded,
-            color: AppColors.primaryGreen,
+            color: AppColors.success,
             size: 21,
           ),
         ],
@@ -244,7 +244,7 @@ class _DriverStats extends StatelessWidget {
           return Expanded(
             child: Column(
               children: [
-                Icon(stat.icon, size: 17, color: AppColors.primaryGreen),
+                Icon(stat.icon, size: 17, color: AppColors.primaryAccent),
                 const SizedBox(height: 6),
                 Text(
                   stat.value,

@@ -16,15 +16,11 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isPasswordVisible = false;
   bool _isLoading = false;
-  bool _rememberMe = false;
 
   @override
   void dispose() {
     _phoneController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -40,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       // Simulate API call
       await Future.delayed(const Duration(seconds: 2));
-      
+
       // Navigate to phone verification or dashboard based on driver status
       if (mounted) {
         Navigator.of(context).push(
@@ -73,16 +69,16 @@ class _LoginScreenState extends State<LoginScreen> {
   void _navigateToRegister() {
     Navigator.of(context).push(
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => 
-          const RegisterScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const RegisterScreen(),
         transitionDuration: AppConstants.shortAnimation,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
           const curve = Curves.easeInOut;
 
-          var tween = Tween(begin: begin, end: end)
-              .chain(CurveTween(curve: curve));
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
 
           return SlideTransition(
             position: animation.drive(tween),
@@ -90,6 +86,12 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         },
       ),
+    );
+  }
+
+  void _handleGoogleLogin() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Google sign-in is coming soon')),
     );
   }
 
@@ -112,97 +114,117 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 40),
-                  
-                  // Header
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 8),
+                  Row(
                     children: [
-                      // Back button (optional, for navigation)
-                      Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: AppColors.backgroundCard,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: IconButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              icon: const Icon(
-                                Icons.arrow_back_ios,
-                                color: AppColors.textPrimary,
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 24),
-                      
-                      // Welcome text
-                      const Text(
-                        'Welcome Back',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                      IconButton(
+                        tooltip: 'Back',
+                        onPressed: () => Navigator.of(context).maybePop(),
+                        icon: const Icon(Icons.arrow_back_rounded),
+                        style: IconButton.styleFrom(
+                          backgroundColor: AppColors.backgroundCard,
+                          foregroundColor: AppColors.textPrimary,
                         ),
-                      )
-                          .animate()
-                          .fadeIn(duration: 600.ms)
-                          .slideX(begin: -0.3, end: 0),
-                      
-                      const SizedBox(height: 8),
-                      
-                      // Subtitle
+                      ),
+                      const SizedBox(width: 8),
                       const Text(
-                        'Ready to start earning? Sign in to your driver account',
+                        'Driver Login',
                         style: TextStyle(
                           fontSize: 16,
-                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
                         ),
-                      )
-                          .animate()
-                          .fadeIn(delay: 200.ms, duration: 600.ms)
-                          .slideX(begin: -0.2, end: 0),
+                      ),
                     ],
                   ),
-                  
-                  const SizedBox(height: 48),
-                  
+                  const SizedBox(height: 18),
+                  _buildDriverHero(),
+                  const SizedBox(height: 24),
+
                   // Form fields
                   Column(
                     children: [
-                      // Phone number field
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Sign in with phone number',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Use your driver account number to continue.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(AppConstants.phoneNumberLength),
+                          LengthLimitingTextInputFormatter(
+                              AppConstants.phoneNumberLength),
                         ],
                         decoration: InputDecoration(
-                          labelText: 'Phone Number',
-                          hintText: '08012345678',
-                          prefixIcon: const Icon(Icons.phone_outlined),
-                          prefixText: '+234 ',
+                          hintText: 'Phone number',
+                          prefixIcon: const Padding(
+                            padding: EdgeInsets.only(left: 12, right: 8),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('🇳🇬'),
+                                SizedBox(width: 6),
+                                Text(
+                                  '+234',
+                                  style: TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                SizedBox(width: 3),
+                                Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  color: AppColors.textSecondary,
+                                  size: 17,
+                                ),
+                              ],
+                            ),
+                          ),
+                          prefixIconConstraints: const BoxConstraints(
+                            minWidth: 0,
+                            minHeight: 0,
+                          ),
                           filled: true,
-                          fillColor: AppColors.backgroundSecondary,
+                          fillColor: AppColors.backgroundCard,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 15,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.border),
+                            borderSide:
+                                const BorderSide(color: AppColors.border),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.border),
+                            borderSide:
+                                const BorderSide(color: AppColors.border),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(
-                              color: AppColors.primaryGreen, 
+                              color: AppColors.primaryAccent,
                               width: 2,
                             ),
                           ),
@@ -218,118 +240,41 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       )
                           .animate()
-                          .fadeIn(delay: 400.ms, duration: 600.ms)
-                          .slideY(begin: 0.3, end: 0),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // Password field
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: !_isPasswordVisible,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          hintText: 'Enter your password',
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _isPasswordVisible = !_isPasswordVisible;
-                              });
-                            },
-                            icon: Icon(
-                              _isPasswordVisible 
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: AppColors.backgroundSecondary,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.border),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.border),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppColors.primaryGreen, 
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Password is required';
-                          }
-                          if (value.length < AppConstants.minPasswordLength) {
-                            return 'Password must be at least ${AppConstants.minPasswordLength} characters';
-                          }
-                          return null;
-                        },
-                      )
-                          .animate()
-                          .fadeIn(delay: 500.ms, duration: 600.ms)
-                          .slideY(begin: 0.3, end: 0),
+                          .fadeIn(delay: 200.ms, duration: 500.ms)
+                          .slideY(begin: 0.15, end: 0),
                     ],
                   ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Remember me and forgot password
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                  const SizedBox(height: 10),
+                  const Row(
                     children: [
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: _rememberMe,
-                            onChanged: (value) {
-                              setState(() {
-                                _rememberMe = value ?? false;
-                              });
-                            },
-                            activeColor: AppColors.primaryGreen,
-                          ),
-                          const Text(
-                            'Remember me',
-                            style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
+                      Icon(
+                        Icons.lock_outline_rounded,
+                        size: 14,
+                        color: AppColors.textSecondary,
                       ),
-                      TextButton(
-                        onPressed: () {
-                          // TODO: Implement forgot password
-                        },
-                        child: const Text(
-                          'Forgot Password?',
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'We’ll send a secure verification code to your phone.',
                           style: TextStyle(
-                            color: AppColors.primaryGreen,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ),
                     ],
-                  )
-                      .animate()
-                      .fadeIn(delay: 600.ms, duration: 600.ms),
-                  
+                  ),
+
                   const SizedBox(height: 32),
-                  
+
                   // Login button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryGreen,
+                        backgroundColor: AppColors.primaryAccent,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -349,7 +294,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             )
                           : const Text(
-                              'Sign In',
+                              'Continue',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -360,88 +305,68 @@ class _LoginScreenState extends State<LoginScreen> {
                       .animate()
                       .fadeIn(delay: 700.ms, duration: 600.ms)
                       .slideY(begin: 0.3, end: 0),
-                  
-                  const SizedBox(height: 32),
-                  
-                  // Sign up link
-                  Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          "Don't have an account? ",
+
+                  const SizedBox(height: 20),
+                  const Row(
+                    children: [
+                      Expanded(child: Divider(color: AppColors.border)),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          'OR CONTINUE WITH',
                           style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 14,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textTertiary,
                           ),
                         ),
-                        GestureDetector(
-                          onTap: _navigateToRegister,
-                          child: const Text(
-                            'Sign Up',
-                            style: TextStyle(
-                              color: AppColors.primaryGreen,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                      ),
+                      Expanded(child: Divider(color: AppColors.border)),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _handleGoogleLogin,
+                      icon: const Icon(Icons.g_mobiledata_rounded, size: 24),
+                      label: const Text('Google'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textPrimary,
+                        backgroundColor: AppColors.backgroundCard,
+                        side: const BorderSide(color: AppColors.border),
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ],
-                    ),
-                  )
-                      .animate()
-                      .fadeIn(delay: 800.ms, duration: 600.ms),
-                  
-                  const SizedBox(height: 40),
-                  
-                  // Driver info card
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: AppColors.backgroundCard,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.primaryGreen.withValues(alpha: 0.3),
-                        width: 1,
                       ),
                     ),
-                    child: Column(
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              color: AppColors.primaryGreen,
-                              size: 20,
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Driver Requirements',
-                                style: TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Column(
-                          children: [
-                            _buildRequirementItem('Valid driver\'s license'),
-                            _buildRequirementItem('Vehicle registration'),
-                            _buildRequirementItem('Insurance certificate'),
-                            _buildRequirementItem('Phone number verification'),
-                          ],
-                        ),
-                      ],
+                  ),
+                  const SizedBox(height: 22),
+                  const Center(
+                    child: Text(
+                      'Want to drive with Ride Deliva?',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  )
-                      .animate()
-                      .fadeIn(delay: 900.ms, duration: 600.ms)
-                      .slideY(begin: 0.2, end: 0),
+                  ),
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: _navigateToRegister,
+                      icon: const Icon(Icons.arrow_forward_rounded, size: 15),
+                      iconAlignment: IconAlignment.end,
+                      label: const Text('Apply as Driver'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primaryAccent,
+                        textStyle: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -451,28 +376,114 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildRequirementItem(String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
+  Widget _buildDriverHero() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.check_circle_outline,
-            color: AppColors.primaryGreen,
-            size: 16,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+            decoration: BoxDecoration(
+              color: AppColors.primaryAccent.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Text(
+              'DRIVER ACCESS',
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primaryAccent,
               ),
             ),
           ),
+          const SizedBox(height: 12),
+          const Text(
+            'Welcome Back, Driver',
+            style: TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 5),
+          const Text(
+            'Go online and start earning today.',
+            style: TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              'https://images.unsplash.com/photo-1503376780353-7e6692767b70?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1200',
+              width: double.infinity,
+              height: 176,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                width: double.infinity,
+                height: 176,
+                color: AppColors.backgroundSecondary,
+                child: const Icon(
+                  Icons.directions_car_filled_outlined,
+                  size: 52,
+                  color: AppColors.primaryBlue,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Professional driver',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 3),
+                    Text(
+                      'Ready to pick up your next trip',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  'Trusted & verified',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.success,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.08, end: 0);
   }
 }

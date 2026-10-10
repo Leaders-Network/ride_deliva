@@ -16,8 +16,66 @@ import 'package:driver_app/presentation/screens/wallet/wallet_screen.dart';
 import 'package:driver_app/presentation/screens/activity/activity_screen.dart';
 import 'package:driver_app/presentation/screens/profile/profile_screen.dart';
 import 'package:driver_app/presentation/screens/document_verification/document_verification_screen.dart';
+import 'package:driver_app/presentation/screens/auth/login_screen.dart';
+import 'package:driver_app/presentation/screens/auth/verify_phone_screen.dart';
 
 void main() {
+  testWidgets('Driver login matches the phone-first prototype', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: LoginScreen()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Driver Login'), findsOneWidget);
+    expect(find.text('Welcome Back, Driver'), findsOneWidget);
+    expect(find.text('Sign in with phone number'), findsOneWidget);
+    expect(find.text('Google'), findsOneWidget);
+    expect(find.text('Apply as Driver'), findsOneWidget);
+    expect(find.byType(TextFormField), findsOneWidget);
+    expect(find.text('Password'), findsNothing);
+
+    await tester.enterText(find.byType(TextFormField), '08012345678');
+    await tester.ensureVisible(find.text('Continue'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continue'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(VerifyPhoneScreen), findsOneWidget);
+  });
+
+  testWidgets('Phone verification continues to the verification screen', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: VerifyPhoneScreen(phoneNumber: '08012345678'),
+      ),
+    );
+    await tester.tap(find.text('Continue to Verification'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DocumentVerificationScreen), findsOneWidget);
+    expect(find.text('Driver Verification'), findsOneWidget);
+  });
+
+  testWidgets('Saving verification from the root opens the dashboard', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: DocumentVerificationScreen(vehicleDocumentsSubmitted: true),
+      ),
+    );
+
+    await tester.tap(find.text('Save & Exit'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DashboardScreen), findsOneWidget);
+    expect(find.text('Good Afternoon, David'), findsOneWidget);
+  });
+
   testWidgets('App smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const DriverApp());
@@ -143,5 +201,25 @@ void main() {
     await tester.tap(find.text('Driver documents'));
     await tester.pumpAndSettle();
     expect(find.byType(DocumentVerificationScreen), findsOneWidget);
+    expect(find.text('Complete your driver verification'), findsOneWidget);
+    expect(find.text('3 of 5'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Background Check'), 240);
+    await tester.pumpAndSettle();
+    expect(find.text('Background Check'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Usually completed within 24 hours.'),
+      240,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Usually completed within 24 hours.'), findsOneWidget);
+
+    await tester.tap(find.text('Continue Verification'));
+    await tester.pumpAndSettle();
+    // Now navigates to Step 1 of rider verification flow
+    expect(find.text('Personal information'), findsOneWidget);
+
+    await tester.tap(find.text('Save & Exit'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ProfileScreen), findsOneWidget);
   });
 }

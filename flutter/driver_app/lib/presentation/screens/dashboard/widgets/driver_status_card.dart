@@ -54,7 +54,7 @@ class DriverStatusCard extends StatelessWidget {
                 ),
                 backgroundColor: WidgetStateProperty.resolveWith((states) {
                   return states.contains(WidgetState.selected)
-                      ? AppColors.primaryGreen
+                      ? AppColors.primaryAccent
                       : AppColors.backgroundSecondary;
                 }),
                 foregroundColor: WidgetStateProperty.resolveWith((states) {

@@ -23,7 +23,7 @@ class TodayStatsCard extends StatelessWidget {
         icon: Icons.trending_up,
         label: 'Acceptance Rate',
         value: '96%',
-        color: AppColors.primaryGreen,
+        color: AppColors.primaryAccent,
       ),
       const StatItem(
         icon: Icons.star,

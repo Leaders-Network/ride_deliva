@@ -310,15 +310,15 @@ class _WalletScreenState extends State<WalletScreen> {
             showCheckmark: false,
             onSelected: (_) => setState(() => _filter = filter),
             backgroundColor: AppColors.backgroundCard,
-            selectedColor: AppColors.primaryGreen.withValues(alpha: 0.16),
+            selectedColor: AppColors.primaryAccent.withValues(alpha: 0.16),
             side: BorderSide(
-              color: selected ? AppColors.primaryGreen : AppColors.border,
+              color: selected ? AppColors.primaryAccent : AppColors.border,
             ),
             labelStyle: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color:
-                  selected ? AppColors.primaryGreen : AppColors.textSecondary,
+                  selected ? AppColors.primaryAccent : AppColors.textSecondary,
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(9),
@@ -415,7 +415,7 @@ class _TransactionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isCredit = transaction.amount.startsWith('+');
     final amountColor =
-        isCredit ? AppColors.primaryGreen : AppColors.textPrimary;
+        isCredit ? AppColors.earningsGreen : AppColors.textPrimary;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),

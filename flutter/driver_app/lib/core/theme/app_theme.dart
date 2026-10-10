@@ -9,10 +9,10 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       primarySwatch: DriverMaterialColors.primarySwatch,
-      
+
       // Color Scheme
       colorScheme: const ColorScheme.dark(
-        primary: AppColors.primaryGreen,
+        primary: AppColors.primaryAccent,
         onPrimary: Colors.white,
         secondary: AppColors.primaryBlue,
         onSecondary: Colors.white,
@@ -57,10 +57,10 @@ class AppTheme {
       // Elevated Button Theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryGreen,
+          backgroundColor: AppColors.primaryAccent,
           foregroundColor: Colors.white,
           elevation: 2,
-          shadowColor: AppColors.primaryGreen.withValues(alpha: 0.3),
+          shadowColor: AppColors.primaryAccent.withValues(alpha: 0.3),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -93,7 +93,7 @@ class AppTheme {
       // Text Button Theme
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.primaryGreen,
+          foregroundColor: AppColors.primaryAccent,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           textStyle: const TextStyle(
             fontSize: 14,
@@ -105,7 +105,7 @@ class AppTheme {
 
       // FloatingActionButton Theme
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: AppColors.primaryGreen,
+        backgroundColor: AppColors.primaryAccent,
         foregroundColor: Colors.white,
         elevation: 6,
         shape: CircleBorder(),
@@ -125,7 +125,8 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primaryGreen, width: 2),
+          borderSide:
+              const BorderSide(color: AppColors.primaryAccent, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -149,7 +150,7 @@ class AppTheme {
       checkboxTheme: CheckboxThemeData(
         fillColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return AppColors.primaryGreen;
+            return AppColors.primaryAccent;
           }
           return Colors.transparent;
         }),
@@ -161,13 +162,13 @@ class AppTheme {
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return AppColors.primaryGreen;
+            return AppColors.primaryAccent;
           }
           return AppColors.textTertiary;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return AppColors.primaryGreen.withValues(alpha: 0.5);
+            return AppColors.primaryAccent.withValues(alpha: 0.5);
           }
           return AppColors.border;
         }),
@@ -176,7 +177,7 @@ class AppTheme {
       // Bottom Navigation Bar Theme
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.backgroundCard,
-        selectedItemColor: AppColors.primaryGreen,
+        selectedItemColor: AppColors.primaryAccent,
         unselectedItemColor: AppColors.textTertiary,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
@@ -194,9 +195,9 @@ class AppTheme {
 
       // Tab Bar Theme
       tabBarTheme: const TabBarThemeData(
-        labelColor: AppColors.primaryGreen,
+        labelColor: AppColors.primaryAccent,
         unselectedLabelColor: AppColors.textSecondary,
-        indicatorColor: AppColors.primaryGreen,
+        indicatorColor: AppColors.primaryAccent,
         labelStyle: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -211,7 +212,7 @@ class AppTheme {
 
       // Progress Indicator Theme
       progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: AppColors.primaryGreen,
+        color: AppColors.primaryAccent,
         linearTrackColor: AppColors.border,
         circularTrackColor: AppColors.border,
       ),
@@ -265,7 +266,7 @@ class AppTheme {
 
       // Primary Icon Theme
       primaryIconTheme: const IconThemeData(
-        color: AppColors.primaryGreen,
+        color: AppColors.primaryAccent,
         size: 24,
       ),
 

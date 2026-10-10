@@ -18,25 +18,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<OnboardingPage> _pages = [
     const OnboardingPage(
       title: 'Drive & Earn',
-      subtitle: 'Turn your car into a money-making machine. Drive when you want, earn what you deserve.',
+      subtitle:
+          'Turn your car into a money-making machine. Drive when you want, earn what you deserve.',
       icon: Icons.directions_car,
       gradient: AppColors.onlineGradient,
     ),
     const OnboardingPage(
       title: 'Flexible Schedule',
-      subtitle: 'Work on your own terms. Choose your hours, take breaks whenever you need.',
+      subtitle:
+          'Work on your own terms. Choose your hours, take breaks whenever you need.',
       icon: Icons.schedule,
       gradient: AppColors.tripGradient,
     ),
     const OnboardingPage(
       title: 'Track Earnings',
-      subtitle: 'Monitor your daily, weekly, and monthly earnings. Get detailed insights into your performance.',
+      subtitle:
+          'Monitor your daily, weekly, and monthly earnings. Get detailed insights into your performance.',
       icon: Icons.analytics,
       gradient: AppColors.earningsGradient,
     ),
     const OnboardingPage(
       title: 'Safe & Secure',
-      subtitle: 'Verified customers, secure payments, and 24/7 support. Your safety is our priority.',
+      subtitle:
+          'Verified customers, secure payments, and 24/7 support. Your safety is our priority.',
       icon: Icons.security,
       gradient: [AppColors.info, AppColors.primaryBlue],
     ),
@@ -91,7 +95,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const SizedBox(width: 60), // Balance for centered dots
-                  
+
                   // Page indicators
                   Row(
                     children: List.generate(
@@ -102,19 +106,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         height: 8,
                         decoration: BoxDecoration(
                           color: _currentPage == index
-                              ? AppColors.primaryGreen
+                              ? AppColors.primaryAccent
                               : AppColors.border,
                           borderRadius: BorderRadius.circular(4),
                         ),
-                      )
-                          .animate()
-                          .scale(
+                      ).animate().scale(
                             duration: AppConstants.shortAnimation,
                             curve: Curves.easeInOut,
                           ),
                     ),
                   ),
-                  
+
                   // Skip button
                   TextButton(
                     onPressed: _skipOnboarding,
@@ -158,15 +160,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: ElevatedButton(
                       onPressed: _nextPage,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryGreen,
+                        backgroundColor: AppColors.primaryAccent,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: Text(
-                        _currentPage == _pages.length - 1 
-                            ? 'Get Started' 
+                        _currentPage == _pages.length - 1
+                            ? 'Get Started'
                             : 'Continue',
                         style: const TextStyle(
                           fontSize: 16,
@@ -195,7 +197,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         child: const Text(
                           'Sign In',
                           style: TextStyle(
-                            color: AppColors.primaryGreen,
+                            color: AppColors.primaryAccent,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
@@ -242,10 +244,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               size: 60,
               color: Colors.white,
             ),
-          )
-              .animate()
-              .fadeIn(duration: 800.ms)
-              .scale(
+          ).animate().fadeIn(duration: 800.ms).scale(
                 begin: const Offset(0.5, 0.5),
                 end: const Offset(1.0, 1.0),
                 duration: 800.ms,
