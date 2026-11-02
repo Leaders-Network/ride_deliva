@@ -66,19 +66,24 @@ describe('Database Service', () => {
 });
 
 describe('Prisma Schema Validation', () => {
-  it('should have correct model structure', () => {
-    // This test ensures our schema is properly structured
-    const prisma = new PrismaClient();
-    
-    expect(prisma.user).toBeDefined();
-    expect(prisma.customerProfile).toBeDefined();
-    expect(prisma.driverProfile).toBeDefined();
-    expect(prisma.ride).toBeDefined();
-    expect(prisma.delivery).toBeDefined();
-    expect(prisma.payment).toBeDefined();
-    expect(prisma.wallet).toBeDefined();
-    expect(prisma.vehicle).toBeDefined();
-    expect(prisma.address).toBeDefined();
-    expect(prisma.notification).toBeDefined();
+  it('should expose every expected model', () => {
+    // The file mocks the generated client above, so load the real one to inspect the schema
+    const { Prisma } = jest.requireActual('@/generated/prisma');
+    const models = Object.values(Prisma.ModelName);
+
+    expect(models).toEqual(
+      expect.arrayContaining([
+        'User',
+        'CustomerProfile',
+        'DriverProfile',
+        'Ride',
+        'Delivery',
+        'Payment',
+        'Wallet',
+        'Vehicle',
+        'Address',
+        'Notification',
+      ])
+    );
   });
 });

@@ -172,6 +172,7 @@ export const errorHandler = (
 
   // Prepare error response
   const errorResponse: any = {
+    success: false,
     error: {
       code: apiError.code,
       message: apiError.message,

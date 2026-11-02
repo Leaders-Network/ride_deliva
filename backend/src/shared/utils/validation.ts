@@ -16,7 +16,11 @@ export class ValidationError extends Error {
 // Common validation patterns
 export const commonPatterns = {
   uuid: Joi.string().uuid({ version: 'uuidv4' }),
-  phoneNumber: Joi.string().pattern(/^\+?[1-9]\d{1,14}$/),
+  // Normalises spaces, dashes, parentheses and the Nigerian local leading 0 before the E.164 check
+  phoneNumber: Joi.string()
+    .replace(/[\s\-()]/g, '')
+    .replace(/^0(?=[789]\d{9}$)/, '+234')
+    .pattern(/^\+?[1-9]\d{1,14}$/),
   email: Joi.string().email().lowercase(),
   password: Joi.string().min(8).pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/),
   name: Joi.string().min(1).max(100).trim(),

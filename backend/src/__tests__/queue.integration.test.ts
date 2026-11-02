@@ -7,7 +7,7 @@ import {
   PaymentQueueHelpers,
   NotificationQueueHelpers 
 } from '../shared/utils/queue-helpers';
-import { redisClient } from '../config/redis';
+import { redis as redisClient } from '../config/redis';
 
 describe('Queue System Tests', () => {
   beforeAll(async () => {
@@ -98,7 +98,7 @@ describe('Queue System Tests', () => {
       // Wait a moment for processing
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const jobStatus = await JobStatusChecker.getJobProgress(QUEUE_NAMES.SMS, job.id);
+      const jobStatus = await JobStatusChecker.getJobProgress(QUEUE_NAMES.SMS, job.id!);
       expect(jobStatus.progress).toBeGreaterThanOrEqual(0);
     }, 15000);
 
@@ -117,7 +117,7 @@ describe('Queue System Tests', () => {
       // Wait for processing
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const jobStatus = await JobStatusChecker.getJobProgress(QUEUE_NAMES.NOTIFICATION, job.id);
+      const jobStatus = await JobStatusChecker.getJobProgress(QUEUE_NAMES.NOTIFICATION, job.id!);
       expect(jobStatus.progress).toBeGreaterThanOrEqual(0);
     }, 15000);
 
@@ -214,7 +214,7 @@ describe('Queue System Tests', () => {
       );
 
       // Check initial status
-      const initialStatus = await JobStatusChecker.getJobProgress(QUEUE_NAMES.SMS, job.id);
+      const initialStatus = await JobStatusChecker.getJobProgress(QUEUE_NAMES.SMS, job.id!);
       expect(initialStatus.progress).toBe(0);
       expect(['waiting', 'processing'].includes(initialStatus.status)).toBe(true);
     });
@@ -235,13 +235,13 @@ describe('Queue System Tests', () => {
       try {
         const result = await JobStatusChecker.waitForJobCompletion(
           QUEUE_NAMES.NOTIFICATION,
-          job.id,
+          job.id!,
           10000 // 10 second timeout
         );
         expect(result).toBeDefined();
       } catch (error) {
         // Job might still be processing, which is acceptable
-        console.log('Job completion test - job may still be processing:', error.message);
+        console.log('Job completion test - job may still be processing:', (error as Error).message);
       }
     }, 15000);
   });
@@ -308,7 +308,7 @@ describe('Queue System Tests', () => {
       // Wait for processing and check that it handles the error
       await new Promise(resolve => setTimeout(resolve, 3000));
       
-      const status = await JobStatusChecker.getJobProgress(QUEUE_NAMES.SMS, job.id);
+      const status = await JobStatusChecker.getJobProgress(QUEUE_NAMES.SMS, job.id!);
       // Job should either be failed or completed (depending on mock behavior)
       expect(['failed', 'completed', 'processing'].includes(status.status)).toBe(true);
     }, 10000);

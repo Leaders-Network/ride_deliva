@@ -1,6 +1,6 @@
 # Job Queue System Documentation
 
-> **Status (November 2, 2026):** queue initialization, the six workers, and Bull Board run at startup and were verified against local PostgreSQL and Redis (a notification job completed). Provider limits: payment gateway and push notification delivery are **mocked**, in-app notification persistence is simulated, `payment_verification` and `driver_payout` intentionally throw until a gateway exists, and SMS/email need real Twilio/SMTP credentials. No HTTP API enqueues ride, delivery, or payment jobs yet. `queue.test.ts` does not currently compile. See [progress.md](../../docs/progress.md).
+> **Status (November 2, 2026):** queue initialization, the six workers, and Bull Board run at startup and were verified against local PostgreSQL and Redis (a notification job completed). Provider limits: payment gateway and push notification delivery are **mocked**, in-app notification persistence is simulated, `payment_verification` and `driver_payout` intentionally throw until a gateway exists, and SMS/email need real Twilio/SMTP credentials. No HTTP API enqueues ride, delivery, or payment jobs yet. `queue.integration.test.ts` compiles but has not been run against live Redis. See [progress.md](../../docs/progress.md).
 
 The Ride Deliva platform uses BullMQ with Redis for robust background job processing. This system handles SMS notifications, email sending, ride processing, payment operations, and delivery management.
 

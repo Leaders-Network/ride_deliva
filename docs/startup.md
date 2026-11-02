@@ -152,7 +152,8 @@ npm run dev          # Development server with hot reload
 npm run build        # TypeScript compilation
 npm run start        # Production server
 npm run typecheck    # tsc --noEmit (currently 0 errors)
-npm test             # Jest (4 of 9 suites pass; see docs/progress.md)
+npm test             # Unit tests (8 suites, 73 tests)
+npm run test:integration  # Needs PostgreSQL and Redis running
 npm run db:generate  # Generate Prisma client
 npm run db:migrate   # Create/apply dev migrations (db:migrate:prod to deploy)
 npm run db:seed      # Seed database
@@ -221,7 +222,7 @@ curl -X POST http://localhost:3000/api/v1/auth/register \
 - **TypeScript**: 0 compiler errors; production build and startup verified
 
 ### 🚧 In Progress
-- **Test suite**: 5 of 9 Jest suites failing (stale auth expectations, queue/socket fixture compile errors)
+- **Integration tests**: queue and socket suites compile but have not been run against live services
 - **External Integrations**: Google Maps, FCM, AWS S3, payment gateway, Twilio/SMTP credentials
 
 ### ⏳ Planned

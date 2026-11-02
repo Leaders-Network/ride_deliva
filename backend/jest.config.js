@@ -3,6 +3,8 @@ module.exports = {
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
   testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
+  // Integration suites need live PostgreSQL/Redis; run them with `npm run test:integration`
+  testPathIgnorePatterns: ['/node_modules/', '\\.integration\\.test\\.ts$'],
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },

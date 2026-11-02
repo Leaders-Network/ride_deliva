@@ -82,10 +82,10 @@ Status as of November 2, 2026. See [docs/progress.md](docs/progress.md) for the 
 ### Core Platform (backend)
 - [x] Project structure and development environment
 - [x] PostgreSQL + PostGIS + Redis infrastructure (Docker Compose; verified)
-- [x] Authentication and sessions (implemented; some auth tests still failing)
+- [x] Authentication and sessions (implemented; HTTP contract tests pass)
 - [x] Real-time communication (Socket.IO; location persistence pending)
 - [x] Job queue system (6 BullMQ queues + Bull Board; payment and push providers are mocked)
-- [ ] Green test suite and CI (4 of 9 suites pass)
+- [x] Green unit test suite (73 tests); [ ] CI and integration runs
 
 ### Customer Experience
 - [x] Onboarding, login and OTP screens (UI only)

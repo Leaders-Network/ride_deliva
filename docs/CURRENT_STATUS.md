@@ -10,10 +10,10 @@ This is a short summary. The detailed, evidence-based backend breakdown is in [p
 | --- | --- |
 | Backend foundation | Built and verified: zero TypeScript errors, production build and startup verified against PostgreSQL/PostGIS and Redis |
 | Backend business APIs | Not built: rides, deliveries, payments, users, notifications, admin routes are not mounted |
-| Backend tests | 4 of 9 Jest suites pass (56 of 73 tests); 5 suites fail |
+| Backend tests | All 8 unit suites pass (73 tests); 2 integration suites compile but have not been run |
 | Customer app | UI screens only; not connected to the backend |
 | Driver app | UI screens only; not connected to the backend |
-| CI / deployment | Not started |
+| CI / deployment | Backend CI workflow added (typecheck, unit tests, build); deployment not started |
 
 ## Backend
 
@@ -50,8 +50,8 @@ All of these are still placeholder configuration: Google Maps, Firebase/FCM, Twi
 
 ## Next steps
 
-1. Fix the 5 failing Jest suites so tests can gate changes.
+1. Confirm the first GitHub Actions run is green.
 2. Mount users, rides, delivery, and payments routers; build the ride booking path end to end.
-3. Add CI (typecheck, test, build).
+3. Run the integration suites against live Redis/PostgreSQL.
 4. Choose a payment provider, then build wallet and webhook handling.
 5. Connect the Flutter apps to the REST API and sockets.

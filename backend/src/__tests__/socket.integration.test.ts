@@ -308,30 +308,31 @@ describe('Socket.IO HTTP Endpoints', () => {
       expect(response.body.error.code).toBe('FORBIDDEN');
     });
   });
-});
 
-describe('Socket Service Error Handling', () => {
-  it('should handle invalid location updates gracefully', () => {
-    expect(() => {
-      // This should not throw
-      socketService.getDriverLocation('non-existent-driver');
-    }).not.toThrow();
-  });
 
-  it('should handle cleanup of inactive drivers', () => {
-    expect(() => {
-      socketService.cleanupInactiveDrivers();
-    }).not.toThrow();
-  });
-
-  it('should handle notification to non-existent user', async () => {
-    const result = await socketService.sendNotification({
-      userId: 'non-existent-user',
-      type: 'TEST',
-      title: 'Test',
-      message: 'Test message',
+  describe('Socket Service Error Handling', () => {
+    it('should handle invalid location updates gracefully', () => {
+      expect(() => {
+        // This should not throw
+        socketService.getDriverLocation('non-existent-driver');
+      }).not.toThrow();
     });
 
-    expect(result).toBe(false);
+    it('should handle cleanup of inactive drivers', () => {
+      expect(() => {
+        socketService.cleanupInactiveDrivers();
+      }).not.toThrow();
+    });
+
+    it('should handle notification to non-existent user', async () => {
+      const result = await socketService.sendNotification({
+        userId: 'non-existent-user',
+        type: 'TEST',
+        title: 'Test',
+        message: 'Test message',
+      });
+
+      expect(result).toBe(false);
+    });
   });
 });

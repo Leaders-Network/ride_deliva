@@ -1,6 +1,6 @@
 # Ride Deliva Testing Strategy
 
-> **Status note (November 2, 2026):** the examples below describe the target strategy. Actual state: backend tests live in `backend/src/__tests__/` (not `backend/tests/`), `jest.config.js` matches `**/__tests__/**/*.ts` and `*.test.ts`, and there is no `test:integration` script or CI workflow. Latest run: 9 suites, 4 pass (`bull-board-auth`, `health`, `token-lifetime`, `worker-contracts`) and 5 fail (`auth`, `app`, `database`, `queue`, `socket`); 56 of 73 tests pass. The Flutter apps have only template and exploration tests. Details in [progress.md](./progress.md).
+> **Status note (November 2, 2026):** the examples below describe the target strategy. Actual state: backend tests live in `backend/src/__tests__/` (not `backend/tests/`), `jest.config.js` matches `**/__tests__/**/*.ts` and `*.test.ts`, and CI (`.github/workflows/backend.yml`) runs the unit tests only. Unit tests (`*.test.ts`) run with `npm test`: 8 suites, 73 tests, all passing (Nov 2). Integration tests (`*.integration.test.ts`: `queue`, `socket`) need live Redis/PostgreSQL and run with `npm run test:integration` (`jest.integration.config.js`); they compile but have not been run yet. The Flutter apps have only template and exploration tests. Details in [progress.md](./progress.md).
 
 ## Testing Philosophy
 
@@ -694,7 +694,8 @@ npm run test:coverage
 # Run in watch mode
 npm run test:watch
 
-# Integration tests: not yet available (no test:integration script)
+# Integration tests (start PostgreSQL and Redis first, e.g. npm run docker:up at the repo root)
+npm run test:integration
 # Other helpers: npm run test:auth | test:socket | test:queues (manual scripts; need running services)
 ```
 

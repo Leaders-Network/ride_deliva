@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authController } from './controllers/auth.controller';
 import { validate } from '@/shared/utils/validation';
+import { ResponseUtil } from '@/shared/utils/response';
 import { 
   authenticate, 
   authenticateVerifiedUser,
@@ -137,7 +138,7 @@ router.get('/verify-session',
 
 // API information endpoint
 router.get('/', (req, res) => {
-  res.json({
+  ResponseUtil.success(res, {
     name: 'Authentication API',
     version: '1.0.0',
     endpoints: {

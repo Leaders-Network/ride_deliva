@@ -21,7 +21,7 @@ This document tracks what the backend implements, what has been verified, and wh
 | `npm run typecheck` | 0 diagnostics (was 113 before the October repair work) |
 | `npm run build` | Passes (verified Oct 8-9) |
 | Production startup (`npm start`) | Verified against local PostgreSQL/PostGIS and Redis (Oct 9) |
-| `npm test -- --runInBand` | 9 suites: 4 pass, 5 fail. 73 tests: 56 pass, 17 fail |
+| `npm test -- --runInBand` | 8 unit suites, 73 tests: all pass (Nov 2). 2 integration suites (`npm run test:integration`) compile but need live Redis/PostgreSQL and have not been run |
 | Mounted API modules | `auth`, `socket`, `queues`, plus `/health*` and Bull Board |
 | Unmounted API modules | users, rides, delivery, payments, webhooks, admin |
 | Prisma | 20 models, 18 enums, one migration (`20260831192643_init`), seed script |
@@ -60,7 +60,7 @@ This document tracks what the backend implements, what has been verified, and wh
 
 ### 2.3 Authentication and sessions (`/api/v1/auth`)
 
-Status: **Implemented; behavior only partly verified.** `token-lifetime.test.ts` passes; `auth.test.ts` has 15 failing tests (stale response and mock expectations, not confirmed product bugs).
+Status: **Verified at the HTTP-contract level** (service mocked; 25 tests in `auth.test.ts` and `auth.service.test.ts` pass). Behavior against a live database and a real SMS provider is not yet verified.
 
 | Endpoint | Auth |
 | --- | --- |
@@ -69,7 +69,8 @@ Status: **Implemented; behavior only partly verified.** `token-lifetime.test.ts`
 | `GET/PUT /profile`, `POST /logout`, `/logout-all`, `/change-password`, `GET /sessions`, `DELETE /sessions/:sessionId`, `GET /verify-session` | Bearer token |
 
 Remaining:
-- [ ] Repair auth test expectations, then confirm OTP, login, refresh rotation, and revocation behavior.
+- [x] Repair auth test expectations (Nov 2).
+- [ ] Confirm OTP, login, refresh rotation, and revocation against a live database.
 - [ ] Real SMS delivery (Twilio is configured but credentials are placeholders; OTP is not verified against a live provider).
 - [ ] Role and ownership rules per operation (customer vs driver vs admin).
 - [ ] Align docs: API reference lists `/verify-otp` and `/auth/me`; code uses `/verify-phone` and `/auth/profile`.
@@ -83,7 +84,7 @@ Status: **Partial.**
 - Gaps:
   - [ ] Persist driver locations and ride tracking points (currently in memory).
   - [ ] Enforce ride ownership and lifecycle permissions on ride events.
-  - [ ] `socket.test.ts` does not compile (undeclared fixtures).
+  - [x] `socket.integration.test.ts` now compiles (a describe-scope bug was fixed); it still needs a live server to run.
   - [ ] Event names in docs differ from `SOCKET_EVENTS` constants; reconcile.
 
 ### 2.5 Queues and workers (BullMQ)
@@ -102,7 +103,7 @@ Status: **Partial.** Initialization, workers, and Bull Board are wired and verif
 - Queue admin API (`/api/v1/queues`): `statistics`, `:queueName`, `pause`, `resume`, `clean`, `jobs/:jobId`, `retry`, `remove`, `test`.
 - Bull Board at `/admin/queues`, authenticated through `AuthService`, admin or super-admin only (6 passing tests).
 - Remaining:
-  - [ ] Live-Redis worker tests (concurrent acceptance, retries, idempotency); `queue.test.ts` does not compile.
+  - [ ] Run `queue.integration.test.ts` against live Redis (it now compiles) and add worker tests for concurrent acceptance, retries, and idempotency.
   - [ ] Payment verification and driver payout deliberately throw until a gateway is integrated.
   - [ ] Wallet trip settlement and partial-refund accounting.
 
@@ -123,23 +124,22 @@ Status: **Partial.** Initialization, workers, and Bull Board are wired and verif
 
 ### 2.7 Testing
 
-| Suite | Result | Cause |
+| Suite | Type | Result |
 | --- | --- | --- |
-| `bull-board-auth` | Pass | |
-| `health` | Pass | |
-| `token-lifetime` | Pass | |
-| `worker-contracts` | Pass | Models, relations, statuses, money units, job discriminators |
-| `auth` | 15 tests fail | Stale response shapes and mock setup |
-| `app` | 1 test fails | `GET /api/v1/auth` response shape |
-| `database` | 1 test fails | "should have correct model structure" |
-| `queue` | Suite fails to compile | Type and import errors in fixtures |
-| `socket` | Suite fails to compile | Undeclared fixtures |
+| `auth` (HTTP contract, service mocked) | Unit | Pass |
+| `auth.service` (real hashing, JWT, roles) | Unit | Pass |
+| `app`, `health`, `database` (schema models) | Unit | Pass |
+| `bull-board-auth`, `token-lifetime` | Unit | Pass |
+| `worker-contracts` (models, relations, statuses, money units, job types) | Unit | Pass |
+| `queue.integration` | Integration (live Redis) | Compiles; not run |
+| `socket.integration` | Integration (live server) | Compiles; not run |
 
-There is no integration-test script, no coverage threshold in practice, and no CI.
+`npm test` runs the unit suites; `npm run test:integration` runs the integration suites. There is no coverage threshold in practice and no CI yet.
 
 ### 2.8 Infrastructure and operations
 
-- [ ] CI pipeline (typecheck, lint, tests, build).
+- [x] CI pipeline: `.github/workflows/backend.yml` runs install, Prisma generate, typecheck, unit tests, and build on pushes and PRs touching `backend/` (added Nov 2; not yet run on GitHub, but the same commands pass locally with CI-style env vars and no `.env`).
+- [ ] CI: add lint, a PostgreSQL+Redis service job for `test:integration`, and Flutter analysis.
 - [ ] Production Dockerfile and deployment configuration.
 - [ ] Monitoring and alerting beyond health endpoints and Bull Board.
 - [ ] Secrets management; `.env.example` exists and placeholder values are used for external services.
@@ -157,7 +157,8 @@ There is no integration-test script, no coverage threshold in practice, and no C
 - [x] Bull Board authentication
 - [x] Environment validation, dependency-aware health, queue initialization, clean shutdown
 - [x] Docker extensions, migration, seed, spatial query, real job processing verified
-- [ ] **Green test suite** (fix 5 failing suites; the only open item)
+- [x] **Green unit test suite** (8 suites, 73 tests, Nov 2)
+- [ ] Run the integration suites against live services (needs Docker up)
 
 ### M2. API contract and database alignment
 
@@ -194,16 +195,23 @@ There is no integration-test script, no coverage threshold in practice, and no C
 
 ## 4. Suggested next steps
 
-1. Fix the 5 failing test suites so the suite is a reliable gate (auth expectations, queue/socket fixtures, the one database test, the one app test).
-2. Mount `users`, `rides`, `delivery`, and `payments` routers and build the ride booking path first (M3).
-3. Add a CI workflow running `typecheck`, `test`, and `build`.
+1. ~~Fix the failing test suites~~ (done Nov 2).
+2. ~~Add CI~~ (workflow added Nov 2; confirm the first GitHub run is green). Next, mount `users`, `rides`, `delivery`, and `payments` routers and build the ride booking path first (M3).
 4. Pick a payment provider (Paystack or Stripe) before building wallet and webhook code.
 
 ## 5. Work log
 
+### November 2, 2026 - Green unit test suite
+
+- Root causes of the 17 failures were few: (1) the error handler omitted `success: false`, so error and success responses had different envelopes (fixed in `error-handler.ts`); (2) `GET /auth` returned a raw object instead of the standard envelope (fixed); (3) the auth "unit" tests ran inside a file that auto-mocked the whole service, so they exercised stubs (moved to `auth.service.test.ts`); (4) fixtures lacked `isActive: true`, which the real middleware requires; (5) the database test mocked the Prisma client and then inspected the mock (now reads `Prisma.ModelName` from the real generated client).
+- Behavior change: the shared `phoneNumber` Joi rule now strips spaces, dashes and parentheses and converts Nigerian local numbers (`0812...`) to `+234...` before validating. Garbage input still fails.
+- Queue and socket suites were integration tests in disguise (live Redis/server). They were renamed `*.integration.test.ts`, excluded from `npm test`, and given `npm run test:integration` (`jest.integration.config.js`). Their compile errors were fixed; they have not been run because Docker was not running.
+- Result: 8 suites, 73 tests pass; typecheck clean.
+- Added `.github/workflows/backend.yml` (typecheck, unit tests, build). The generated Prisma client and `.env` are not in git, so the workflow runs `db:generate` and supplies throwaway env vars.
+
 ### November 2, 2026 - Documentation reconciliation
 
-- Re-ran typecheck (0 diagnostics) and the full Jest run (4 of 9 suites pass; 56 of 73 tests pass).
+- Re-ran typecheck (0 diagnostics) and the full Jest run (at that point 4 of 9 suites passed; see the entry above for the fix).
 - Rewrote this document with a feature inventory and milestones; updated the remaining docs to match the code (README, CURRENT_STATUS, architecture, api-reference, startup, testing, QUEUE_SYSTEM).
 - Fixed the root `db:seed` script (it called a nonexistent `seed` script).
 

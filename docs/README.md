@@ -42,7 +42,7 @@ This directory contains comprehensive documentation for the Ride Deliva platform
 ### 🚧 Not yet built
 - **Backend APIs**: users, rides, deliveries, payments, notifications, admin (workers for rides, deliveries and payments exist but no REST endpoints trigger them)
 - **Integrations**: real payment gateway, push notifications, SMS/email credentials, Google Maps
-- **Quality**: 5 of 9 Jest suites fail; no CI
+- **Quality**: unit tests pass (73); integration tests not yet run; no CI
 - **Mobile**: BLoC state management and API integration
 - **Deployment**: CI/CD and production infrastructure
 
