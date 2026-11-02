@@ -1,5 +1,7 @@
 # Ride Deliva Testing Strategy
 
+> **Status note (November 2, 2026):** the examples below describe the target strategy. Actual state: backend tests live in `backend/src/__tests__/` (not `backend/tests/`), `jest.config.js` matches `**/__tests__/**/*.ts` and `*.test.ts`, and there is no `test:integration` script or CI workflow. Latest run: 9 suites, 4 pass (`bull-board-auth`, `health`, `token-lifetime`, `worker-contracts`) and 5 fail (`auth`, `app`, `database`, `queue`, `socket`); 56 of 73 tests pass. The Flutter apps have only template and exploration tests. Details in [progress.md](./progress.md).
+
 ## Testing Philosophy
 
 Our testing approach follows the testing pyramid:
@@ -692,8 +694,8 @@ npm run test:coverage
 # Run in watch mode
 npm run test:watch
 
-# Run integration tests only
-npm run test:integration
+# Integration tests: not yet available (no test:integration script)
+# Other helpers: npm run test:auth | test:socket | test:queues (manual scripts; need running services)
 ```
 
 #### Flutter Tests

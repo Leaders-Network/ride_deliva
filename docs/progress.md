@@ -1,138 +1,226 @@
-﻿# Ride Deliva - Development Progress
+# Ride Deliva - Backend Progress
 
-Last updated: October 9, 2026
+Last updated: November 2, 2026
 
-## Current position
+This document tracks what the backend implements, what has been verified, and what remains. It replaces earlier percentage-based status claims. Mobile app status is summarized in [CURRENT_STATUS.md](./CURRENT_STATUS.md).
 
-The backend has substantial foundation code and partial services. Core ride and delivery workflows are unfinished. Earlier completion percentages and production-readiness claims are superseded by this evidence-based assessment.
+**Status definitions**
 
-Status definitions: **Implemented** means code exists; **verified** means a relevant check passed; **partial** means wiring or behavior is incomplete; **planned** means the feature API is absent. Database and external-service operation have not been verified during this audit.
+| Label | Meaning |
+| --- | --- |
+| Verified | Code exists and a check (test, typecheck, or runtime run) passed |
+| Implemented | Code exists; no passing check yet |
+| Partial | Some behavior exists; wiring or logic is incomplete |
+| Mocked | Runs against a fake provider; not production-usable |
+| Planned | No API or implementation yet |
 
-## Verified baseline
+## 1. Snapshot (re-checked November 2, 2026)
 
-- TypeScript: `npx --no-install tsc --noEmit --pretty false` failed with 113 diagnostics before this work.
-- Tests: `npm test -- --runInBand --watch=false` failed in all five suites during setup; zero tests executed. Jest alias mapping was misconfigured.
-- Mounted feature routes: auth, socket management, and queue management. Health routes also exist.
-- Users, rides, delivery, and payment routes are commented out; Stripe webhook routing is disabled.
-- Prisma: 20 models, initial migration, and seed code exist. Migration and seed execution remain unverified.
-- BullMQ: six configured queues (SMS, email, notification, ride, payment, delivery).
-- Application startup bypasses environment validation, dependency checks, queue initialization, and Bull Board mounting.
-- Health reports overall healthy and readiness returns true without checking PostgreSQL or Redis.
-- Payment and push notification processors use mock providers. In-app notification persistence is simulated.
-- Ride/delivery/payment worker model, relation, status, money-unit, and job-discriminator contracts are covered by focused schema-contract tests; live PostgreSQL/Redis processing remains unverified.
+| Check | Result |
+| --- | --- |
+| `npm run typecheck` | 0 diagnostics (was 113 before the October repair work) |
+| `npm run build` | Passes (verified Oct 8-9) |
+| Production startup (`npm start`) | Verified against local PostgreSQL/PostGIS and Redis (Oct 9) |
+| `npm test -- --runInBand` | 9 suites: 4 pass, 5 fail. 73 tests: 56 pass, 17 fail |
+| Mounted API modules | `auth`, `socket`, `queues`, plus `/health*` and Bull Board |
+| Unmounted API modules | users, rides, delivery, payments, webhooks, admin |
+| Prisma | 20 models, 18 enums, one migration (`20260831192643_init`), seed script |
+| Queues | 6 BullMQ queues with workers (sms, email, notification, ride, payment, delivery) |
+| Git | `main`, 6 commits, latest `9539172` (Oct 9) |
 
-## Backend feature inventory
+**Bottom line:** the foundation (server, database, auth, queues, sockets, health) is built and runs. No customer-facing ride, delivery, or payment REST API exists yet, so no end-to-end business flow works. Ride, delivery, and payment logic lives in queue workers that nothing in the HTTP layer triggers.
+
+## 2. Feature inventory
+
+### 2.1 Foundation
+
+| Area | Status | Evidence / notes |
+| --- | --- | --- |
+| Express app, Helmet, CORS, compression, Morgan, rate limiter, request logger | Verified | Runs in production start; `app.test.ts` partly failing (see 4) |
+| Centralized error handler, 404 handler, response helpers | Implemented | |
+| Winston logging | Implemented | |
+| Environment validation | Verified | Rejects malformed DB/Redis URLs, bad ports, short or unsafe JWT/encryption secrets (Oct 9) |
+| Startup sequence | Verified | Checks Prisma and three Redis connections, then waits for all queue/worker/event connections before listening |
+| Graceful shutdown | Verified | Closes HTTP, BullMQ, then Prisma and Redis |
+| Health endpoints `/health`, `/health/readiness`, `/health/liveness` | Verified | Readiness checks PostgreSQL and Redis; `health.test.ts` passes |
+| Docker Compose (PostgreSQL+PostGIS, Redis) | Verified | Both containers healthy; six extensions present |
+| TypeScript build with path aliases (`@/`) | Verified | Production preload hook `register-paths.cjs` resolves aliases |
+
+### 2.2 Database (Prisma 5.22, PostgreSQL + PostGIS)
+
+| Area | Status | Notes |
+| --- | --- | --- |
+| Schema (20 models) | Verified | User, CustomerProfile, DriverProfile, AdminProfile, Session, VerificationCode, Address, DriverLocation, Vehicle, Ride, RideTrackingPoint, Delivery, DeliveryTrackingPoint, Wallet, Transaction, Payment, Review, DriverEarning, Notification, SupportTicket |
+| Initial migration deploys | Verified | Oct 9 |
+| Seed data | Verified | `npm run db:seed` |
+| `db:validate` (extensions, functions, unique indexes) | Verified | All six groups pass |
+| PostGIS nearby-driver / distance query | Verified | Ad hoc query succeeded; app-level query paths are untested |
+| Repository layer (base, user, ride) | Implemented | No delivery, payment, wallet, or notification repositories |
+| Money units | Decided | Prisma stores naira; queues carry integer kobo; conversions are covered by `worker-contracts.test.ts` |
+
+### 2.3 Authentication and sessions (`/api/v1/auth`)
+
+Status: **Implemented; behavior only partly verified.** `token-lifetime.test.ts` passes; `auth.test.ts` has 15 failing tests (stale response and mock expectations, not confirmed product bugs).
+
+| Endpoint | Auth |
+| --- | --- |
+| `POST /register`, `/login`, `/send-code`, `/verify-phone`, `/refresh-token`, `/forgot-password`, `/reset-password` | Public |
+| `GET /check` | Public |
+| `GET/PUT /profile`, `POST /logout`, `/logout-all`, `/change-password`, `GET /sessions`, `DELETE /sessions/:sessionId`, `GET /verify-session` | Bearer token |
+
+Remaining:
+- [ ] Repair auth test expectations, then confirm OTP, login, refresh rotation, and revocation behavior.
+- [ ] Real SMS delivery (Twilio is configured but credentials are placeholders; OTP is not verified against a live provider).
+- [ ] Role and ownership rules per operation (customer vs driver vs admin).
+- [ ] Align docs: API reference lists `/verify-otp` and `/auth/me`; code uses `/verify-phone` and `/auth/profile`.
+
+### 2.4 Real-time (Socket.IO)
+
+Status: **Partial.**
+
+- Implemented: authenticated connections, role rooms, driver online/offline, driver location updates held in memory, ride events (`requested`, `accepted`, `cancelled`, `started`, `completed`, `location_update`), notification push helper.
+- REST management under `/api/v1/socket`: `info`, `health`, `stats`, `connection/status`, `drivers/:driverId/location`, `drivers/connected`, `notifications/test`, `broadcast/role`, `rides/message`.
+- Gaps:
+  - [ ] Persist driver locations and ride tracking points (currently in memory).
+  - [ ] Enforce ride ownership and lifecycle permissions on ride events.
+  - [ ] `socket.test.ts` does not compile (undeclared fixtures).
+  - [ ] Event names in docs differ from `SOCKET_EVENTS` constants; reconcile.
+
+### 2.5 Queues and workers (BullMQ)
+
+Status: **Partial.** Initialization, workers, and Bull Board are wired and verified at startup; a real notification job completed on Oct 9.
+
+| Queue | Job types | Status |
+| --- | --- | --- |
+| `sms` | verification, transactional, marketing, alert | Implemented; Twilio credentials needed |
+| `email` | transactional, receipt, marketing, system | Implemented; SMTP credentials needed |
+| `notification` | push, in_app, broadcast | Push is **mocked**; in-app persistence is **simulated** |
+| `ride` | match_driver, calculate_fare, update_status, cancel_ride, complete_ride | Implemented on Prisma; driver matching logic refactored Oct 8; only contract tests |
+| `payment` | process_ride_payment, process_delivery_payment, process_refund, wallet_top_up, driver_payout, payment_verification, failed_payment_retry | Partial; gateway **mocked** |
+| `delivery` | assign_courier, calculate_delivery_fee, optimize_route, handle_delivery_completion, process_failed_delivery | Implemented; contract tests only |
+
+- Queue admin API (`/api/v1/queues`): `statistics`, `:queueName`, `pause`, `resume`, `clean`, `jobs/:jobId`, `retry`, `remove`, `test`.
+- Bull Board at `/admin/queues`, authenticated through `AuthService`, admin or super-admin only (6 passing tests).
+- Remaining:
+  - [ ] Live-Redis worker tests (concurrent acceptance, retries, idempotency); `queue.test.ts` does not compile.
+  - [ ] Payment verification and driver payout deliberately throw until a gateway is integrated.
+  - [ ] Wallet trip settlement and partial-refund accounting.
+
+### 2.6 Domain APIs
 
 | Area | Status | Remaining work |
 | --- | --- | --- |
-| Express, security middleware, logging, validation | Implemented; verification pending | Build/runtime fixes and integration checks |
-| PostgreSQL/Prisma | Partial | Verify migrations/seeding, resolve schema/query mismatches |
-| PostGIS | Partial | Align container extensions, spatial storage, queries, and indexes |
-| Authentication and sessions | Implemented; verification pending | Fix dependencies/types; verify OTP, login, refresh, revocation |
-| Socket.IO | Partial | Persist tracking; enforce ride ownership and lifecycle permissions |
-| Queues and Bull Board | Partial | Restore initialization/dashboard; repair and test workers |
-| User/driver management | Partial | Profile/document uploads, vehicles, verification, availability APIs |
-| Rides | Partial; REST API absent | Estimates, booking, matching, acceptance, lifecycle, history, ratings |
-| Deliveries | Partial; REST API absent | Booking, courier assignment, tracking, proof of delivery, history |
-| Payments/wallet | Partial; mock gateway | Real gateway, atomic ledger operations, idempotent webhooks, refunds/payouts |
-| Notifications | Partial; mock push | FCM/APNs, token registration, persistence, read APIs |
-| Admin/support/analytics | Planned APIs | Driver approval, support operations, reporting, financial oversight |
-| Deployment and CI | Planned | Buildable production entry point, automated checks, deployment configuration |
+| Users / profiles / uploads | Planned (route file absent) | Profile image upload, customer addresses |
+| Driver management | Planned | Documents, vehicle, availability, persisted location, admin approval |
+| Rides | Planned (REST absent; worker partial) | Fare estimate, booking, matching trigger, atomic acceptance, arrival/start/cancel/complete, history, ratings |
+| Deliveries | Planned (REST absent; worker partial) | Booking, courier assignment, lifecycle, proof of delivery, tracking, history |
+| Payments and wallet | Planned (REST absent; worker partial/mocked) | Gateway integration, atomic top-up/debit/refund, earnings and payouts, transaction history |
+| Stripe/Paystack webhooks | Implemented but unmounted | Stripe controller has handler stubs (all `TODO`); needs raw-body route, signature check, replay protection, idempotency, Paystack equivalent |
+| Notifications | Planned (REST absent) | FCM/APNs, device token registration, persistence, read/unread APIs |
+| Reviews and support tickets | Planned (models only) | Create/read APIs, moderation |
+| Location services (geocode, route, places) | Planned | Google Maps integration (API key placeholder) |
+| Admin and analytics | Planned | Driver approval, user management, support, reporting, financial oversight |
 
-## Ordered implementation backlog
+### 2.7 Testing
 
-### 1. Stabilize and verify the foundation - in progress
+| Suite | Result | Cause |
+| --- | --- | --- |
+| `bull-board-auth` | Pass | |
+| `health` | Pass | |
+| `token-lifetime` | Pass | |
+| `worker-contracts` | Pass | Models, relations, statuses, money units, job discriminators |
+| `auth` | 15 tests fail | Stale response shapes and mock setup |
+| `app` | 1 test fails | `GET /api/v1/auth` response shape |
+| `database` | 1 test fails | "should have correct model structure" |
+| `queue` | Suite fails to compile | Type and import errors in fixtures |
+| `socket` | Suite fails to compile | Undeclared fixtures |
 
-- [x] Audit documentation against routes, services, schema, compilation, and tests.
-- [x] Repair Jest aliases and identified Prisma import paths; rerun existing suites.
-- [x] Repair missing repository/processor imports and queue rate-limit construction.
-- [x] Repair Bull Board authentication and verify access rules with six focused tests.
-- [x] Reach zero compiler diagnostics without suppressing checks or weakening types (backend source typecheck and production build verified October 8, 2026; legacy test-suite errors remain separate).
-- [x] Reconcile worker models, relations, statuses, and service contracts.
-- [x] Verify compiled production startup; TypeScript path aliases resolve through the production preload hook.
-- [x] Restore environment validation and dependency-aware health/readiness.
-- [x] Restore PostgreSQL/Redis checks, queue initialization, Bull Board, and clean shutdown.
-- [x] Verify Docker extensions, migrations, seed data, spatial queries, and job processing.
+There is no integration-test script, no coverage threshold in practice, and no CI.
 
-### 2. Align the API contract and database
+### 2.8 Infrastructure and operations
 
-- [ ] Resolve documented `/orders` endpoints versus separate Ride/Delivery models.
-- [ ] Standardize request/response fields, lifecycle enums, currency units, and socket events.
-- [ ] Reconcile auth docs with `/verify-phone`, `/refresh-token`, and `/auth/profile`.
-- [ ] Define role permissions and resource ownership for each operation.
+- [ ] CI pipeline (typecheck, lint, tests, build).
+- [ ] Production Dockerfile and deployment configuration.
+- [ ] Monitoring and alerting beyond health endpoints and Bull Board.
+- [ ] Secrets management; `.env.example` exists and placeholder values are used for external services.
+- [ ] External services still unconfigured: Google Maps, Firebase/FCM, Twilio, SMTP, S3, Stripe/Paystack keys.
+- [ ] Prisma note: `@prisma/adapter-pg` is at ^7.10 while `@prisma/client` is ^5.22; confirm the adapter is needed or remove it.
 
-### 3. Deliver one complete ride workflow
+## 3. Milestones
 
-- [ ] Verified customer and approved driver authentication.
-- [ ] Driver documents, vehicle, availability, and persisted location.
-- [ ] Fare estimate and booking APIs.
-- [ ] Matching and atomic driver acceptance, including concurrent acceptance protection.
-- [ ] Arrival, start, cancellation, completion, tracking, and trip history.
-- [ ] Payment settlement and rating.
-- [ ] Verify the complete workflow through integration tests and both mobile apps.
+### M1. Stabilize and verify the foundation - mostly done
 
-### 4. Complete financial and communication services
+- [x] Audit documentation against code
+- [x] Jest alias fix, Prisma import fixes, missing imports
+- [x] Zero compiler diagnostics without suppression
+- [x] Worker models, relations, and contracts reconciled
+- [x] Bull Board authentication
+- [x] Environment validation, dependency-aware health, queue initialization, clean shutdown
+- [x] Docker extensions, migration, seed, spatial query, real job processing verified
+- [ ] **Green test suite** (fix 5 failing suites; the only open item)
 
-- [ ] Replace payment mocks with a real provider integration.
-- [ ] Implement webhook raw-body verification, replay protection, and idempotency.
-- [ ] Implement atomic wallet top-up/debit/refund and driver earnings/payout operations.
-- [ ] Replace push mocks; persist notifications and implement token/read APIs.
+### M2. API contract and database alignment
 
-### 5. Complete delivery and operational features
+- [ ] Decide `/orders` (docs) versus separate Ride and Delivery models (code); recommendation: keep separate models and update docs
+- [ ] Standardize field names, lifecycle enums, currency units, and socket events
+- [ ] Define role permissions and ownership per operation
 
-- [ ] Delivery booking, assignment, lifecycle, proof, tracking, and history APIs.
-- [ ] Admin driver approval, user management, support tickets, reviews, and analytics.
-- [ ] Customer/driver API, state management, socket, and push integration.
-- [ ] CI, meaningful coverage measurement, deployment, and operational monitoring.
+### M3. One complete ride workflow
 
-## Documentation follow-up
+- [ ] Verified customer auth and approved driver auth
+- [ ] Driver documents, vehicle, availability, persisted location
+- [ ] Fare estimate and booking APIs
+- [ ] Matching and atomic driver acceptance with concurrency protection
+- [ ] Arrival, start, cancellation, completion, tracking, history
+- [ ] Payment settlement and rating
+- [ ] Integration tests plus verification from both mobile apps
 
-- [ ] Reconcile CURRENT_STATUS.md with this verified baseline.
-- [ ] Label implemented versus planned endpoints in api-reference.md.
-- [ ] Reconcile architecture.md with the actual schema and runtime behavior.
-- [ ] Correct startup.md script names to db:generate, db:migrate, db:seed, db:studio.
-- [ ] Correct the root db:seed script, which invokes an absent backend seed script.
-- [ ] Reconcile testing.md examples, actual configuration, and absent test:integration script.
-- [ ] Update backend/docs/QUEUE_SYSTEM.md for disabled initialization/dashboard and mock providers.
-- [ ] Reconcile root/docs READMEs with implementation status.
+### M4. Financial and communication services
 
-## Current work log
+- [ ] Real payment provider
+- [ ] Webhook raw-body verification, replay protection, idempotency
+- [ ] Atomic wallet top-up/debit/refund, driver earnings and payouts
+- [ ] Real push notifications; persisted notifications with token and read APIs
 
-### October 8, 2026 - First foundation repair batch
+### M5. Delivery and operations
 
-- Fixed Jest's moduleNameMapper configuration. Existing suites now resolve aliases and expose additional TypeScript/test errors.
-- Corrected generated Prisma imports in middleware, shared types, and database tests.
-- Added missing imports used by repository instances and the processor type union.
-- Corrected queue routes to construct express-rate-limit middleware instead of calling an existing middleware as a factory.
-- Corrected Bull Board to authenticate through AuthService and require an active admin/super-admin user. Added six focused access-control tests; all pass with dashboard and service dependencies mocked.
-- Removed a duplicate TypeScript path mapping.
-- Compiler diagnostics decreased from 113 to 100. Compilation still fails; no checks were suppressed or types weakened.
-- The five pre-existing suites remain blocked before test execution. Reported blockers include JWT expiry typing, authentication/repository contracts, undeclared socket-test fixtures, and queue-test type/import errors.
-- The focused dashboard test initially exposed a local dependency-resolution issue: @bull-board/api could not resolve bullmq. Dashboard dependencies are mocked in the access-control test; real dashboard startup remains unverified and the dependency installation needs inspection.
+- [ ] Delivery booking, assignment, lifecycle, proof, tracking, history
+- [ ] Admin: driver approval, user management, support tickets, reviews, analytics
+- [ ] CI, coverage measurement, deployment, monitoring
 
-### October 8, 2026 - Compiler milestone completed
+### M6. Mobile integration
 
-- Backend source diagnostics reduced from 100 to zero. `npm run typecheck` and `npm run build` pass. Strict compiler settings and existing compilation scope are unchanged; no diagnostic suppression or additional exclusions were introduced.
-- Fixed socket-handler response returns and typed access to the socket service, transaction callback types, repository ID constraints and profile inference, JWT lifetime parsing, SMS options, BullMQ worker settings/cleanup return values, response metadata, and webhook configuration/signature guards.
-- Ride, delivery, and payment workers now use generated Prisma delegates instead of untyped model-name calls. Corrected customer/driver relations, schema lifecycle values, fare fields, wallet/transaction storage, profile IDs versus notification user IDs, and payment job dispatch.
-- Queue money remains integer kobo; Prisma monetary values use naira, matching seed data. Route distance/duration conversions now match schema units.
-- Payment scaffolding uses actual Payment, Wallet, Transaction, and DriverEarning models. External payment verification and driver payout settlement explicitly fail until their integrations are implemented; mock verification no longer invents transaction amounts. Wallet trip settlement and partial refund accounting remain pending. These changes do not complete the financial milestone.
-- Added token-lifetime and worker-contract regression suites. Together with Bull Board access tests, 28 focused tests pass. Tests cover money conversion, supported ride and delivery payment jobs, duplicate settlement protection, invalid statuses, missing drivers, and refusal to credit wallets from mock verification.
-- The full pre-existing test suite is still failing: queue/socket fixture compilation issues, circular Joi login-schema dependencies, and a database test failure. Full-suite run after source fixes: 1 suite passed, 5 failed; 14 tests passed, 1 failed. New focused suites were validated separately afterward.
-- Real PostgreSQL/PostGIS, Redis workers, provider integration, dashboard dependencies, and compiled production startup remain unverified.
+- [ ] Customer and driver apps connect to the REST API, sockets, and push (currently UI only, no API calls)
 
-Next task: repair the existing test fixtures and response/auth mock expectations. Worker lifecycle authorization/concurrency and external-service integration remain open acceptance work.
+## 4. Suggested next steps
+
+1. Fix the 5 failing test suites so the suite is a reliable gate (auth expectations, queue/socket fixtures, the one database test, the one app test).
+2. Mount `users`, `rides`, `delivery`, and `payments` routers and build the ride booking path first (M3).
+3. Add a CI workflow running `typecheck`, `test`, and `build`.
+4. Pick a payment provider (Paystack or Stripe) before building wallet and webhook code.
+
+## 5. Work log
+
+### November 2, 2026 - Documentation reconciliation
+
+- Re-ran typecheck (0 diagnostics) and the full Jest run (4 of 9 suites pass; 56 of 73 tests pass).
+- Rewrote this document with a feature inventory and milestones; updated the remaining docs to match the code (README, CURRENT_STATUS, architecture, api-reference, startup, testing, QUEUE_SYSTEM).
+- Fixed the root `db:seed` script (it called a nonexistent `seed` script).
 
 ### October 9, 2026 - Runtime foundation verified
 
-- Production compilation and the `@/` runtime alias preload passed. A compiled production server started against local PostgreSQL/PostGIS and Redis, returned healthy/ready dependency checks, exposed six initialized queues, and served authenticated Bull Board.
-- Environment validation now rejects malformed PostgreSQL/Redis URLs, invalid ports, short JWT secrets, and unsafe production secrets. Production also requires a sufficiently long encryption key.
-- Startup checks Prisma plus application, pub/sub, and BullMQ Redis connections, then waits for every queue, worker, and queue-event connection before opening the HTTP listener.
-- Clean shutdown now closes HTTP and BullMQ resources before disconnecting Prisma and Redis. A programmatic start/stop completed without worker connection errors.
-- Docker Compose validated and both containers reached healthy. The initial migration deployed, seed data loaded, all six required extensions were present, custom functions and unique indexes validated, a PostGIS distance/nearby-driver query succeeded, and a real notification job completed through BullMQ.
-- Corrected `db:validate` to recognize Prisma's unique indexes instead of checking only SQL `UNIQUE` constraints. All six database validation groups now pass.
-- The full legacy Jest run is not yet green: 3 suites pass and 5 fail (53 passing, 17 failing tests), primarily from stale auth response/mocking expectations plus socket and queue fixture TypeScript errors. Focused runtime health coverage was added separately.
+- Compiled production server started against local PostgreSQL/PostGIS and Redis; health/readiness healthy; six queues initialized; Bull Board served with authentication.
+- Environment validation hardened; startup waits for all queue connections; clean shutdown verified.
+- Docker Compose healthy, migration deployed, seed loaded, six extensions present, PostGIS query succeeded, a notification job completed through BullMQ.
+- `db:validate` now recognizes Prisma unique indexes; all six validation groups pass.
 
-## Next milestone
+### October 8, 2026 - Compiler milestone
 
-A compiling backend with executable, passing tests and one verified end-to-end ride flow. Completion percentages will remain omitted until there is an agreed feature checklist and measured acceptance evidence.
+- Backend diagnostics reduced from 113 to 0 without suppressing checks or weakening types.
+- Ride, delivery, and payment workers moved to generated Prisma delegates; schema lifecycle values, fare fields, wallet and transaction storage corrected.
+- Payment verification and driver payout explicitly fail until real integrations exist; mock verification no longer invents amounts.
+- Bull Board authentication repaired (6 tests); token-lifetime and worker-contract suites added.
+
+### October 2, 2026 and August 31, 2026
+
+- Initial groundwork: backend, schema, queues, sockets, auth, and both Flutter app UIs, followed by a first round of bug fixes.

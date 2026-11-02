@@ -13,7 +13,9 @@ This directory contains comprehensive documentation for the Ride Deliva platform
 - **[testing.md](./testing.md)** - Testing strategy, examples, coverage goals, best practices
 - **[api-reference.md](./api-reference.md)** - Complete API documentation with examples
 
-### 📋 Legacy Documentation
+- **[CURRENT_STATUS.md](./CURRENT_STATUS.md)** - Short status summary across backend and mobile apps
+
+### 📋 Subsystem Documentation
 - **[QUEUE_SYSTEM.md](../backend/docs/QUEUE_SYSTEM.md)** - BullMQ job queue system documentation
 
 ## 🚀 Quick Start Links
@@ -32,18 +34,19 @@ This directory contains comprehensive documentation for the Ride Deliva platform
 
 ## 📊 Current Status
 
-### ✅ Completed Foundation (December 2024)
-- **Backend**: Complete infrastructure, auth system, job queues, real-time features
-- **Flutter Customer App**: Full UI implementation with navigation flows
-- **Flutter Driver App**: Complete foundation with dashboard, status management, and earnings tracking
-- **Documentation**: Comprehensive architecture and setup guides
+### ✅ Built and verified (November 2, 2026)
+- **Backend foundation**: compiles with zero TypeScript errors, starts in production mode against PostgreSQL/PostGIS and Redis, dependency-aware health checks, 6 BullMQ queues with Bull Board
+- **Backend APIs mounted**: auth, socket management, queue management, health
+- **Flutter apps**: customer and driver UI screens (not yet connected to the backend)
 
-### 🚧 Ready for Implementation
-- **Backend APIs**: Business logic completion
-- **State Management**: BLoC implementation in Flutter apps
-- **Advanced Features**: Real-time integration and advanced analytics
-- **Testing Suite**: Comprehensive test coverage
-- **Production Deployment**: CI/CD and infrastructure
+### 🚧 Not yet built
+- **Backend APIs**: users, rides, deliveries, payments, notifications, admin (workers for rides, deliveries and payments exist but no REST endpoints trigger them)
+- **Integrations**: real payment gateway, push notifications, SMS/email credentials, Google Maps
+- **Quality**: 5 of 9 Jest suites fail; no CI
+- **Mobile**: BLoC state management and API integration
+- **Deployment**: CI/CD and production infrastructure
+
+See [progress.md](./progress.md) for the full, evidence-based breakdown.
 
 ## 🛠️ Technology Stack
 
@@ -63,10 +66,9 @@ This directory contains comprehensive documentation for the Ride Deliva platform
 
 ### Infrastructure
 - **Docker** + **Docker Compose**
-- **Kubernetes** (production)
-- **CI/CD** (GitHub Actions)
+- **Kubernetes** and **CI/CD** (GitHub Actions): planned, not yet set up
 
-## 📖 Key Features Documented
+## 📖 Key Features (target design; implementation status in progress.md)
 
 ### 🔐 Authentication System
 - Phone number verification with OTP
@@ -93,10 +95,9 @@ This directory contains comprehensive documentation for the Ride Deliva platform
 - Real-time notifications
 
 ### 🔧 Infrastructure
-- Scalable microservices architecture
+- Modular monolith architecture
 - Job queue system for async processing
-- Comprehensive monitoring and logging
-- Production-ready deployment setup
+- Structured logging, health checks, and Bull Board (alerting and deployment setup planned)
 
 ## 🎯 Next Steps
 
@@ -128,6 +129,5 @@ This directory contains comprehensive documentation for the Ride Deliva platform
 
 ---
 
-**Last Updated**: December 2024  
-**Status**: Foundation Complete - Ready for Implementation  
-**Version**: v1.0 Foundation
+**Last Updated**: November 2, 2026  
+**Status**: Backend foundation verified; business APIs not yet built

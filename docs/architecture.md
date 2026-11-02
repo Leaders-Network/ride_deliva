@@ -1,5 +1,7 @@
 # Ride Deliva Platform Architecture
 
+> **Status note (November 2, 2026):** this document mixes the current design with target design. The code differs in these ways: rides and deliveries are separate Prisma models (`Ride`, `Delivery`), not a single `Orders` table; only the `auth`, `socket`, and `queue` modules (plus health) are mounted; `users`, `rides`, `delivery`, `payments`, and `webhooks` are not yet routed. Swagger/OpenAPI, Nginx, Prometheus/Grafana, ELK, and Kubernetes are not set up. The authoritative schema is `backend/prisma/schema.prisma` (20 models). See [progress.md](./progress.md).
+
 ## Overview
 Ride Deliva is a comprehensive mobility and logistics platform consisting of a Node.js backend API and Flutter mobile applications for customers and drivers.
 
@@ -70,7 +72,9 @@ Ride Deliva is a comprehensive mobility and logistics platform consisting of a N
 
 ## Database Schema
 
-### Core Entities
+> Illustrative sketch only. The implemented schema (Prisma, camelCase fields) has `User`, `CustomerProfile`, `DriverProfile`, `AdminProfile`, `Session`, `VerificationCode`, `Address`, `DriverLocation`, `Vehicle`, `Ride`, `RideTrackingPoint`, `Delivery`, `DeliveryTrackingPoint`, `Wallet`, `Transaction`, `Payment`, `Review`, `DriverEarning`, `Notification`, and `SupportTicket`. Money is stored in naira in Prisma and carried as integer kobo through queues.
+
+### Core Entities (conceptual)
 ```sql
 -- Users (customers and drivers)
 Users {
@@ -137,7 +141,7 @@ backend/src/
 ├── modules/
 │   ├── auth/           # Authentication & authorization
 │   ├── users/          # User management
-│   ├── orders/         # Order management (rides/deliveries)
+│   ├── orders/         # (planned) Ride/delivery management; not yet created
 │   ├── drivers/        # Driver-specific functionality
 │   ├── payments/       # Payment processing
 │   ├── notifications/  # Push notifications & SMS
@@ -156,6 +160,8 @@ backend/src/
 ```
 
 ### Job Queue System (BullMQ)
+Six queues are initialized at startup with workers; Bull Board is served at `/admin/queues` for admins. Payment gateway and push notification providers are mocked.
+
 - **SMS Queue**: OTP sending, notifications
 - **Email Queue**: Promotional emails, receipts
 - **Notification Queue**: Push notifications
@@ -216,6 +222,7 @@ Splash → Onboarding → Auth → Permissions → Home → Ride Booking → Tra
 ## Real-time Features
 
 ### WebSocket Events
+> Names below are the target design. The implemented events are defined in `SOCKET_EVENTS` (`backend/src/shared/constants`): driver online/offline/location update and ride requested/accepted/cancelled/started/completed/location update.
 ```javascript
 // Customer events
 'ride:requested'

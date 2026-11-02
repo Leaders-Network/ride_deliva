@@ -19,7 +19,7 @@
     "db:migrate": "cd backend && npx prisma migrate deploy",
     "db:push": "cd backend && npx prisma db push",
     "db:studio": "cd backend && npx prisma studio",
-    "db:seed": "cd backend && npm run seed",
+    "db:seed": "cd backend && npm run db:seed",
     "db:reset": "cd backend && npx prisma migrate reset"
   },
   "workspaces": [

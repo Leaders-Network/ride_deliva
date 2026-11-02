@@ -1,6 +1,6 @@
 # Ride Deliva Backend - Development Setup Guide
 
-*Updated: August 31, 2026*
+*Updated: November 2, 2026*
 
 ## 🚀 Quick Start
 
@@ -76,38 +76,11 @@ AWS_SECRET_ACCESS_KEY=placeholder-key
 
 #### Option A: Docker (Recommended)
 
+The repository root already contains a `docker-compose.yml` (PostGIS 15-3.4 and Redis 7, with the SQL in `backend/database/init`). From the repository root:
+
 ```bash
-# Create docker-compose.yml in backend/ directory
-cat > docker-compose.yml << EOF
-version: '3.8'
-services:
-  postgres:
-    image: postgis/postgis:15-3.3
-    environment:
-      POSTGRES_DB: ride_deliva
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/init:/docker-entrypoint-initdb.d
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-
-volumes:
-  postgres_data:
-  redis_data:
-EOF
-
-# Start services
-docker-compose up -d
+npm run docker:up      # or: docker-compose up -d
+docker-compose ps      # both containers should report healthy
 ```
 
 #### Option B: Local Installation
@@ -133,20 +106,23 @@ choco install redis-64
 
 ```bash
 # Generate Prisma client
-npm run generate
+npm run db:generate
 
 # Run database migrations
-npm run migrate
+npm run db:migrate
 
 # Seed database with test data
-npm run seed
+npm run db:seed
 ```
 
 **Verify Database Setup:**
 ```bash
 # Open Prisma Studio to inspect data
-npm run studio
+npm run db:studio
 # Visit http://localhost:5555
+
+# Optional: validate extensions, functions and indexes
+npm run db:validate
 ```
 
 ## 🏃‍♂️ Running the Application
@@ -175,10 +151,13 @@ npm run start
 npm run dev          # Development server with hot reload
 npm run build        # TypeScript compilation
 npm run start        # Production server
-npm run migrate      # Database migrations
-npm run seed         # Seed database
-npm run generate     # Generate Prisma client
-npm run studio       # Prisma Studio GUI
+npm run typecheck    # tsc --noEmit (currently 0 errors)
+npm test             # Jest (4 of 9 suites pass; see docs/progress.md)
+npm run db:generate  # Generate Prisma client
+npm run db:migrate   # Create/apply dev migrations (db:migrate:prod to deploy)
+npm run db:seed      # Seed database
+npm run db:validate  # Check extensions, functions, unique indexes
+npm run db:studio    # Prisma Studio GUI
 npm run lint         # ESLint checking
 npm run lint:fix     # Auto-fix ESLint issues
 npm run format       # Prettier formatting
@@ -189,37 +168,31 @@ npm run format       # Prettier formatting
 ### Bull Board - Queue Monitoring
 - **URL**: http://localhost:3000/admin/queues
 - **Purpose**: Monitor background job queues
-- **Queues Available**: EMAIL, SMS, NOTIFICATION, RIDE, DELIVERY, PAYMENT, ANALYTICS, WEBHOOK
+- **Queues Available**: sms, email, notification, ride, payment, delivery
+- **Access**: requires an admin or super-admin JWT (Authorization header or `?token=`)
 
 ### Prisma Studio - Database GUI
 ```bash
-npm run studio
+npm run db:studio
 # Opens http://localhost:5555
 ```
 
 ### Health Check Endpoint
 ```bash
-curl http://localhost:3000/api/v1/health
-# Should return server status and database connectivity
+curl http://localhost:3000/health
+# Returns status plus PostgreSQL and Redis checks; also /health/readiness and /health/liveness
 ```
 
 ## 🧪 Testing the Setup
 
 ### 1. Health Check
 ```bash
-curl -X GET http://localhost:3000/api/v1/health
+curl -X GET http://localhost:3000/health
 ```
 
-Expected response:
-```json
-{
-  "status": "ok",
-  "timestamp": "2026-08-31T...",
-  "uptime": "...",
-  "database": "connected",
-  "redis": "connected"
-}
-```
+Expected: HTTP 200 with `"status": "healthy"`. The endpoint returns 503 if PostgreSQL or Redis is unreachable.
+
+`GET /health/readiness` returns `{"ready": true}` and `GET /health/liveness` returns `{"alive": true}`.
 
 ### 2. Authentication Test
 ```bash
@@ -235,25 +208,25 @@ curl -X POST http://localhost:3000/api/v1/auth/register \
 
 ### 4. Queue System Test  
 - Visit http://localhost:3000/admin/queues
-- Should see Bull Board dashboard with 8 queue types
+- Sign in with an admin token; you should see Bull Board with 6 queues (sms, email, notification, ride, payment, delivery)
 
 ## 📊 Current Implementation Status
 
 ### ✅ Working Features
-- **Authentication System**: Registration, login, JWT tokens
-- **Database**: All 18 models with relationships and seed data
-- **Real-time**: Socket.IO WebSocket connections
-- **Queue System**: BullMQ with Bull Board monitoring
-- **Health Monitoring**: System status endpoints
-- **TypeScript**: 85% compliance (113 minor errors remaining)
+- **Authentication System**: Registration, login, OTP, refresh tokens, sessions
+- **Database**: 20 Prisma models, migration and seed data verified
+- **Real-time**: Socket.IO server and management endpoints
+- **Queue System**: 6 BullMQ queues with workers and authenticated Bull Board
+- **Health Monitoring**: Dependency-aware health, readiness, liveness
+- **TypeScript**: 0 compiler errors; production build and startup verified
 
 ### 🚧 In Progress
-- **API Endpoints**: User management, rides, deliveries, payments
-- **TypeScript Cleanup**: Remaining 113 type errors
-- **External Integrations**: Google Maps, FCM, AWS S3
+- **Test suite**: 5 of 9 Jest suites failing (stale auth expectations, queue/socket fixture compile errors)
+- **External Integrations**: Google Maps, FCM, AWS S3, payment gateway, Twilio/SMTP credentials
 
 ### ⏳ Planned
-- **Comprehensive Testing**: Unit + integration tests
+- **API Endpoints**: users, drivers, rides, deliveries, payments, notifications, admin (not yet mounted)
+- **Comprehensive Testing**: integration tests and CI
 - **Performance Optimization**: Query optimization, caching
 - **Production Deployment**: Docker + CI/CD
 
@@ -264,7 +237,7 @@ curl -X POST http://localhost:3000/api/v1/auth/register \
 **1. "Cannot find module" errors**
 ```bash
 # Regenerate Prisma client
-npm run generate
+npm run db:generate
 ```
 
 **2. Database connection failed**
@@ -283,9 +256,8 @@ redis-cli ping  # Should return "PONG"
 
 **4. TypeScript compilation errors**
 ```bash
-# Check current error count
-npx tsc --noEmit
-# Current target: 113 errors → 0 errors
+# Check for type errors (expected: no output)
+npm run typecheck
 ```
 
 **5. Port 3000 already in use**
@@ -301,7 +273,7 @@ PORT=3001
 rm -rf node_modules
 rm -rf src/generated
 npm install
-npm run generate
+npm run db:generate
 ```
 
 **Module Resolution Problems:**
@@ -338,10 +310,10 @@ npm run generate
 
 ## 🎯 Next Steps
 
-1. **Complete TypeScript cleanup** (113 errors → 0)
-2. **Implement remaining API endpoints** (8 modules)  
+1. **Fix the failing Jest suites**
+2. **Implement the ride, delivery, payment and user APIs** (see docs/progress.md, milestones M2-M5)
 3. **Connect Flutter mobile apps** (Socket.IO + REST)
-4. **Add comprehensive testing** (Jest setup ready)
+4. **Add CI and integration tests**
 5. **Production deployment** (Docker + CI/CD)
 
 The backend foundation is solid and ready for rapid feature development!

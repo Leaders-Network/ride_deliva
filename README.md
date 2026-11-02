@@ -77,23 +77,25 @@ This will start:
 
 ## Features
 
-### Core Platform
+Status as of November 2, 2026. See [docs/progress.md](docs/progress.md) for the detailed backend breakdown.
+
+### Core Platform (backend)
 - [x] Project structure and development environment
-- [ ] PostgreSQL + PostGIS + Redis infrastructure
-- [ ] Authentication and authorization
-- [ ] Real-time communication
-- [ ] Job queue system
+- [x] PostgreSQL + PostGIS + Redis infrastructure (Docker Compose; verified)
+- [x] Authentication and sessions (implemented; some auth tests still failing)
+- [x] Real-time communication (Socket.IO; location persistence pending)
+- [x] Job queue system (6 BullMQ queues + Bull Board; payment and push providers are mocked)
+- [ ] Green test suite and CI (4 of 9 suites pass)
 
 ### Customer Experience
-- [ ] Onboarding and verification
-- [ ] Home dashboard
-- [ ] Ride booking
-- [ ] Live tracking
+- [x] Onboarding, login and OTP screens (UI only)
+- [x] Home dashboard, ride booking and tracking screens (UI only)
+- [ ] Backend ride booking API
 - [ ] Payments and wallet
 
-### Driver Experience  
-- [ ] Driver onboarding
-- [ ] Trip management
+### Driver Experience
+- [x] Onboarding, document verification and dashboard screens (UI only)
+- [ ] Trip management API
 - [ ] Earnings tracking
 - [ ] Vehicle management
 
@@ -102,6 +104,8 @@ This will start:
 - [ ] Analytics and reporting
 - [ ] Fleet management
 - [ ] Financial operations
+
+Neither mobile app is connected to the backend yet, and the ride, delivery and payment REST APIs are not built.
 
 ## Technology Stack
 

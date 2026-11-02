@@ -1,5 +1,16 @@
 # Ride Deliva API Reference
 
+> **Status note (November 2, 2026):** this is the target API design. Only the endpoints below are implemented and mounted under `/api/v1`; everything else in this document (user, driver, order, payment, notification, location, and admin endpoints) is **planned**.
+>
+> | Implemented | Endpoints |
+> | --- | --- |
+> | Auth | `POST /auth/register`, `/auth/login`, `/auth/send-code`, `/auth/verify-phone`, `/auth/refresh-token`, `/auth/forgot-password`, `/auth/reset-password`, `/auth/logout`, `/auth/logout-all`, `/auth/change-password`; `GET /auth/check`, `/auth/profile`, `/auth/sessions`, `/auth/verify-session`; `PUT /auth/profile`; `DELETE /auth/sessions/:sessionId` |
+> | Socket management | `GET /socket/info`, `/socket/health`, `/socket/stats`, `/socket/connection/status`, `/socket/drivers/:driverId/location`, `/socket/drivers/connected`; `POST /socket/notifications/test`, `/socket/broadcast/role`, `/socket/rides/message` |
+> | Queue administration (admin) | `GET /queues/statistics`, `/queues/:queueName`, `/queues/:queueName/jobs/:jobId`; `POST /queues/:queueName/pause`, `/resume`, `/clean`, `/test`, `/jobs/:jobId/retry`; `DELETE /queues/:queueName/jobs/:jobId/remove` |
+> | Outside `/api/v1` | `GET /health`, `/health/readiness`, `/health/liveness`; Bull Board at `/admin/queues` |
+>
+> Differences from the examples below: phone verification is `POST /auth/verify-phone` (not `/auth/verify-otp`), the current user is `GET /auth/profile` (not `/auth/me`), and rides and deliveries are separate resources rather than a unified `/orders`. Request/response shapes in the planned sections may change. Progress: [progress.md](./progress.md).
+
 ## Base Information
 
 - **Base URL**: `https://api.ridedeliva.com/api/v1`
