@@ -24,4 +24,6 @@ export const ago = (iso: string) => {
 
 export const fullName = (p?: { firstName: string; lastName: string } | null) => (p ? `${p.firstName} ${p.lastName}` : '—');
 export const initials = (p: { firstName: string; lastName: string }) => `${p.firstName[0] ?? ''}${p.lastName[0] ?? ''}`;
-export const label = (s: string) => s.charAt(0) + s.slice(1).toLowerCase().replace(/_/g, ' ');
+const ACRONYMS: Record<string, string> = { nin: 'NIN', bvn: 'BVN', id: 'ID' };
+export const label = (s: string) =>
+  ACRONYMS[s.toLowerCase()] ?? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase().replace(/_/g, ' ');
