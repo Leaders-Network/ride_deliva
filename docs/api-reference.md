@@ -1,12 +1,15 @@
 # Ride Deliva API Reference
 
-> **Status note (November 2, 2026):** this is the target API design. Only the endpoints below are implemented and mounted under `/api/v1`; everything else in this document (user, driver, order, payment, notification, location, and admin endpoints) is **planned**.
+> **Status note (November 23, 2026):** this is the target API design. Only the endpoints below are implemented and mounted under `/api/v1`; everything else in this document (user, driver, order, payment, notification and location endpoints) is **planned**. The [Admin Endpoints](#admin-endpoints) section documents the implemented admin API.
 >
 > | Implemented | Endpoints |
 > | --- | --- |
 > | Auth | `POST /auth/register`, `/auth/login`, `/auth/send-code`, `/auth/verify-phone`, `/auth/refresh-token`, `/auth/forgot-password`, `/auth/reset-password`, `/auth/logout`, `/auth/logout-all`, `/auth/change-password`; `GET /auth/check`, `/auth/profile`, `/auth/sessions`, `/auth/verify-session`; `PUT /auth/profile`; `DELETE /auth/sessions/:sessionId` |
 > | Socket management | `GET /socket/info`, `/socket/health`, `/socket/stats`, `/socket/connection/status`, `/socket/drivers/:driverId/location`, `/socket/drivers/connected`; `POST /socket/notifications/test`, `/socket/broadcast/role`, `/socket/rides/message` |
 > | Queue administration (admin) | `GET /queues/statistics`, `/queues/:queueName`, `/queues/:queueName/jobs/:jobId`; `POST /queues/:queueName/pause`, `/resume`, `/clean`, `/test`, `/jobs/:jobId/retry`; `DELETE /queues/:queueName/jobs/:jobId/remove` |
+> | Rides | `POST /rides/estimate`, `/rides` (customer); `GET /rides`, `/rides/:id`, `POST /rides/:id/cancel` (customer or driver); `GET /rides/available`, `POST /rides/:id/accept`, `/arriving`, `/arrived`, `/start`, `/complete` (approved driver) |
+> | Admin (admin) | `GET /admin/stats`; drivers, customers, rides, deliveries, payments; see [Admin Endpoints](#admin-endpoints) |
+> | Placeholders | `GET /users`, `/delivery`, `/payments` return `status: planned` |
 > | Outside `/api/v1` | `GET /health`, `/health/readiness`, `/health/liveness`; Bull Board at `/admin/queues` |
 >
 > Differences from the examples below: phone verification is `POST /auth/verify-phone` (not `/auth/verify-otp`), the current user is `GET /auth/profile` (not `/auth/me`), and rides and deliveries are separate resources rather than a unified `/orders`. Request/response shapes in the planned sections may change. Progress: [progress.md](./progress.md).
@@ -585,37 +588,67 @@ GET /location/places?query=restaurant&lat=6.5244&lng=3.3792&radius=1000
 
 ## Admin Endpoints
 
-### Get System Stats
+**Implemented.** Source: `backend/src/modules/admin`. Used by the admin dashboard (`admin/`).
+
+Every route requires `Authorization: Bearer {token}` for a user with an `AdminProfile` (`ADMIN` or `SUPER_ADMIN`). Anyone else gets `403`. List endpoints take `page` (default 1) and `limit` (default 20, max 100) and return the standard [pagination](#pagination) `meta`. `:id` parameters must be UUIDs. Date filters `from`/`to` are ISO dates, and `to` includes that whole day. Monetary values are strings (Prisma `Decimal`) in NGN.
+
+### Overview
 ```http
 GET /admin/stats
 ```
-**Headers:** `Authorization: Bearer {admin-token}`
+Returns customer, driver, ride and delivery counts (totals, today, active, by status), revenue (`total`, `today`, platform `commission`), a 7-day `trend` (`date`, `rides`, `deliveries`, `revenue`) and up to 5 oldest `pendingDrivers`.
 
-### Get All Users
+### Drivers
 ```http
-GET /admin/users?page=1&limit=50&type=all&status=all
+GET   /admin/drivers?status=PENDING&search=ada&page=1&limit=20
+GET   /admin/drivers/:id
+PATCH /admin/drivers/:id/status
 ```
-**Headers:** `Authorization: Bearer {admin-token}`
+- `status`: `PENDING | APPROVED | REJECTED | SUSPENDED | INACTIVE`. `search` matches name, phone, email or licence number.
+- Detail includes vehicles, wallet, last location, documents, payout account, earnings totals (`gross`, `commission`, `net`), the 10 latest rides and deliveries, and the 10 latest reviews.
+- Status change body: `{ "status": "APPROVED" | "REJECTED" | "SUSPENDED" | "INACTIVE", "reason": "..." }`. `reason` is required for every status except `APPROVED`.
 
-### Verify Driver
+Allowed transitions (anything else returns `409`):
+
+| To | From |
+| --- | --- |
+| `APPROVED` | `PENDING`, `REJECTED`, `SUSPENDED`, `INACTIVE` |
+| `REJECTED` | `PENDING` |
+| `SUSPENDED` | `APPROVED` |
+| `INACTIVE` | `APPROVED`, `SUSPENDED` |
+
+Any status other than `APPROVED` takes the driver offline. The driver receives a `SYSTEM_ALERT` notification carrying the reason.
+
+### Customers
 ```http
-POST /admin/drivers/:driverId/verify
+GET /admin/customers?search=ada&active=false
+GET /admin/customers/:id
 ```
-**Headers:** `Authorization: Bearer {admin-token}`
+Detail includes saved addresses, wallet with the 10 latest transactions, the 10 latest rides and deliveries, and `totalSpent` (completed payments).
 
-**Request Body:**
-```json
-{
-  "status": "approved", // approved, rejected
-  "notes": "All documents verified"
-}
-```
-
-### Get Platform Analytics
+### Block / unblock a user
 ```http
-GET /admin/analytics?period=7d&metrics=rides,revenue,users
+PATCH /admin/users/:id/active
 ```
-**Headers:** `Authorization: Bearer {admin-token}`
+`:id` is the **user** id (works for customers and drivers). Body: `{ "isActive": false, "reason": "..." }`. Blocking revokes all of the user's sessions, so existing tokens stop working, and takes a driver offline. Admins cannot block themselves (`400`) or other admins (`403`).
+
+### Rides and deliveries
+```http
+GET  /admin/rides?status=IN_PROGRESS&search=RD2026&from=2026-11-01&to=2026-11-23
+GET  /admin/rides/:id
+POST /admin/rides/:id/cancel          { "reason": "Customer called support" }
+
+GET  /admin/deliveries?status=IN_TRANSIT&search=DL2026&from=...&to=...
+GET  /admin/deliveries/:id
+POST /admin/deliveries/:id/cancel     { "reason": "..." }
+```
+`search` matches the ride or delivery code, or the customer's or driver's name or phone. Cancel works only on active trips (otherwise `409`), requires a reason, records `Cancelled by admin: <reason>`, and frees the driver.
+
+### Payments
+```http
+GET /admin/payments?status=COMPLETED&method=CARD&from=...&to=...
+```
+`status`: `PENDING | PROCESSING | COMPLETED | FAILED | REFUNDED`; `method`: `WALLET | CARD | BANK_TRANSFER | CASH`. `meta.summary` holds `{ count, amount }` per status for the filtered set.
 
 ## WebSocket Events
 

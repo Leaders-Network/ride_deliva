@@ -196,8 +196,10 @@ Status: **Partial.** Initialization, workers, and Bull Board are wired and verif
 ## 4. Suggested next steps
 
 1. ~~Fix the failing test suites~~ (done Nov 2).
-2. ~~Add CI~~ (workflow added Nov 2; confirm the first GitHub run is green). `users`, `rides`, `delivery`, and `payments` routers are mounted (Nov 3); `rides` has the booking path. Next: run it against live Postgres, then driver onboarding (documents, vehicle, availability, location) so a driver can actually be approved and accept rides.
-4. Pick a payment provider (Paystack or Stripe) before building wallet and webhook code.
+2. ~~Add CI~~ (green on PR #1, Nov 23). ~~Mount routers and the ride booking path~~ (Nov 3). ~~Admin dashboard MVP~~ (Nov 23).
+3. Driver onboarding (documents, vehicle, availability, location), so a driver can apply, be approved in the admin dashboard, and accept rides. Then run the rides path against live Postgres.
+4. Get the integration suites through a full run and add them to CI with Postgres and Redis service containers.
+5. Pick a payment provider (Paystack or Stripe) before building wallet and webhook code.
 
 ## 5. Work log
 
@@ -207,6 +209,8 @@ Status: **Partial.** Initialization, workers, and Bull Board are wired and verif
 - New `admin/` web app (React + Vite + Tailwind, dark/blue to match `ui_ref`): Overview, Drivers, Customers, Rides, Deliveries, Payments. Filters and the open detail drawer live in the URL. Run with `npm run dev:dashboard` (API :3000 + UI :3001, Vite proxies `/api`).
 - `db:seed` now also loads `src/database/demo-data.ts`: 24 customers, 15 drivers in mixed statuses (4 pending), two weeks of rides/deliveries with payments, earnings and reviews. Deterministic.
 - Verified against live local Postgres + Redis (Docker): 22-step API walkthrough passes (auth guard, filters, pagination, suspend/reinstate, block/unblock with session revocation, illegal-transition 409s). 11 suites / 122 tests pass; typecheck and build clean.
+- Browser click-through (headless Edge via Playwright): login (bad and good password), overview charts, driver tabs/search/drawer, approve and reject dialogs (reject needs a reason), customer block/unblock, ride/delivery drawers, payments, mobile layout, sign-out. All pass with no console or API errors. Fixed from it: document labels rendered lowercase, and a missing favicon (404).
+- `test:integration` matched no files (`testMatch: ?(*.)+integration.test.ts`), so the queue and socket integration suites had never run. Pattern fixed to `**/*.integration.test.ts`; a full run has not completed yet (dev machine ran out of memory).
 - Infra fixes found on the way: Supabase project is gone ("tenant not found"), so local dev uses the compose Postgres on 5433. `bullmq` upgraded 4 → 5 to satisfy `@bull-board` 9.5's peer range; the old `bullmq` path overrides in `jest.config.js` and `register-paths.cjs` are removed. Use `127.0.0.1`, not `localhost`, in local `DATABASE_URL`/`REDIS_URL` on Windows (Docker's `::1` forwarding stalls intermittently). Redis startup check now names the failing client.
 
 ### November 3, 2026 - Routers mounted and ride booking path
