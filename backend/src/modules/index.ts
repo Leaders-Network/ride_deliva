@@ -3,10 +3,10 @@ import { authRoutes } from './auth/routes';
 import { socketRoutes } from './socket/routes';
 import queueRoutes from './queue/routes';
 // import { webhookRoutes } from './webhooks/routes'; // Temporarily disabled
-// import { userRoutes } from './users/routes';
-// import { rideRoutes } from './rides/routes';
-// import { deliveryRoutes } from './delivery/routes';
-// import { paymentRoutes } from './payments/routes';
+import { userRoutes } from './users/routes';
+import { rideRoutes } from './rides/routes';
+import { deliveryRoutes } from './delivery/routes';
+import { paymentRoutes } from './payments/routes';
 
 const router = Router();
 
@@ -51,9 +51,9 @@ router.use('/auth', authRoutes);
 router.use('/socket', socketRoutes);
 router.use('/queues', queueRoutes);
 // router.use('/webhooks', webhookRoutes); // Temporarily disabled
-// router.use('/users', userRoutes);
-// router.use('/rides', rideRoutes);
-// router.use('/delivery', deliveryRoutes);
-// router.use('/payments', paymentRoutes);
+router.use('/users', userRoutes);
+router.use('/rides', rideRoutes);
+router.use('/delivery', deliveryRoutes);
+router.use('/payments', paymentRoutes);
 
 export { router as apiRoutes };
