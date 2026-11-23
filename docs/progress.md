@@ -196,10 +196,30 @@ Status: **Partial.** Initialization, workers, and Bull Board are wired and verif
 ## 4. Suggested next steps
 
 1. ~~Fix the failing test suites~~ (done Nov 2).
-2. ~~Add CI~~ (workflow added Nov 2; confirm the first GitHub run is green). Next, mount `users`, `rides`, `delivery`, and `payments` routers and build the ride booking path first (M3).
+2. ~~Add CI~~ (workflow added Nov 2; confirm the first GitHub run is green). `users`, `rides`, `delivery`, and `payments` routers are mounted (Nov 3); `rides` has the booking path. Next: run it against live Postgres, then driver onboarding (documents, vehicle, availability, location) so a driver can actually be approved and accept rides.
 4. Pick a payment provider (Paystack or Stripe) before building wallet and webhook code.
 
 ## 5. Work log
+
+### November 23, 2026 - Admin dashboard MVP
+
+- New `backend/src/modules/admin` (all routes behind `authenticateAdmin`): `GET /stats` (KPIs, 7-day trend, approval queue), drivers (list/detail/`PATCH :id/status`), customers (list/detail), `PATCH /users/:id/active` (block revokes sessions and takes drivers offline), rides and deliveries (list/detail/admin cancel), payments (list + per-status totals). Driver moderation is a declared transition table with a guarded `updateMany`, mirroring the ride state machine; each decision notifies the driver with the reason.
+- New `admin/` web app (React + Vite + Tailwind, dark/blue to match `ui_ref`): Overview, Drivers, Customers, Rides, Deliveries, Payments. Filters and the open detail drawer live in the URL. Run with `npm run dev:dashboard` (API :3000 + UI :3001, Vite proxies `/api`).
+- `db:seed` now also loads `src/database/demo-data.ts`: 24 customers, 15 drivers in mixed statuses (4 pending), two weeks of rides/deliveries with payments, earnings and reviews. Deterministic.
+- Verified against live local Postgres + Redis (Docker): 22-step API walkthrough passes (auth guard, filters, pagination, suspend/reinstate, block/unblock with session revocation, illegal-transition 409s). 11 suites / 122 tests pass; typecheck and build clean.
+- Infra fixes found on the way: Supabase project is gone ("tenant not found"), so local dev uses the compose Postgres on 5433. `bullmq` upgraded 4 → 5 to satisfy `@bull-board` 9.5's peer range; the old `bullmq` path overrides in `jest.config.js` and `register-paths.cjs` are removed. Use `127.0.0.1`, not `localhost`, in local `DATABASE_URL`/`REDIS_URL` on Windows (Docker's `::1` forwarding stalls intermittently). Redis startup check now names the failing client.
+
+### November 3, 2026 - Routers mounted and ride booking path
+
+- Mounted `/users`, `/rides`, `/delivery`, `/payments`. `users`, `delivery` and `payments` are info-only placeholders reporting `status: planned`.
+- `rides` (`backend/src/modules/rides`): `POST /estimate`, `POST /` (book), `GET /` (history for customer or driver), `GET /available`, `GET /:id`, `POST /:id/cancel`, and driver actions `accept`, `arriving`, `arrived`, `start`, `complete`.
+- Fare is a pure function in `fare.ts` (Naira, haversine x 1.3 road factor, minimum fare) pending a real routing API. Booking enforces the Lagos service area, one active ride per customer, and enqueues `match_driver` best-effort.
+- Accept is atomic: a guarded `updateMany` (`status = REQUESTED AND driverId IS NULL`) inside a transaction, so only one driver wins; the driver is also flipped unavailable in the same transaction. Completion frees the driver and bumps ride counters.
+- Tests: `fare.test.ts` and `rides.test.ts` (HTTP contract with the service mocked). 10 suites, 100 tests pass; typecheck clean.
+- Security pass on the same day: response shapes are allow-listed (an early version leaked driver bank/licence data to customers and customer emergency contacts to drivers); "one active ride" is serialised with a per-customer advisory lock; accept re-checks driver approval/online/availability inside the guarded write; non-owners get 404 not 403; booking has a per-user rate limit (10 per 10 min); driver actions ignore unvalidated bodies.
+- Test runner note: `npm test` (parallel workers) crashed twice with no summary after the security pass, while `jest --runInBand` passes 10 suites / 100 tests. Cause not diagnosed; CI should use `--runInBand` until it is.
+- Fare duration now uses a time-of-day traffic model (`LAGOS_TRAFFIC_BANDS` in `fare.ts`) instead of a flat 30 km/h average, read in WAT (UTC+1) regardless of server timezone. Bands are planning estimates (no live telemetry) to replace once `/rides` data accumulates or a routing API is wired in. `estimateFare` takes an optional `at: Date` so callers and tests can pin the hour. 5 new tests in `fare.test.ts`; 10 suites, 105 tests pass (`--runInBand`).
+- **Not verified:** `ride.service.ts` has never run against a database (no Docker this session), so the transactions and the accept race are untested. Completion sets `finalFare = estimatedFare` and does not trigger payment (the payment worker still fails by design). No driver onboarding exists yet, so no driver can reach `APPROVED` through the API.
 
 ### November 2, 2026 - Green unit test suite
 

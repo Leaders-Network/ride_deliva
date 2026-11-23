@@ -161,14 +161,22 @@ export const redisUtils = {
 
 // Redis connection test function
 export const testRedisConnection = async (): Promise<boolean> => {
-  try {
-    await Promise.all([redis.ping(), redisPubSub.ping(), redisQueue.ping()]);
+  const clients = { app: redis, pubsub: redisPubSub, queue: redisQueue };
+  const results = await Promise.allSettled(Object.values(clients).map((c) => c.ping()));
+  const failed = Object.keys(clients)
+    .map((name, i) => ({ name, result: results[i] }))
+    .filter((r): r is { name: string; result: PromiseRejectedResult } => r.result.status === 'rejected');
+
+  if (failed.length === 0) {
     logger.info('Redis application, pub/sub, and queue connections established successfully');
     return true;
-  } catch (error) {
-    logger.error('Failed to connect to Redis:', error);
-    return false;
   }
+  // Name the failing client(s): a bare "Command timed out" is impossible to act on.
+  for (const { name, result } of failed) {
+    const client = clients[name as keyof typeof clients];
+    logger.error(`Failed to connect to Redis (${name} client, status=${client.status}): ${result.reason?.message ?? result.reason}`);
+  }
+  return false;
 };
 
 // Redis health check function

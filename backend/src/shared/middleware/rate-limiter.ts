@@ -137,3 +137,20 @@ export const otpRateLimiter = rateLimit({
     return `otp:${ip}:${phoneNumber}`;
   },
 });
+
+// Booking writes rows and queues jobs, so cap it per authenticated user (not per IP:
+// many riders share a carrier NAT, and one attacker can rotate IPs). Runs after `authenticate`.
+export const bookingRateLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 10,
+  keyGenerator: (req) => `booking:${(req as any).user?.id ?? req.ip}`,
+  message: {
+    error: {
+      code: 'TOO_MANY_BOOKING_ATTEMPTS',
+      message: 'Too many booking attempts, please try again later',
+      statusCode: 429,
+    },
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
