@@ -138,14 +138,16 @@ Locations {
 ### Modular Structure
 ```
 backend/src/
-├── modules/
-│   ├── auth/           # Authentication & authorization
-│   ├── users/          # User management
-│   ├── orders/         # (planned) Ride/delivery management; not yet created
-│   ├── drivers/        # Driver-specific functionality
-│   ├── payments/       # Payment processing
-│   ├── notifications/  # Push notifications & SMS
-│   └── tracking/       # Real-time location tracking
+├── modules/            # each: routes.ts → controllers/ → services/, Joi validators/
+│   ├── auth/           # Authentication, sessions, profile
+│   ├── rides/          # Fare estimate, booking, driver lifecycle (state machine as data)
+│   ├── admin/          # Admin-only API behind authenticateAdmin (dashboard backend)
+│   ├── socket/         # Socket.IO management endpoints
+│   ├── queue/          # Queue administration
+│   ├── users/          # (placeholder) addresses, driver onboarding
+│   ├── delivery/       # (placeholder) delivery API
+│   ├── payments/       # (placeholder) wallet and payments
+│   └── webhooks/       # Stripe webhook (unmounted)
 ├── shared/
 │   ├── middleware/     # Common middleware
 │   ├── services/       # Shared services
@@ -158,6 +160,9 @@ backend/src/
     ├── queues.ts       # Queue configuration
     └── logger.ts       # Logging configuration
 ```
+
+### Admin Dashboard
+`admin/` is a separate React + Vite single-page app (not part of the npm workspace). It talks only to `/api/v1/admin/*` and `/api/v1/auth/*`. In development Vite proxies `/api` to the backend; for a deployed build set `VITE_API_URL` and add the dashboard origin to `CORS_ORIGIN`. Access is enforced server-side by `authenticateAdmin`; the client-side admin check only gives a clearer login error. Admin responses allow-list user columns (no password hashes leave the API).
 
 ### Job Queue System (BullMQ)
 Six queues are initialized at startup with workers; Bull Board is served at `/admin/queues` for admins. Payment gateway and push notification providers are mocked.

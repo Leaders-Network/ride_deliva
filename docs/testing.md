@@ -1,6 +1,6 @@
 # Ride Deliva Testing Strategy
 
-> **Status note (November 2, 2026):** the examples below describe the target strategy. Actual state: backend tests live in `backend/src/__tests__/` (not `backend/tests/`), `jest.config.js` matches `**/__tests__/**/*.ts` and `*.test.ts`, and CI (`.github/workflows/backend.yml`) runs the unit tests only. Unit tests (`*.test.ts`) run with `npm test`: 8 suites, 73 tests, all passing (Nov 2). Integration tests (`*.integration.test.ts`: `queue`, `socket`) need live Redis/PostgreSQL and run with `npm run test:integration` (`jest.integration.config.js`); they compile but have not been run yet. The Flutter apps have only template and exploration tests. Details in [progress.md](./progress.md).
+> **Status note (November 23, 2026):** the examples below describe the target strategy. Actual state: backend tests live in `backend/src/__tests__/` (not `backend/tests/`), `jest.config.js` matches `**/__tests__/**/*.ts` and `*.test.ts`, and CI (`.github/workflows/backend.yml`) runs the unit tests only, with `--runInBand`. Unit tests (`*.test.ts`) run with `npm test`: 11 suites, 122 tests, all passing (Nov 23), including `admin.test.ts` (admin API contract: auth guard, validation, transitions). Run them with `--runInBand` locally too: parallel workers have crashed or failed to load suites under memory pressure. Integration tests (`*.integration.test.ts`: `queue`, `socket`) need live Redis/PostgreSQL and run with `npm run test:integration` (`jest.integration.config.js`). Until Nov 23 that config's `testMatch` (`?(*.)+integration.test.ts`) matched no files, so the suites never ran; it is now `**/*.integration.test.ts`, but they have not yet completed a run (the attempt on a dev machine with under 1 GB free RAM ran out of memory). The admin API was also checked by hand against live services (22-step walkthrough plus a browser click-through). The Flutter apps have only template and exploration tests. Details in [progress.md](./progress.md).
 
 ## Testing Philosophy
 
@@ -682,11 +682,11 @@ void main() {
 
 #### Backend Tests
 ```bash
-# Run all tests
-npm test
+# Run all unit tests (serially, as CI does)
+npm test -- --runInBand
 
 # Run specific test suite
-npm test -- --testPathPattern=auth
+npm test -- --testPathPattern=admin
 
 # Run with coverage
 npm run test:coverage

@@ -8,6 +8,7 @@ A comprehensive mobility and logistics platform built with modular monolith arch
 - **Database**: PostgreSQL + PostGIS for geospatial data
 - **Cache**: Redis for session management and job queuing
 - **Mobile Apps**: Separate Flutter apps for customers and drivers
+- **Admin Dashboard**: React + Vite web app for operations staff
 - **Real-time**: Socket.IO for live tracking and updates
 - **Queue**: BullMQ for background job processing
 
@@ -17,12 +18,14 @@ A comprehensive mobility and logistics platform built with modular monolith arch
 ride-deliva/
 ├── backend/                 # Node.js API server
 │   ├── src/
-│   │   ├── modules/        # Feature modules (auth, rides, delivery, etc.)
+│   │   ├── modules/        # Feature modules (auth, rides, admin, delivery, etc.)
 │   │   ├── shared/         # Shared utilities and services
 │   │   ├── config/         # Configuration files
+│   │   ├── database/       # Seed script and admin demo data
 │   │   └── app.ts          # Express app setup
 │   ├── prisma/             # Database schema and migrations
 │   └── package.json
+├── admin/                  # Admin dashboard (React + Vite + Tailwind)
 ├── flutter/
 │   ├── customer_app/       # Customer mobile app
 │   └── driver_app/         # Driver mobile app
@@ -47,19 +50,33 @@ ride-deliva/
 1. **Clone and install dependencies:**
    ```bash
    npm install
+   (cd admin && npm install)
    ```
 
-2. **Start infrastructure services:**
+2. **Configure the backend:**
+   ```bash
+   cp .env.example backend/.env
+   ```
+   The template already points at the Docker services (Postgres `127.0.0.1:5433`, Redis `127.0.0.1:6380`). Details in [docs/startup.md](docs/startup.md).
+
+3. **Start infrastructure services:**
    ```bash
    npm run docker:up
    ```
 
-3. **Run database migrations:**
+4. **Run database migrations and seed demo data:**
    ```bash
    npm run db:migrate
+   npm run db:seed   # ⚠️ wipes the target database first in development
    ```
 
-4. **Start development servers:**
+5. **Run the API and admin dashboard:**
+   ```bash
+   npm run dev:dashboard
+   ```
+   API on http://localhost:3000, admin dashboard on http://localhost:3001. Sign in with `+2348012345678` / `admin123!@#`.
+
+6. **Or start everything, including the Flutter apps:**
    ```bash
    npm run dev
    ```
@@ -72,12 +89,13 @@ This will start:
 ### Individual Services
 
 - **Backend only**: `npm run dev:backend`
+- **Admin dashboard only**: `npm run dev:admin` (needs the backend running)
 - **Customer app only**: `npm run dev:customer`  
 - **Driver app only**: `npm run dev:driver`
 
 ## Features
 
-Status as of November 2, 2026. See [docs/progress.md](docs/progress.md) for the detailed backend breakdown.
+Status as of November 23, 2026. See [docs/progress.md](docs/progress.md) for the detailed backend breakdown.
 
 ### Core Platform (backend)
 - [x] Project structure and development environment
@@ -85,27 +103,29 @@ Status as of November 2, 2026. See [docs/progress.md](docs/progress.md) for the 
 - [x] Authentication and sessions (implemented; HTTP contract tests pass)
 - [x] Real-time communication (Socket.IO; location persistence pending)
 - [x] Job queue system (6 BullMQ queues + Bull Board; payment and push providers are mocked)
-- [x] Green unit test suite (73 tests); [ ] CI and integration runs
+- [x] Unit test suite (122 tests) and CI on every PR (typecheck, tests, build)
+- [ ] Integration suites in CI
 
 ### Customer Experience
 - [x] Onboarding, login and OTP screens (UI only)
 - [x] Home dashboard, ride booking and tracking screens (UI only)
-- [ ] Backend ride booking API
+- [x] Backend ride booking API (fare estimate, booking, history, cancel)
 - [ ] Payments and wallet
 
 ### Driver Experience
 - [x] Onboarding, document verification and dashboard screens (UI only)
-- [ ] Trip management API
+- [x] Trip management API (accept, arriving, arrived, start, complete)
+- [ ] Driver onboarding API (documents, vehicle, availability)
 - [ ] Earnings tracking
-- [ ] Vehicle management
 
-### Business Operations
-- [ ] Admin dashboard
-- [ ] Analytics and reporting
-- [ ] Fleet management
-- [ ] Financial operations
+### Business Operations (admin dashboard, [admin/](admin/))
+- [x] Overview: revenue, trips, driver fleet, 7-day trends, approval queue
+- [x] Driver moderation: approve, reject, suspend, reinstate, block
+- [x] Customer management: profile, wallet, trip history, block/unblock
+- [x] Rides, deliveries and payments: filter, inspect, cancel active trips
+- [ ] Live driver map, support tickets, document viewer, audit log, payouts
 
-Neither mobile app is connected to the backend yet, and the ride, delivery and payment REST APIs are not built.
+Neither mobile app is connected to the backend yet. The delivery and payment REST APIs are placeholders. The admin dashboard reads deliveries and payments directly from the database (seeded demo data).
 
 ## Technology Stack
 
@@ -120,6 +140,12 @@ Neither mobile app is connected to the backend yet, and the ride, delivery and p
 - **Real-time**: Socket.IO
 - **Auth**: JWT + bcrypt
 
+### Admin Dashboard
+- **Framework**: React 18 + TypeScript, Vite
+- **Styling**: Tailwind CSS 4
+- **Data**: TanStack Query, React Router
+- **Charts**: Recharts
+
 ### Mobile Apps
 - **Framework**: Flutter 3.16+
 - **Language**: Dart
@@ -132,7 +158,7 @@ Neither mobile app is connected to the backend yet, and the ride, delivery and p
 ### Infrastructure
 - **Containerization**: Docker
 - **Development**: Docker Compose
-- **CI/CD**: GitHub Actions (planned)
+- **CI/CD**: GitHub Actions (backend typecheck, tests and build on PRs); deployment planned
 - **Deployment**: AWS/GCP (planned)
 
 ## Development Guidelines

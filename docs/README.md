@@ -17,6 +17,7 @@ This directory contains comprehensive documentation for the Ride Deliva platform
 
 ### 📋 Subsystem Documentation
 - **[QUEUE_SYSTEM.md](../backend/docs/QUEUE_SYSTEM.md)** - BullMQ job queue system documentation
+- **[admin/README.md](../admin/README.md)** - Admin dashboard: running it, pages, what's next
 
 ## 🚀 Quick Start Links
 
@@ -34,15 +35,17 @@ This directory contains comprehensive documentation for the Ride Deliva platform
 
 ## 📊 Current Status
 
-### ✅ Built and verified (November 2, 2026)
-- **Backend foundation**: compiles with zero TypeScript errors, starts in production mode against PostgreSQL/PostGIS and Redis, dependency-aware health checks, 6 BullMQ queues with Bull Board
-- **Backend APIs mounted**: auth, socket management, queue management, health
+### ✅ Built and verified (November 23, 2026)
+- **Backend foundation**: compiles with zero TypeScript errors, starts against PostgreSQL/PostGIS and Redis, dependency-aware health checks, 6 BullMQ queues with Bull Board
+- **Backend APIs mounted**: auth, socket management, queue management, health, rides (booking + driver lifecycle), admin
+- **Admin dashboard** (`admin/`): drivers, customers, rides, deliveries, payments; verified against live local services
+- **Quality**: 122 unit tests pass; CI (typecheck, tests, build) runs on every PR
 - **Flutter apps**: customer and driver UI screens (not yet connected to the backend)
 
 ### 🚧 Not yet built
-- **Backend APIs**: users, rides, deliveries, payments, notifications, admin (workers for rides, deliveries and payments exist but no REST endpoints trigger them)
+- **Backend APIs**: driver onboarding, deliveries, payments/wallet, notifications (`users`, `delivery`, `payments` are mounted placeholders)
 - **Integrations**: real payment gateway, push notifications, SMS/email credentials, Google Maps
-- **Quality**: unit tests pass (73); integration tests not yet run; no CI
+- **Quality**: integration suites have not completed a run; not yet in CI
 - **Mobile**: BLoC state management and API integration
 - **Deployment**: CI/CD and production infrastructure
 
@@ -58,7 +61,11 @@ See [progress.md](./progress.md) for the full, evidence-based breakdown.
 - **BullMQ** (job processing)
 - **Socket.IO** (real-time)
 
-### Frontend
+### Admin Dashboard
+- **React** 18 + **Vite** + **TypeScript**
+- **Tailwind CSS** 4, **TanStack Query**, **Recharts**
+
+### Mobile
 - **Flutter** 3.16+ (Dart 3.2+)
 - **BLoC** (state management)
 - **Google Maps** (mapping)
@@ -66,7 +73,7 @@ See [progress.md](./progress.md) for the full, evidence-based breakdown.
 
 ### Infrastructure
 - **Docker** + **Docker Compose**
-- **Kubernetes** and **CI/CD** (GitHub Actions): planned, not yet set up
+- **GitHub Actions**: backend CI on PRs; deployment (and Kubernetes) planned
 
 ## 📖 Key Features (target design; implementation status in progress.md)
 
