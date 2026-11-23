@@ -106,7 +106,10 @@ async function handleDriverMatching(job: ProcessorJob<RideJobData>) {
     });
 
     if (!ride) {
-      throw new Error(`Ride ${rideId} not found or not in REQUESTED status`);
+      // Accepted, cancelled or gone since this job was queued: nothing to match. Not an error,
+      // so BullMQ does not retry it, and the expanding-radius retry chain stops here.
+      logger.info(`Ride ${rideId} is no longer requested; skipping driver matching`, { rideId });
+      return { success: false, reason: 'not_requested', retryScheduled: false };
     }
 
     await job.updateProgress(40);
@@ -176,11 +179,8 @@ async function handleDriverMatching(job: ProcessorJob<RideJobData>) {
       });
     }
 
-    // Keep the ride requested until a driver accepts.
-    await prisma.ride.update({ where: { id: rideId }, data: {
-      status: 'REQUESTED',
-      updatedAt: new Date(),
-    } });
+    // No status write here. The ride is already REQUESTED, and an unconditional write would
+    // race with a driver accepting it in the meantime and revert the ride to REQUESTED.
 
     await job.updateProgress(90);
 

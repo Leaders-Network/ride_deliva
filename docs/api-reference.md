@@ -1,6 +1,6 @@
 # Ride Deliva API Reference
 
-> **Status note (November 23, 2026):** this is the target API design. Only the endpoints below are implemented and mounted under `/api/v1`; everything else in this document (user, driver, order, payment, notification and location endpoints) is **planned**. The [Admin Endpoints](#admin-endpoints) section documents the implemented admin API.
+> **Status note (November 23, 2026):** this is the target API design. Only the endpoints below are implemented and mounted under `/api/v1`; everything else in this document (user, driver, order, payment, notification and location endpoints) is **planned**. The [Delivery Endpoints](#delivery-endpoints) and [Admin Endpoints](#admin-endpoints) sections document the implemented delivery and admin APIs.
 >
 > | Implemented | Endpoints |
 > | --- | --- |
@@ -8,8 +8,9 @@
 > | Socket management | `GET /socket/info`, `/socket/health`, `/socket/stats`, `/socket/connection/status`, `/socket/drivers/:driverId/location`, `/socket/drivers/connected`; `POST /socket/notifications/test`, `/socket/broadcast/role`, `/socket/rides/message` |
 > | Queue administration (admin) | `GET /queues/statistics`, `/queues/:queueName`, `/queues/:queueName/jobs/:jobId`; `POST /queues/:queueName/pause`, `/resume`, `/clean`, `/test`, `/jobs/:jobId/retry`; `DELETE /queues/:queueName/jobs/:jobId/remove` |
 > | Rides | `POST /rides/estimate`, `/rides` (customer); `GET /rides`, `/rides/:id`, `POST /rides/:id/cancel` (customer or driver); `GET /rides/available`, `POST /rides/:id/accept`, `/arriving`, `/arrived`, `/start`, `/complete` (approved driver) |
+> | Deliveries | `POST /delivery/estimate`, `/delivery`, `/delivery/:id/pin` (customer); `GET /delivery`, `/delivery/:id`, `/delivery/:id/tracking`, `POST /delivery/:id/cancel` (customer or driver); `GET /delivery/available`, `POST /delivery/:id/accept`, `/pickup`, `/transit`, `/location`, `/deliver` (approved driver); see [Delivery Endpoints](#delivery-endpoints) |
 > | Admin (admin) | `GET /admin/stats`; drivers, customers, rides, deliveries, payments; see [Admin Endpoints](#admin-endpoints) |
-> | Placeholders | `GET /users`, `/delivery`, `/payments` return `status: planned` |
+> | Placeholders | `GET /users`, `/payments` return `status: planned` |
 > | Outside `/api/v1` | `GET /health`, `/health/readiness`, `/health/liveness`; Bull Board at `/admin/queues` |
 >
 > Differences from the examples below: phone verification is `POST /auth/verify-phone` (not `/auth/verify-otp`), the current user is `GET /auth/profile` (not `/auth/me`), and rides and deliveries are separate resources rather than a unified `/orders`. Request/response shapes in the planned sections may change. Progress: [progress.md](./progress.md).
@@ -585,6 +586,65 @@ GET /location/route?origin=6.5244,3.3792&destination=6.4281,3.4219&mode=driving
 GET /location/places?query=restaurant&lat=6.5244&lng=3.3792&radius=1000
 ```
 **Headers:** `Authorization: Bearer {token}`
+
+## Delivery Endpoints
+
+**Implemented.** Source: `backend/src/modules/delivery`. Mounted at `/api/v1/delivery` (singular). All amounts are Naira.
+
+**Lifecycle.** `REQUESTED` → `accept` → `ACCEPTED` → `pickup` → `PICKED_UP` → `transit` → `IN_TRANSIT` → `deliver` (with PIN) → `DELIVERED`. `deliver` also works straight from `PICKED_UP`. A customer can cancel while `REQUESTED` or `ACCEPTED`; a driver only while `ACCEPTED` (once the driver holds the package, cancellation goes through support). `DRIVER_ASSIGNED` is reserved for future admin dispatch.
+
+**Proof of delivery.** Booking generates a 4-digit recipient PIN, stores only a bcrypt hash, texts it to the recipient (SMS queue), and returns it once to the sender in the booking response. The driver must send it to `deliver`. Each attempt is counted before the PIN is checked; after 5 wrong attempts the delivery is locked until the sender issues a new PIN (`POST /:id/pin`, which resets the count).
+
+**Limits.** At most 3 active deliveries per customer (409 beyond that). Booking, estimate, PIN reissue and `deliver` share the per-user booking rate limit (10 per 10 minutes).
+
+### Estimate / Book
+```http
+POST /delivery/estimate
+POST /delivery
+```
+**Headers:** `Authorization: Bearer {token}` (verified customer)
+
+```json
+{
+  "pickup": { "latitude": 6.4474, "longitude": 3.4739, "address": "1 Admiralty Way, Lekki" },
+  "destination": { "latitude": 6.6018, "longitude": 3.3515, "address": "5 Allen Avenue, Ikeja" },
+  "deliveryType": "STANDARD",
+  "package": { "description": "Box of books", "weightKg": 8, "size": "MEDIUM" },
+  "recipient": { "name": "Chi Eze", "phoneNumber": "08031234567" },
+  "sender": { "name": "Ada Obi", "phoneNumber": "+2348123456789" },
+  "specialInstructions": "Call on arrival",
+  "scheduledPickupAt": "2026-11-24T09:00:00Z"
+}
+```
+- `estimate` takes only `pickup`, `destination`, `deliveryType`, `package`.
+- `deliveryType`: `STANDARD` (default), `EXPRESS` (×1.5), `FRAGILE` (×1.3), `SCHEDULED` (requires `scheduledPickupAt`, forbidden otherwise).
+- `package.weightKg`: 0.1–30. `sender` defaults to the caller. Both ends must be inside the Lagos service area; distance at most 100 km.
+- Fee: 600 base + 100/km + 10/min + 50/kg above 5 kg, times the type multiplier, minimum 700. Distance and time-of-day traffic come from the rides fare model.
+
+**Book response (201):** `{ delivery, estimate, deliveryPin }`. `estimate` contains `fee`, `distanceKm`, `durationMinutes` and a `breakdown`.
+
+### Read
+| Endpoint | Who | Notes |
+| --- | --- | --- |
+| `GET /delivery?page=&limit=&status=` | customer or driver | Own history, newest first |
+| `GET /delivery/:id` | customer, assigned driver, admin | 404 for anyone else |
+| `GET /delivery/:id/tracking` | same | `{ deliveryId, status, points: [{ latitude, longitude, status, timestamp }] }` |
+| `GET /delivery/available` | approved driver | Open, unscheduled requests; no sender or recipient details until accepted |
+
+### Driver actions
+| Endpoint | Body | From status |
+| --- | --- | --- |
+| `POST /delivery/:id/accept` | none | `REQUESTED` (needs an active vehicle; 409 if another driver won) |
+| `POST /delivery/:id/pickup` | none | `ACCEPTED` |
+| `POST /delivery/:id/transit` | none | `PICKED_UP` |
+| `POST /delivery/:id/location` | `{ latitude, longitude }` | `ACCEPTED`, `PICKED_UP`, `IN_TRANSIT` |
+| `POST /delivery/:id/deliver` | `{ pin, actualDistance?, actualDuration? }` | `PICKED_UP`, `IN_TRANSIT`. Wrong PIN: 400 with attempts left. Locked: 409 |
+
+### Customer actions
+| Endpoint | Body | Notes |
+| --- | --- | --- |
+| `POST /delivery/:id/cancel` | `{ reason? }` | Also used by drivers, see lifecycle |
+| `POST /delivery/:id/pin` | none | Issues and texts a new PIN; returns `{ deliveryPin }` |
 
 ## Admin Endpoints
 
