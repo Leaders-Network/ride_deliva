@@ -9,9 +9,9 @@ This is a short summary. The detailed, evidence-based backend breakdown is in [p
 | Area | State |
 | --- | --- |
 | Backend foundation | Built and verified: zero TypeScript errors, production build and startup verified against PostgreSQL/PostGIS and Redis |
-| Backend business APIs | Rides (booking + driver lifecycle) and admin built. Users, delivery and payments are mounted placeholders. Notifications not built |
+| Backend business APIs | Rides (booking + driver lifecycle), deliveries (booking, lifecycle, PIN proof of delivery, tracking) and admin built. Users and payments are mounted placeholders. Notifications not built |
 | Admin dashboard | Built (`admin/`): React web app over `/api/v1/admin`. Verified end to end against local Postgres and Redis and clicked through in a browser |
-| Backend tests | 11 unit suites pass (122 tests). The 2 integration suites are now picked up by `test:integration` but have not completed a run |
+| Backend tests | 15 unit suites pass (174 tests). The 2 integration suites are now picked up by `test:integration` but have not completed a run |
 | Customer app | UI screens only; not connected to the backend |
 | Driver app | UI screens only; not connected to the backend |
 | CI / deployment | Backend CI runs on every PR (typecheck, unit tests, build) and is green; deployment not started |
@@ -24,6 +24,7 @@ This is a short summary. The detailed, evidence-based backend breakdown is in [p
 - Queue management (`/api/v1/queues`) and authenticated Bull Board (`/admin/queues`)
 - Health: `/health`, `/health/readiness`, `/health/liveness` (check PostgreSQL and Redis)
 - Rides (`/api/v1/rides`): fare estimate, booking, history, cancel, and driver accept/arriving/arrived/start/complete. HTTP-contract tested; not yet exercised against a live database
+- Deliveries (`/api/v1/delivery`): fee estimate, booking (up to 3 active), history, driver accept/pickup/transit/deliver, recipient-PIN proof of delivery, location tracking, cancel, PIN reissue. Verified end to end against local Postgres and Redis
 - Admin (`/api/v1/admin`, admin-only): stats, drivers (moderation), customers, block/unblock users, rides, deliveries, payments. Verified against live local Postgres and Redis
 
 **Infrastructure verified (November 23, 2026)**
@@ -33,12 +34,12 @@ This is a short summary. The detailed, evidence-based backend breakdown is in [p
 - Environment validation, startup ordering, and graceful shutdown
 
 **Built but not exposed or not production-ready**
-- Ride, delivery, and payment queue workers (contract-tested only; nothing in the HTTP layer enqueues them)
+- Payment queue worker (contract-tested only; nothing enqueues it). Ride and delivery booking enqueue driver matching; a race in those workers that reset accepted requests to REQUESTED was fixed on Nov 23
 - Stripe webhook controller (unmounted; handlers are `TODO` stubs)
 - Payment gateway and push notifications are mocked; payment verification and driver payout deliberately throw
 
 **Not started**
-- Driver onboarding (documents, vehicle, availability), delivery API, wallet and payment APIs, notification APIs, analytics beyond the admin overview, location services, deployment
+- Driver onboarding (documents, vehicle, availability), wallet and payment APIs, notification APIs, analytics beyond the admin overview, location services, deployment
 
 ## Mobile applications
 

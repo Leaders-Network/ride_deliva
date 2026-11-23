@@ -1,14 +1,5 @@
 import Joi from 'joi';
-import { commonPatterns } from '@/shared/utils/validation';
-
-const rideLocation = Joi.object({
-  latitude: commonPatterns.coordinates.latitude,
-  longitude: commonPatterns.coordinates.longitude,
-  address: Joi.string().trim().max(500).required(),
-  city: Joi.string().trim().max(100).default('Lagos'),
-  state: Joi.string().trim().max(100).default('Lagos'),
-  postalCode: Joi.string().trim().max(20).allow('').default(''),
-});
+import { commonPatterns, bookingLocationSchema as rideLocation } from '@/shared/utils/validation';
 
 const rideType = Joi.string().valid('STANDARD', 'PREMIUM', 'SHARED', 'SCHEDULE').default('STANDARD');
 

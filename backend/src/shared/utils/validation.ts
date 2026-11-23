@@ -34,6 +34,16 @@ export const commonPatterns = {
   },
 };
 
+// A pickup or drop-off point for a booking (rides and deliveries): coordinates plus a street address.
+export const bookingLocationSchema = Joi.object({
+  latitude: commonPatterns.coordinates.latitude,
+  longitude: commonPatterns.coordinates.longitude,
+  address: Joi.string().trim().max(500).required(),
+  city: Joi.string().trim().max(100).default('Lagos'),
+  state: Joi.string().trim().max(100).default('Lagos'),
+  postalCode: Joi.string().trim().max(20).allow('').default(''),
+});
+
 // Location validation schema
 export const locationSchema = Joi.object({
   latitude: commonPatterns.coordinates.latitude,

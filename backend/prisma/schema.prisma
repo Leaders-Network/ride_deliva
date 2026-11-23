@@ -347,6 +347,8 @@ model Delivery {
   notes                 String?
   cancellationReason    String?           @map("cancellation_reason")
   proofOfDelivery       String?           @map("proof_of_delivery") // Photo/signature
+  deliveryPinHash       String?           @map("delivery_pin_hash") // bcrypt hash of the recipient's handover PIN
+  deliveryPinAttempts   Int               @default(0) @map("delivery_pin_attempts")
   
   createdAt             DateTime          @default(now()) @map("created_at")
   updatedAt             DateTime          @updatedAt @map("updated_at")

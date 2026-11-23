@@ -114,7 +114,7 @@ Status: **Partial.** Initialization, workers, and Bull Board are wired and verif
 | Users / profiles / uploads | Planned (route file absent) | Profile image upload, customer addresses |
 | Driver management | Planned | Documents, vehicle, availability, persisted location, admin approval |
 | Rides | Planned (REST absent; worker partial) | Fare estimate, booking, matching trigger, atomic acceptance, arrival/start/cancel/complete, history, ratings |
-| Deliveries | Planned (REST absent; worker partial) | Booking, courier assignment, lifecycle, proof of delivery, tracking, history |
+| Deliveries | Implemented (Nov 23); verified end to end against local Postgres/Redis | Payment capture, socket events, public recipient tracking link, photo proof (needs storage), admin dispatch |
 | Payments and wallet | Planned (REST absent; worker partial/mocked) | Gateway integration, atomic top-up/debit/refund, earnings and payouts, transaction history |
 | Stripe/Paystack webhooks | Implemented but unmounted | Stripe controller has handler stubs (all `TODO`); needs raw-body route, signature check, replay protection, idempotency, Paystack equivalent |
 | Notifications | Planned (REST absent) | FCM/APNs, device token registration, persistence, read/unread APIs |
@@ -185,7 +185,7 @@ Status: **Partial.** Initialization, workers, and Bull Board are wired and verif
 
 ### M5. Delivery and operations
 
-- [ ] Delivery booking, assignment, lifecycle, proof, tracking, history
+- [x] Delivery booking, assignment, lifecycle, proof (recipient PIN), tracking, history (Nov 23)
 - [ ] Admin: driver approval, user management, support tickets, reviews, analytics
 - [ ] CI, coverage measurement, deployment, monitoring
 
@@ -202,6 +202,17 @@ Status: **Partial.** Initialization, workers, and Bull Board are wired and verif
 5. Pick a payment provider (Paystack or Stripe) before building wallet and webhook code.
 
 ## 5. Work log
+
+### November 23, 2026 - Delivery API
+
+- New `backend/src/modules/delivery`, built on the rides patterns (server-side pricing, guarded `updateMany` transitions, allow-listed responses, 404 for non-owners): estimate, book, history, detail, available, accept, pickup, transit, deliver, cancel, location, tracking, PIN reissue. See the Delivery Endpoints section of [api-reference.md](./api-reference.md).
+- Proof of delivery is a recipient PIN: 4 digits, bcrypt hash only, texted to the recipient and returned once to the sender. Migration `20261123145824_delivery_pin` adds `deliveries.delivery_pin_hash` and `delivery_pin_attempts`. An attempt is reserved (counter incremented under a `< 5` guard) before the PIN is compared, so parallel guesses cannot exceed the cap.
+- Up to 3 active deliveries per customer, serialised with a per-customer advisory lock (separate key from rides). Booking enqueues `assign_courier` and the recipient SMS after commit, best-effort.
+- `fee.ts` reuses the rides distance and traffic model. The booking location schema moved to `shared/utils/validation.ts` (`bookingLocationSchema`) and is shared with rides.
+- **Bug fixed in both matching workers** (found by the live run): `match_driver` and `assign_courier` ended with an unconditional `status: 'REQUESTED'` write, so a request accepted while the job ran was reset to REQUESTED with its driver still attached. A delivery already IN_TRANSIT was reverted. The write is removed, and the jobs now skip quietly (no throw, no retry) once the request is no longer REQUESTED. This affected rides since booking started enqueuing `match_driver` on Nov 3.
+- Tests: `delivery.test.ts` (HTTP contract), `delivery.service.test.ts` (PIN, attempt cap, active limit, allow-list, against a mocked Prisma), `delivery-fee.test.ts`, `delivery-pin.test.ts`, and 4 worker regression tests in `worker-contracts.test.ts` (confirmed failing on the old workers). 15 suites, 174 tests pass; typecheck and build clean.
+- Live run against the Compose Postgres/Redis with the seed accounts: estimate, book, available, accept, a second driver losing the accept race (409), deliver before pickup (409), pickup, location, transit, status unchanged after the worker ran, driver cancel after pickup (409), wrong PIN (400, 4 left), right PIN (DELIVERED at the server fare), tracking, non-participant 404, history, 4th active booking (409). All pass.
+- Still open: the matching retry chain expands the radius every 30–45 s with no upper bound while nobody accepts; no payment on completion (payments not built); no socket events from the service; the seed drivers had to be set online by hand because there is no driver availability API yet. `process_failed_delivery` still writes `REQUESTED` unguarded, but nothing enqueues it.
 
 ### November 23, 2026 - Admin dashboard MVP
 

@@ -102,7 +102,10 @@ async function handleCourierAssignment(job: ProcessorJob<DeliveryJobData>) {
     });
 
     if (!delivery) {
-      throw new Error(`Delivery ${deliveryId} not found or not in PENDING status`);
+      // Accepted, cancelled or gone since this job was queued: nothing to assign. Not an error,
+      // so BullMQ does not retry it, and the expanding-radius retry chain stops here.
+      logger.info(`Delivery ${deliveryId} is no longer requested; skipping courier assignment`, { deliveryId });
+      return { success: false, reason: 'not_requested', retryScheduled: false };
     }
 
     await job.updateProgress(40);
@@ -173,11 +176,9 @@ async function handleCourierAssignment(job: ProcessorJob<DeliveryJobData>) {
       });
     }
 
-    // Keep the delivery requested until a courier accepts.
-    await prisma.delivery.update({ where: { id: deliveryId }, data: {
-      status: 'REQUESTED',
-      updatedAt: new Date(),
-    } });
+    // No status write here. The delivery is already REQUESTED, and an unconditional write would
+    // race with a driver accepting it in the meantime and revert it to REQUESTED (seen in a live run:
+    // an IN_TRANSIT delivery was reset after the driver had picked it up).
 
     await job.updateProgress(90);
 

@@ -25,12 +25,45 @@ jest.mock('@/shared/services/queue.service', () => ({
   queueService: jest.requireMock('@/config/queues').queueService,
 }));
 
+jest.mock('@/shared/services/database', () => ({ dbService: { findNearbyDrivers: jest.fn() } }));
+
 function job<T>(data: T): ProcessorJob<T> {
   return { id: 'job-id', data, attemptsMade: 0, updateProgress: jest.fn().mockResolvedValue(undefined) };
 }
 
 describe('Worker contracts against the Prisma schema', () => {
   beforeEach(() => jest.resetAllMocks());
+
+  // Regression: matching used to finish with an unconditional `status: 'REQUESTED'` write, which
+  // reverted requests a driver had accepted (and moved on) while the job was running.
+  describe('matching never rewrites the request status', () => {
+    const { dbService } = jest.requireMock('@/shared/services/database');
+    const nearby = [{ id: 'drv', distance: 800, averageRating: 4.8, vehicleType: 'MOTORCYCLE' }];
+    const pickup = { pickupLatitude: 6.45, pickupLongitude: 3.47 };
+
+    it.each([
+      ['ride', () => rideProcessor(job({ type: 'match_driver', rideId: 'ride', data: pickup })), () => prisma.ride],
+      ['delivery', () => deliveryProcessor(job({ type: 'assign_courier', deliveryId: 'delivery', data: pickup })), () => prisma.delivery],
+    ] as const)('%s: notifies nearby drivers without touching status', async (_name, run, model) => {
+      jest.mocked(model().findFirst as jest.Mock).mockResolvedValue({ id: 'x', deliveryType: 'STANDARD' });
+      dbService.findNearbyDrivers.mockResolvedValue(nearby);
+      jest.mocked(queueService.addJob).mockResolvedValue({} as never);
+
+      await expect(run()).resolves.toMatchObject({ success: true });
+      expect(model().update).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['ride', () => rideProcessor(job({ type: 'match_driver', rideId: 'ride', data: pickup })), () => prisma.ride],
+      ['delivery', () => deliveryProcessor(job({ type: 'assign_courier', deliveryId: 'delivery', data: pickup })), () => prisma.delivery],
+    ] as const)('%s: skips quietly once the request was accepted or cancelled', async (_name, run, model) => {
+      jest.mocked(model().findFirst as jest.Mock).mockResolvedValue(null);
+
+      await expect(run()).resolves.toMatchObject({ reason: 'not_requested', retryScheduled: false });
+      expect(dbService.findNearbyDrivers).not.toHaveBeenCalled();
+      expect(model().update).not.toHaveBeenCalled();
+    });
+  });
 
   it('stores a ride quote in naira while returning the calculation in kobo', async () => {
     const result = await rideProcessor(job({ type: 'calculate_fare', rideId: 'ride', data: { distance: 1000, duration: 60 } }));

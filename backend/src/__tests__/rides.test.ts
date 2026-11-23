@@ -160,7 +160,7 @@ describe('Rides API', () => {
   });
 
   describe('placeholder routers', () => {
-    it.each(['users', 'delivery', 'payments'])('mounts /%s', async (name) => {
+    it.each(['users', 'payments'])('mounts /%s', async (name) => {
       const res = await request(app.app).get(`/api/v1/${name}`).expect(200);
       expect(res.body.data.status).toBe('planned');
     });
