@@ -7,6 +7,8 @@
     "setup": "node setup-infrastructure.js",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:customer\" \"npm run dev:driver\"",
     "dev:backend": "cd backend && npm run dev",
+    "dev:admin": "cd admin && npm run dev",
+    "dev:dashboard": "concurrently -n api,admin \"npm run dev:backend\" \"npm run dev:admin\"",
     "dev:customer": "cd flutter/customer_app && flutter run",
     "dev:driver": "cd flutter/driver_app && flutter run",
     "build": "npm run build:backend",

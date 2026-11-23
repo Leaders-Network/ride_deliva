@@ -201,6 +201,14 @@ Status: **Partial.** Initialization, workers, and Bull Board are wired and verif
 
 ## 5. Work log
 
+### November 23, 2026 - Admin dashboard MVP
+
+- New `backend/src/modules/admin` (all routes behind `authenticateAdmin`): `GET /stats` (KPIs, 7-day trend, approval queue), drivers (list/detail/`PATCH :id/status`), customers (list/detail), `PATCH /users/:id/active` (block revokes sessions and takes drivers offline), rides and deliveries (list/detail/admin cancel), payments (list + per-status totals). Driver moderation is a declared transition table with a guarded `updateMany`, mirroring the ride state machine; each decision notifies the driver with the reason.
+- New `admin/` web app (React + Vite + Tailwind, dark/blue to match `ui_ref`): Overview, Drivers, Customers, Rides, Deliveries, Payments. Filters and the open detail drawer live in the URL. Run with `npm run dev:dashboard` (API :3000 + UI :3001, Vite proxies `/api`).
+- `db:seed` now also loads `src/database/demo-data.ts`: 24 customers, 15 drivers in mixed statuses (4 pending), two weeks of rides/deliveries with payments, earnings and reviews. Deterministic.
+- Verified against live local Postgres + Redis (Docker): 22-step API walkthrough passes (auth guard, filters, pagination, suspend/reinstate, block/unblock with session revocation, illegal-transition 409s). 11 suites / 122 tests pass; typecheck and build clean.
+- Infra fixes found on the way: Supabase project is gone ("tenant not found"), so local dev uses the compose Postgres on 5433. `bullmq` upgraded 4 → 5 to satisfy `@bull-board` 9.5's peer range; the old `bullmq` path overrides in `jest.config.js` and `register-paths.cjs` are removed. Use `127.0.0.1`, not `localhost`, in local `DATABASE_URL`/`REDIS_URL` on Windows (Docker's `::1` forwarding stalls intermittently). Redis startup check now names the failing client.
+
 ### November 3, 2026 - Routers mounted and ride booking path
 
 - Mounted `/users`, `/rides`, `/delivery`, `/payments`. `users`, `delivery` and `payments` are info-only placeholders reporting `status: planned`.

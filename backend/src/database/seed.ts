@@ -1,6 +1,7 @@
 import { PrismaClient } from '../generated/prisma';
 import bcrypt from 'bcrypt';
 import { logger } from '@/config/logger';
+import { seedDemoData } from './demo-data';
 
 const prisma = new PrismaClient();
 
@@ -588,6 +589,10 @@ async function main() {
     });
 
     logger.info('Created driver earnings record');
+
+    // Larger demo dataset for the admin dashboard (two weeks of trips, a driver approval queue).
+    const demo = await seedDemoData(prisma, { customer: customerPasswordHash, driver: driverPasswordHash });
+    logger.info('Created admin dashboard demo data', demo);
 
     logger.info('Database seeding completed successfully! 🎉');
     

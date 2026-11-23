@@ -7,6 +7,7 @@ import { userRoutes } from './users/routes';
 import { rideRoutes } from './rides/routes';
 import { deliveryRoutes } from './delivery/routes';
 import { paymentRoutes } from './payments/routes';
+import { adminRoutes } from './admin/routes';
 
 const router = Router();
 
@@ -55,5 +56,6 @@ router.use('/users', userRoutes);
 router.use('/rides', rideRoutes);
 router.use('/delivery', deliveryRoutes);
 router.use('/payments', paymentRoutes);
+router.use('/admin', adminRoutes);
 
 export { router as apiRoutes };
