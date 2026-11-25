@@ -1,0 +1,31 @@
+$kind: http-request
+description: |-
+  Pays every eligible driver (balance >= payoutMinimum and a payout account). Idempotent per batchKey (YYYY-MM-DD, default today). WARNING: sends real Paystack transfers for the configured key.
+method: POST
+url: '{{baseUrl}}/payments/admin/payouts/run'
+order: 10000
+body:
+  type: json
+  content: |-
+    {
+      "batchKey": "{{batchKey}}"
+    }
+scripts:
+  - type: beforeRequest
+    language: text/javascript
+    code: |-
+      // One batch per run date; re-running the same batch must not pay anyone twice.
+      pm.variables.set('batchKey', new Date().toISOString().slice(0, 10));
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 200', () => pm.response.to.have.status(200));
+      const s = pm.response.json().data;
+      pm.test('batch summary adds up', () => {
+        pm.expect(s).to.include.keys('batchKey', 'eligible', 'created', 'paid', 'processing', 'failed', 'skipped');
+        pm.expect(s.batchKey).to.match(/^\d{4}-\d{2}-\d{2}$/);
+        pm.expect(s.batchKey).to.eql(pm.variables.get('batchKey'));
+        pm.expect(s.created + s.skipped).to.be.at.most(s.eligible);
+        pm.expect(s.paid + s.processing).to.be.at.most(s.created);
+      });
+examples: './.resources/Run payout batch.resources/examples'

@@ -1,0 +1,11 @@
+$kind: collection
+description: |-
+  Approved drivers only. Net earnings (fare minus commission) accrue in the driver wallet; a scheduled batch
+  pays out every balance at or above payoutMinimum to the driver's verified payout account (bank NUBAN or
+  MoMo PSB) via Paystack transfers. The account name always comes from the bank, never from the driver.
+order: 4000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{driverToken}}'

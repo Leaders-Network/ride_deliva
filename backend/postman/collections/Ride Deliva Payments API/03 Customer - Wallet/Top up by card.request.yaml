@@ -1,0 +1,30 @@
+$kind: http-request
+method: POST
+url: '{{baseUrl}}/payments/wallet/top-up'
+order: 6000
+body:
+  type: json
+  content: |-
+    {
+      "amount": 500,
+      "method": "CARD"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 201', () => pm.response.to.have.status(201));
+      const { payment, next } = pm.response.json().data;
+      pm.test('a PROCESSING WALLET_TOP_UP payment for exactly the amount', () => {
+        pm.expect(payment.purpose).to.eql('WALLET_TOP_UP');
+        pm.expect(payment.rideId).to.be.null;
+        pm.expect(payment.deliveryId).to.be.null;
+        pm.expect(Number(payment.amount)).to.eql(500);
+        pm.expect(payment.status).to.eql('PROCESSING');
+      });
+      pm.test('next action is a Paystack redirect', () => pm.expect(next.type).to.eql('redirect'));
+      pm.test('gateway payloads are not exposed', () => {
+        const p = pm.response.json().data.payment || pm.response.json().data;
+        ['gatewayResponse', 'providerReference', 'payerPhone', 'userId'].forEach((k) => pm.expect(p).to.not.have.property(k));
+      });
+examples: './.resources/Top up by card.resources/examples'

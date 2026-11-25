@@ -1,0 +1,12 @@
+$kind: collection
+description: |-
+  Provider callbacks. Unauthenticated by design; each handler authenticates its caller and receives the RAW body.
+  - POST /webhooks/paystack: x-paystack-signature = hex HMAC-SHA512 of the raw body with the Paystack secret key.
+    Events are de-duplicated by (provider, event:reference); a redelivery returns { received: true, duplicate: true }.
+    charge.success is re-verified with Paystack's API before anything settles. Non-2xx makes Paystack retry.
+  - PUT|POST /webhooks/momo/:referenceId/:signature: the path carries an HMAC of the referenceId; anything
+    invalid is a bare 404. The body is never trusted: the MoMo status API is the source of truth.
+  The signed requests need the paystackSecretKey environment variable (secret; never commit it).
+order: 7000
+auth:
+  type: noauth

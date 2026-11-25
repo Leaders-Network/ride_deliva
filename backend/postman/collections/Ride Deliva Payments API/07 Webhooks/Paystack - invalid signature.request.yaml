@@ -1,0 +1,23 @@
+$kind: http-request
+method: POST
+url: '{{baseUrl}}/webhooks/paystack'
+order: 1000
+headers:
+  - key: Content-Type
+    value: 'application/json'
+  - key: x-paystack-signature
+    value: 'not-a-valid-signature'
+body:
+  type: json
+  content: |-
+    {
+      "event": "charge.success",
+      "data": { "reference": "PAY-forged" }
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 401', () => pm.response.to.have.status(401));
+      pm.test('rejects without processing', () => pm.expect(pm.response.json()).to.eql({ error: 'Invalid signature' }));
+examples: './.resources/Paystack - invalid signature.resources/examples'

@@ -14,18 +14,18 @@ datasource db {
 // ============================================================================
 
 model User {
-  id              String    @id @default(uuid()) @db.Uuid
-  phoneNumber     String    @unique @map("phone_number")
-  email           String?   @unique
-  firstName       String    @map("first_name")
-  lastName        String    @map("last_name")
-  profilePicture  String?   @map("profile_picture")
-  dateOfBirth     DateTime? @map("date_of_birth") @db.Date
-  gender          Gender?
-  isVerified      Boolean   @default(false) @map("is_verified")
-  isActive        Boolean   @default(true) @map("is_active")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id             String    @id @default(uuid()) @db.Uuid
+  phoneNumber    String    @unique @map("phone_number")
+  email          String?   @unique
+  firstName      String    @map("first_name")
+  lastName       String    @map("last_name")
+  profilePicture String?   @map("profile_picture")
+  dateOfBirth    DateTime? @map("date_of_birth") @db.Date
+  gender         Gender?
+  isVerified     Boolean   @default(false) @map("is_verified")
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   // Authentication
   passwordHash    String?   @map("password_hash")
@@ -40,72 +40,75 @@ model User {
   sessions        Session[]
   notifications   Notification[]
   supportTickets  SupportTicket[]
+  payments        Payment[]
 
   @@map("users")
 }
 
 model CustomerProfile {
-  id                String    @id @default(uuid()) @db.Uuid
-  userId            String    @unique @map("user_id") @db.Uuid
-  preferredLanguage String    @default("en") @map("preferred_language")
-  emergencyContact  Json?     @map("emergency_contact")
-  rating            Decimal   @default(5.0) @db.Decimal(3, 2)
-  totalRides        Int       @default(0) @map("total_rides")
-  totalDeliveries   Int       @default(0) @map("total_deliveries")
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @unique @map("user_id") @db.Uuid
+  preferredLanguage String   @default("en") @map("preferred_language")
+  emergencyContact  Json?    @map("emergency_contact")
+  rating            Decimal  @default(5.0) @db.Decimal(3, 2)
+  totalRides        Int      @default(0) @map("total_rides")
+  totalDeliveries   Int      @default(0) @map("total_deliveries")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
 
   // Relationships
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  rides             Ride[]
-  deliveries        Delivery[]
-  reviews           Review[]
-  wallet            Wallet?
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rides      Ride[]
+  deliveries Delivery[]
+  reviews    Review[]
+  wallet     Wallet?
 
   @@map("customer_profiles")
 }
 
 model DriverProfile {
-  id                    String           @id @default(uuid()) @db.Uuid
-  userId                String           @unique @map("user_id") @db.Uuid
-  licenseNumber         String           @unique @map("license_number")
-  licenseExpiryDate     DateTime         @map("license_expiry_date") @db.Date
-  licenseDocument       String           @map("license_document")
-  status                DriverStatus     @default(PENDING)
-  isOnline              Boolean          @default(false) @map("is_online")
-  isAvailable           Boolean          @default(false) @map("is_available")
-  rating                Decimal          @default(5.0) @db.Decimal(3, 2)
-  totalRides            Int              @default(0) @map("total_rides")
-  totalDeliveries       Int              @default(0) @map("total_deliveries")
-  totalEarnings         Decimal          @default(0) @db.Decimal(10, 2)
-  bankAccount           Json?            @map("bank_account")
-  verificationDocuments Json?            @map("verification_documents")
-  createdAt             DateTime         @default(now()) @map("created_at")
-  updatedAt             DateTime         @updatedAt @map("updated_at")
+  id                    String       @id @default(uuid()) @db.Uuid
+  userId                String       @unique @map("user_id") @db.Uuid
+  licenseNumber         String       @unique @map("license_number")
+  licenseExpiryDate     DateTime     @map("license_expiry_date") @db.Date
+  licenseDocument       String       @map("license_document")
+  status                DriverStatus @default(PENDING)
+  isOnline              Boolean      @default(false) @map("is_online")
+  isAvailable           Boolean      @default(false) @map("is_available")
+  rating                Decimal      @default(5.0) @db.Decimal(3, 2)
+  totalRides            Int          @default(0) @map("total_rides")
+  totalDeliveries       Int          @default(0) @map("total_deliveries")
+  totalEarnings         Decimal      @default(0) @db.Decimal(10, 2)
+  bankAccount           Json?        @map("bank_account")
+  verificationDocuments Json?        @map("verification_documents")
+  createdAt             DateTime     @default(now()) @map("created_at")
+  updatedAt             DateTime     @updatedAt @map("updated_at")
 
   // Relationships
-  user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vehicles              Vehicle[]
-  rides                 Ride[]
-  deliveries            Delivery[]
-  reviews               Review[]
-  locations             DriverLocation[]
-  earnings              DriverEarning[]
-  wallet                Wallet?
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicles      Vehicle[]
+  rides         Ride[]
+  deliveries    Delivery[]
+  reviews       Review[]
+  locations     DriverLocation[]
+  earnings      DriverEarning[]
+  wallet        Wallet?
+  payoutAccount PayoutAccount?
+  payouts       Payout[]
 
   @@map("driver_profiles")
 }
 
 model AdminProfile {
-  id          String         @id @default(uuid()) @db.Uuid
-  userId      String         @unique @map("user_id") @db.Uuid
-  role        AdminRole      @default(SUPPORT)
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @unique @map("user_id") @db.Uuid
+  role        AdminRole @default(SUPPORT)
   permissions Json?
-  createdAt   DateTime       @default(now()) @map("created_at")
-  updatedAt   DateTime       @updatedAt @map("updated_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   // Relationships
-  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("admin_profiles")
 }
@@ -115,21 +118,21 @@ model AdminProfile {
 // ============================================================================
 
 model Session {
-  id           String    @id @default(uuid()) @db.Uuid
-  userId       String    @map("user_id") @db.Uuid
-  token        String    @unique
-  refreshToken String    @unique @map("refresh_token")
-  deviceId     String?   @map("device_id")
-  deviceInfo   Json?     @map("device_info")
-  ipAddress    String?   @map("ip_address")
-  userAgent    String?   @map("user_agent")
-  expiresAt    DateTime  @map("expires_at")
-  isActive     Boolean   @default(true) @map("is_active")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  token        String   @unique
+  refreshToken String   @unique @map("refresh_token")
+  deviceId     String?  @map("device_id")
+  deviceInfo   Json?    @map("device_info")
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  expiresAt    DateTime @map("expires_at")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   // Relationships
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sessions")
 }
@@ -155,7 +158,7 @@ model Address {
   id            String      @id @default(uuid()) @db.Uuid
   userId        String      @map("user_id") @db.Uuid
   type          AddressType
-  title         String      // e.g., "Home", "Work", "Gym"
+  title         String // e.g., "Home", "Work", "Gym"
   streetAddress String      @map("street_address")
   city          String
   state         String
@@ -168,31 +171,31 @@ model Address {
   updatedAt     DateTime    @updatedAt @map("updated_at")
 
   // Relationships
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ridesFrom     Ride[]      @relation("PickupAddress")
-  ridesTo       Ride[]      @relation("DestinationAddress")
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ridesFrom      Ride[]     @relation("PickupAddress")
+  ridesTo        Ride[]     @relation("DestinationAddress")
   deliveriesFrom Delivery[] @relation("DeliveryPickupAddress")
-  deliveriesTo  Delivery[]  @relation("DeliveryDestinationAddress")
+  deliveriesTo   Delivery[] @relation("DeliveryDestinationAddress")
 
   @@map("addresses")
 }
 
 model DriverLocation {
-  id           String        @id @default(uuid()) @db.Uuid
-  driverId     String        @map("driver_id") @db.Uuid
-  latitude     Decimal       @db.Decimal(10, 8)
-  longitude    Decimal       @db.Decimal(11, 8)
-  heading      Decimal?      @db.Decimal(5, 2) // Direction in degrees
-  speed        Decimal?      @db.Decimal(5, 2) // Speed in km/h
-  accuracy     Decimal?      @db.Decimal(6, 2) // GPS accuracy in meters
-  isOnline     Boolean       @default(false) @map("is_online")
-  isAvailable  Boolean       @default(false) @map("is_available")
-  lastLocation Bytes?        @map("last_location") // PostGIS POINT geometry
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
+  id           String   @id @default(uuid()) @db.Uuid
+  driverId     String   @map("driver_id") @db.Uuid
+  latitude     Decimal  @db.Decimal(10, 8)
+  longitude    Decimal  @db.Decimal(11, 8)
+  heading      Decimal? @db.Decimal(5, 2) // Direction in degrees
+  speed        Decimal? @db.Decimal(5, 2) // Speed in km/h
+  accuracy     Decimal? @db.Decimal(6, 2) // GPS accuracy in meters
+  isOnline     Boolean  @default(false) @map("is_online")
+  isAvailable  Boolean  @default(false) @map("is_available")
+  lastLocation Bytes?   @map("last_location") // PostGIS POINT geometry
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   // Relationships
-  driver       DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  driver DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
 
   @@unique([driverId])
   @@map("driver_locations")
@@ -203,27 +206,27 @@ model DriverLocation {
 // ============================================================================
 
 model Vehicle {
-  id               String        @id @default(uuid()) @db.Uuid
-  driverId         String        @map("driver_id") @db.Uuid
-  type             VehicleType
-  make             String
-  model            String
-  year             Int
-  color            String
-  licensePlate     String        @unique @map("license_plate")
-  registrationDoc  String        @map("registration_doc")
-  insuranceDoc     String        @map("insurance_doc")
-  inspectionDoc    String?       @map("inspection_doc")
-  isActive         Boolean       @default(false) @map("is_active")
-  capacity         Json?         // Seats for rides, cargo specs for delivery
-  features         Json?         // AC, music, etc.
-  createdAt        DateTime      @default(now()) @map("created_at")
-  updatedAt        DateTime      @updatedAt @map("updated_at")
+  id              String      @id @default(uuid()) @db.Uuid
+  driverId        String      @map("driver_id") @db.Uuid
+  type            VehicleType
+  make            String
+  model           String
+  year            Int
+  color           String
+  licensePlate    String      @unique @map("license_plate")
+  registrationDoc String      @map("registration_doc")
+  insuranceDoc    String      @map("insurance_doc")
+  inspectionDoc   String?     @map("inspection_doc")
+  isActive        Boolean     @default(false) @map("is_active")
+  capacity        Json? // Seats for rides, cargo specs for delivery
+  features        Json? // AC, music, etc.
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
 
   // Relationships
-  driver           DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  rides            Ride[]
-  deliveries       Delivery[]
+  driver     DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  rides      Ride[]
+  deliveries Delivery[]
 
   @@map("vehicles")
 }
@@ -233,55 +236,56 @@ model Vehicle {
 // ============================================================================
 
 model Ride {
-  id                  String            @id @default(uuid()) @db.Uuid
-  rideCode            String            @unique @map("ride_code")
-  customerId          String            @map("customer_id") @db.Uuid
-  driverId            String?           @map("driver_id") @db.Uuid
-  vehicleId           String?           @map("vehicle_id") @db.Uuid
-  pickupAddressId     String            @map("pickup_address_id") @db.Uuid
-  destinationAddressId String           @map("destination_address_id") @db.Uuid
-  
+  id                   String  @id @default(uuid()) @db.Uuid
+  rideCode             String  @unique @map("ride_code")
+  customerId           String  @map("customer_id") @db.Uuid
+  driverId             String? @map("driver_id") @db.Uuid
+  vehicleId            String? @map("vehicle_id") @db.Uuid
+  pickupAddressId      String  @map("pickup_address_id") @db.Uuid
+  destinationAddressId String  @map("destination_address_id") @db.Uuid
+
   // Trip Details
-  status              RideStatus        @default(REQUESTED)
-  rideType            RideType          @default(STANDARD)
-  passengerCount      Int               @default(1) @map("passenger_count")
-  
+  status         RideStatus @default(REQUESTED)
+  rideType       RideType   @default(STANDARD)
+  passengerCount Int        @default(1) @map("passenger_count")
+
   // Scheduling
-  scheduledAt         DateTime?         @map("scheduled_at")
-  requestedAt         DateTime          @default(now()) @map("requested_at")
-  acceptedAt          DateTime?         @map("accepted_at")
-  arrivedAt           DateTime?         @map("arrived_at")
-  startedAt           DateTime?         @map("started_at")
-  completedAt         DateTime?         @map("completed_at")
-  cancelledAt         DateTime?         @map("cancelled_at")
-  
+  scheduledAt DateTime? @map("scheduled_at")
+  requestedAt DateTime  @default(now()) @map("requested_at")
+  acceptedAt  DateTime? @map("accepted_at")
+  arrivedAt   DateTime? @map("arrived_at")
+  startedAt   DateTime? @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  cancelledAt DateTime? @map("cancelled_at")
+
   // Pricing
-  estimatedFare       Decimal           @map("estimated_fare") @db.Decimal(8, 2)
-  finalFare           Decimal?          @map("final_fare") @db.Decimal(8, 2)
-  surgeMultiplier     Decimal           @default(1.0) @map("surge_multiplier") @db.Decimal(3, 2)
-  
+  estimatedFare   Decimal       @map("estimated_fare") @db.Decimal(8, 2)
+  finalFare       Decimal?      @map("final_fare") @db.Decimal(8, 2)
+  surgeMultiplier Decimal       @default(1.0) @map("surge_multiplier") @db.Decimal(3, 2)
+  paymentMethod   PaymentMethod @default(CASH) @map("payment_method")
+
   // Trip Metrics
-  estimatedDistance   Decimal?          @map("estimated_distance") @db.Decimal(8, 2) // km
-  actualDistance      Decimal?          @map("actual_distance") @db.Decimal(8, 2) // km
-  estimatedDuration   Int?              @map("estimated_duration") // minutes
-  actualDuration      Int?              @map("actual_duration") // minutes
-  
+  estimatedDistance Decimal? @map("estimated_distance") @db.Decimal(8, 2) // km
+  actualDistance    Decimal? @map("actual_distance") @db.Decimal(8, 2) // km
+  estimatedDuration Int?     @map("estimated_duration") // minutes
+  actualDuration    Int?     @map("actual_duration") // minutes
+
   // Additional Info
-  notes               String?
-  cancellationReason  String?           @map("cancellation_reason")
-  
-  createdAt           DateTime          @default(now()) @map("created_at")
-  updatedAt           DateTime          @updatedAt @map("updated_at")
+  notes              String?
+  cancellationReason String? @map("cancellation_reason")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relationships
-  customer            CustomerProfile   @relation(fields: [customerId], references: [id])
-  driver              DriverProfile?    @relation(fields: [driverId], references: [id])
-  vehicle             Vehicle?          @relation(fields: [vehicleId], references: [id])
-  pickupAddress       Address           @relation("PickupAddress", fields: [pickupAddressId], references: [id])
-  destinationAddress  Address           @relation("DestinationAddress", fields: [destinationAddressId], references: [id])
-  payment             Payment?
-  reviews             Review[]
-  trackingPoints      RideTrackingPoint[]
+  customer           CustomerProfile     @relation(fields: [customerId], references: [id])
+  driver             DriverProfile?      @relation(fields: [driverId], references: [id])
+  vehicle            Vehicle?            @relation(fields: [vehicleId], references: [id])
+  pickupAddress      Address             @relation("PickupAddress", fields: [pickupAddressId], references: [id])
+  destinationAddress Address             @relation("DestinationAddress", fields: [destinationAddressId], references: [id])
+  payment            Payment?
+  reviews            Review[]
+  trackingPoints     RideTrackingPoint[]
 
   @@map("rides")
 }
@@ -292,9 +296,9 @@ model RideTrackingPoint {
   latitude  Decimal  @db.Decimal(10, 8)
   longitude Decimal  @db.Decimal(11, 8)
   timestamp DateTime @default(now())
-  
+
   // Relationships
-  ride      Ride     @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  ride Ride @relation(fields: [rideId], references: [id], onDelete: Cascade)
 
   @@map("ride_tracking_points")
 }
@@ -304,78 +308,79 @@ model RideTrackingPoint {
 // ============================================================================
 
 model Delivery {
-  id                    String            @id @default(uuid()) @db.Uuid
-  deliveryCode          String            @unique @map("delivery_code")
-  customerId            String            @map("customer_id") @db.Uuid
-  driverId              String?           @map("driver_id") @db.Uuid
-  vehicleId             String?           @map("vehicle_id") @db.Uuid
-  pickupAddressId       String            @map("pickup_address_id") @db.Uuid
-  destinationAddressId  String            @map("destination_address_id") @db.Uuid
-  
+  id                   String  @id @default(uuid()) @db.Uuid
+  deliveryCode         String  @unique @map("delivery_code")
+  customerId           String  @map("customer_id") @db.Uuid
+  driverId             String? @map("driver_id") @db.Uuid
+  vehicleId            String? @map("vehicle_id") @db.Uuid
+  pickupAddressId      String  @map("pickup_address_id") @db.Uuid
+  destinationAddressId String  @map("destination_address_id") @db.Uuid
+
   // Delivery Details
-  status                DeliveryStatus    @default(REQUESTED)
-  deliveryType          DeliveryType      @default(STANDARD)
-  
+  status       DeliveryStatus @default(REQUESTED)
+  deliveryType DeliveryType   @default(STANDARD)
+
   // Package Information
-  packageDetails        Json              @map("package_details") // weight, dimensions, description
-  specialInstructions   String?           @map("special_instructions")
-  
+  packageDetails      Json    @map("package_details") // weight, dimensions, description
+  specialInstructions String? @map("special_instructions")
+
   // Contacts
-  senderInfo            Json              @map("sender_info") // name, phone
-  recipientInfo         Json              @map("recipient_info") // name, phone
-  
+  senderInfo    Json @map("sender_info") // name, phone
+  recipientInfo Json @map("recipient_info") // name, phone
+
   // Scheduling
-  scheduledPickupAt     DateTime?         @map("scheduled_pickup_at")
-  scheduledDeliveryAt   DateTime?         @map("scheduled_delivery_at")
-  requestedAt           DateTime          @default(now()) @map("requested_at")
-  acceptedAt            DateTime?         @map("accepted_at")
-  pickedUpAt            DateTime?         @map("picked_up_at")
-  deliveredAt           DateTime?         @map("delivered_at")
-  cancelledAt           DateTime?         @map("cancelled_at")
-  
+  scheduledPickupAt   DateTime? @map("scheduled_pickup_at")
+  scheduledDeliveryAt DateTime? @map("scheduled_delivery_at")
+  requestedAt         DateTime  @default(now()) @map("requested_at")
+  acceptedAt          DateTime? @map("accepted_at")
+  pickedUpAt          DateTime? @map("picked_up_at")
+  deliveredAt         DateTime? @map("delivered_at")
+  cancelledAt         DateTime? @map("cancelled_at")
+
   // Pricing
-  estimatedFare         Decimal           @map("estimated_fare") @db.Decimal(8, 2)
-  finalFare             Decimal?          @map("final_fare") @db.Decimal(8, 2)
-  
+  estimatedFare Decimal       @map("estimated_fare") @db.Decimal(8, 2)
+  finalFare     Decimal?      @map("final_fare") @db.Decimal(8, 2)
+  paymentMethod PaymentMethod @default(CASH) @map("payment_method")
+
   // Delivery Metrics
-  estimatedDistance     Decimal?          @map("estimated_distance") @db.Decimal(8, 2) // km
-  actualDistance        Decimal?          @map("actual_distance") @db.Decimal(8, 2) // km
-  estimatedDuration     Int?              @map("estimated_duration") // minutes
-  actualDuration        Int?              @map("actual_duration") // minutes
-  
+  estimatedDistance Decimal? @map("estimated_distance") @db.Decimal(8, 2) // km
+  actualDistance    Decimal? @map("actual_distance") @db.Decimal(8, 2) // km
+  estimatedDuration Int?     @map("estimated_duration") // minutes
+  actualDuration    Int?     @map("actual_duration") // minutes
+
   // Additional Info
-  notes                 String?
-  cancellationReason    String?           @map("cancellation_reason")
-  proofOfDelivery       String?           @map("proof_of_delivery") // Photo/signature
-  deliveryPinHash       String?           @map("delivery_pin_hash") // bcrypt hash of the recipient's handover PIN
-  deliveryPinAttempts   Int               @default(0) @map("delivery_pin_attempts")
-  
-  createdAt             DateTime          @default(now()) @map("created_at")
-  updatedAt             DateTime          @updatedAt @map("updated_at")
+  notes               String?
+  cancellationReason  String? @map("cancellation_reason")
+  proofOfDelivery     String? @map("proof_of_delivery") // Photo/signature
+  deliveryPinHash     String? @map("delivery_pin_hash") // bcrypt hash of the recipient's handover PIN
+  deliveryPinAttempts Int     @default(0) @map("delivery_pin_attempts")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relationships
-  customer              CustomerProfile   @relation(fields: [customerId], references: [id])
-  driver                DriverProfile?    @relation(fields: [driverId], references: [id])
-  vehicle               Vehicle?          @relation(fields: [vehicleId], references: [id])
-  pickupAddress         Address           @relation("DeliveryPickupAddress", fields: [pickupAddressId], references: [id])
-  destinationAddress    Address           @relation("DeliveryDestinationAddress", fields: [destinationAddressId], references: [id])
-  payment               Payment?
-  reviews               Review[]
-  trackingPoints        DeliveryTrackingPoint[]
+  customer           CustomerProfile         @relation(fields: [customerId], references: [id])
+  driver             DriverProfile?          @relation(fields: [driverId], references: [id])
+  vehicle            Vehicle?                @relation(fields: [vehicleId], references: [id])
+  pickupAddress      Address                 @relation("DeliveryPickupAddress", fields: [pickupAddressId], references: [id])
+  destinationAddress Address                 @relation("DeliveryDestinationAddress", fields: [destinationAddressId], references: [id])
+  payment            Payment?
+  reviews            Review[]
+  trackingPoints     DeliveryTrackingPoint[]
 
   @@map("deliveries")
 }
 
 model DeliveryTrackingPoint {
-  id        String   @id @default(uuid()) @db.Uuid
-  deliveryId String  @map("delivery_id") @db.Uuid
-  latitude  Decimal  @db.Decimal(10, 8)
-  longitude Decimal  @db.Decimal(11, 8)
-  status    String   // "picked_up", "in_transit", "delivered"
-  timestamp DateTime @default(now())
-  
+  id         String   @id @default(uuid()) @db.Uuid
+  deliveryId String   @map("delivery_id") @db.Uuid
+  latitude   Decimal  @db.Decimal(10, 8)
+  longitude  Decimal  @db.Decimal(11, 8)
+  status     String // "picked_up", "in_transit", "delivered"
+  timestamp  DateTime @default(now())
+
   // Relationships
-  delivery  Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  delivery Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
 
   @@map("delivery_tracking_points")
 }
@@ -385,60 +390,148 @@ model DeliveryTrackingPoint {
 // ============================================================================
 
 model Wallet {
-  id                String            @id @default(uuid()) @db.Uuid
-  customerId        String?           @unique @map("customer_id") @db.Uuid
-  driverId          String?           @unique @map("driver_id") @db.Uuid
-  balance           Decimal           @default(0) @db.Decimal(10, 2)
-  currency          String            @default("NGN")
-  isActive          Boolean           @default(true) @map("is_active")
-  createdAt         DateTime          @default(now()) @map("created_at")
-  updatedAt         DateTime          @updatedAt @map("updated_at")
+  id         String   @id @default(uuid()) @db.Uuid
+  customerId String?  @unique @map("customer_id") @db.Uuid
+  driverId   String?  @unique @map("driver_id") @db.Uuid
+  balance    Decimal  @default(0) @db.Decimal(12, 2)
+  currency   String   @default("NGN")
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   // Relationships
-  customer          CustomerProfile?  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  driver            DriverProfile?    @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  transactions      Transaction[]
+  customer     CustomerProfile? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  driver       DriverProfile?   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
 
   @@map("wallets")
 }
 
 model Transaction {
-  id              String            @id @default(uuid()) @db.Uuid
-  walletId        String            @map("wallet_id") @db.Uuid
-  type            TransactionType
-  amount          Decimal           @db.Decimal(10, 2)
-  currency        String            @default("NGN")
-  status          TransactionStatus @default(PENDING)
-  description     String?
-  reference       String?           @unique // External payment reference
-  metadata        Json?
-  createdAt       DateTime          @default(now()) @map("created_at")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
+  id          String            @id @default(uuid()) @db.Uuid
+  walletId    String            @map("wallet_id") @db.Uuid
+  type        TransactionType
+  amount      Decimal           @db.Decimal(10, 2)
+  currency    String            @default("NGN")
+  status      TransactionStatus @default(PENDING)
+  description String?
+  reference   String?           @unique // External payment reference
+  metadata    Json?
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
 
   // Relationships
-  wallet          Wallet            @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
 
   @@map("transactions")
 }
 
+// One row per attempt to collect money from a customer: a trip fare or a wallet top-up.
+// `reference` is ours and is sent to the provider (Paystack reference / MoMo externalId);
+// `providerReference` is the provider's own id (MoMo X-Reference-Id, Paystack transaction id).
 model Payment {
-  id              String            @id @default(uuid()) @db.Uuid
-  rideId          String?           @unique @map("ride_id") @db.Uuid
-  deliveryId      String?           @unique @map("delivery_id") @db.Uuid
-  amount          Decimal           @db.Decimal(8, 2)
-  currency        String            @default("NGN")
-  method          PaymentMethod
-  status          PaymentStatus     @default(PENDING)
-  gatewayResponse Json?             @map("gateway_response")
-  reference       String?           @unique
-  createdAt       DateTime          @default(now()) @map("created_at")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
+  id                String           @id @default(uuid()) @db.Uuid
+  purpose           PaymentPurpose   @default(TRIP)
+  userId            String?          @map("user_id") @db.Uuid // payer
+  rideId            String?          @unique @map("ride_id") @db.Uuid
+  deliveryId        String?          @unique @map("delivery_id") @db.Uuid
+  amount            Decimal          @db.Decimal(10, 2)
+  currency          String           @default("NGN")
+  method            PaymentMethod
+  provider          PaymentProvider?
+  status            PaymentStatus    @default(PENDING)
+  reference         String?          @unique
+  providerReference String?          @unique @map("provider_reference")
+  channel           String? // what the provider reports was used, e.g. "card", "bank_transfer", "momo"
+  payerPhone        String?          @map("payer_phone") // MSISDN charged for MoMo
+  cashbackAmount    Decimal          @default(0) @map("cashback_amount") @db.Decimal(10, 2)
+  failureReason     String?          @map("failure_reason")
+  gatewayResponse   Json?            @map("gateway_response")
+  paidAt            DateTime?        @map("paid_at")
+  refundedAt        DateTime?        @map("refunded_at")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relationships
-  ride            Ride?             @relation(fields: [rideId], references: [id])
-  delivery        Delivery?         @relation(fields: [deliveryId], references: [id])
+  user     User?     @relation(fields: [userId], references: [id])
+  ride     Ride?     @relation(fields: [rideId], references: [id])
+  delivery Delivery? @relation(fields: [deliveryId], references: [id])
 
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
   @@map("payments")
+}
+
+// Where a driver's earnings are paid. MoMo PSB wallets are NUBAN accounts (account number =
+// MSISDN without the leading 0), so both types are paid with Paystack Transfers.
+model PayoutAccount {
+  id            String            @id @default(uuid()) @db.Uuid
+  driverId      String            @unique @map("driver_id") @db.Uuid
+  type          PayoutAccountType
+  accountNumber String            @map("account_number")
+  bankCode      String            @map("bank_code")
+  bankName      String            @map("bank_name")
+  accountName   String            @map("account_name") // as resolved by the bank, not typed by the driver
+  recipientCode String            @map("recipient_code") // Paystack transfer recipient
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  driver DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@map("payout_accounts")
+}
+
+// A scheduled transfer of a driver's wallet balance. The wallet is debited when the payout is
+// created and re-credited if the transfer fails or is reversed.
+model Payout {
+  id            String       @id @default(uuid()) @db.Uuid
+  driverId      String       @map("driver_id") @db.Uuid
+  batchKey      String       @map("batch_key") // e.g. "2026-11-30"; one payout per driver per batch
+  amount        Decimal      @db.Decimal(10, 2)
+  currency      String       @default("NGN")
+  status        PayoutStatus @default(PENDING)
+  reference     String       @unique
+  transferCode  String?      @map("transfer_code")
+  destination   Json // snapshot of the payout account at the time of transfer
+  failureReason String?      @map("failure_reason")
+  paidAt        DateTime?    @map("paid_at")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  driver DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@unique([driverId, batchKey])
+  @@index([status, createdAt])
+  @@map("payouts")
+}
+
+// Provider callbacks already handled. Paystack retries webhooks; this makes redelivery a no-op.
+model WebhookEvent {
+  id          String          @id @default(uuid()) @db.Uuid
+  provider    PaymentProvider
+  eventKey    String          @map("event_key")
+  type        String
+  payload     Json
+  processedAt DateTime?       @map("processed_at")
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  @@unique([provider, eventKey])
+  @@map("webhook_events")
+}
+
+// Single-row, admin-editable payment settings (id is always "default").
+model PaymentSettings {
+  id                  String   @id @default("default")
+  commissionRate      Decimal  @default(0.20) @map("commission_rate") @db.Decimal(5, 4)
+  momoCashbackEnabled Boolean  @default(false) @map("momo_cashback_enabled")
+  momoCashbackRate    Decimal  @default(0.02) @map("momo_cashback_rate") @db.Decimal(5, 4)
+  momoCashbackCap     Decimal  @default(500) @map("momo_cashback_cap") @db.Decimal(10, 2)
+  momoCashbackMinFare Decimal  @default(1000) @map("momo_cashback_min_fare") @db.Decimal(10, 2)
+  payoutMinimum       Decimal  @default(1000) @map("payout_minimum") @db.Decimal(10, 2)
+  updatedBy           String?  @map("updated_by") @db.Uuid
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("payment_settings")
 }
 
 // ============================================================================
@@ -446,22 +539,22 @@ model Payment {
 // ============================================================================
 
 model Review {
-  id          String            @id @default(uuid()) @db.Uuid
-  rideId      String?           @map("ride_id") @db.Uuid
-  deliveryId  String?           @map("delivery_id") @db.Uuid
-  customerId  String            @map("customer_id") @db.Uuid
-  driverId    String            @map("driver_id") @db.Uuid
-  rating      Int               @db.SmallInt // 1-5 stars
-  comment     String?
-  isPublic    Boolean           @default(true) @map("is_public")
-  createdAt   DateTime          @default(now()) @map("created_at")
-  updatedAt   DateTime          @updatedAt @map("updated_at")
+  id         String   @id @default(uuid()) @db.Uuid
+  rideId     String?  @map("ride_id") @db.Uuid
+  deliveryId String?  @map("delivery_id") @db.Uuid
+  customerId String   @map("customer_id") @db.Uuid
+  driverId   String   @map("driver_id") @db.Uuid
+  rating     Int      @db.SmallInt // 1-5 stars
+  comment    String?
+  isPublic   Boolean  @default(true) @map("is_public")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   // Relationships
-  ride        Ride?             @relation(fields: [rideId], references: [id])
-  delivery    Delivery?         @relation(fields: [deliveryId], references: [id])
-  customer    CustomerProfile   @relation(fields: [customerId], references: [id])
-  driver      DriverProfile     @relation(fields: [driverId], references: [id])
+  ride     Ride?           @relation(fields: [rideId], references: [id])
+  delivery Delivery?       @relation(fields: [deliveryId], references: [id])
+  customer CustomerProfile @relation(fields: [customerId], references: [id])
+  driver   DriverProfile   @relation(fields: [driverId], references: [id])
 
   @@map("reviews")
 }
@@ -471,19 +564,19 @@ model Review {
 // ============================================================================
 
 model DriverEarning {
-  id          String        @id @default(uuid()) @db.Uuid
-  driverId    String        @map("driver_id") @db.Uuid
-  rideId      String?       @map("ride_id") @db.Uuid
-  deliveryId  String?       @map("delivery_id") @db.Uuid
-  grossAmount Decimal       @map("gross_amount") @db.Decimal(8, 2)
-  commission  Decimal       @db.Decimal(8, 2)
-  netAmount   Decimal       @map("net_amount") @db.Decimal(8, 2)
-  currency    String        @default("NGN")
-  earnedAt    DateTime      @default(now()) @map("earned_at")
-  createdAt   DateTime      @default(now()) @map("created_at")
+  id          String   @id @default(uuid()) @db.Uuid
+  driverId    String   @map("driver_id") @db.Uuid
+  rideId      String?  @map("ride_id") @db.Uuid
+  deliveryId  String?  @map("delivery_id") @db.Uuid
+  grossAmount Decimal  @map("gross_amount") @db.Decimal(8, 2)
+  commission  Decimal  @db.Decimal(8, 2)
+  netAmount   Decimal  @map("net_amount") @db.Decimal(8, 2)
+  currency    String   @default("NGN")
+  earnedAt    DateTime @default(now()) @map("earned_at")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   // Relationships
-  driver      DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  driver DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
 
   @@map("driver_earnings")
 }
@@ -493,18 +586,18 @@ model DriverEarning {
 // ============================================================================
 
 model Notification {
-  id        String             @id @default(uuid()) @db.Uuid
-  userId    String             @map("user_id") @db.Uuid
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
   type      NotificationType
   title     String
   message   String
-  data      Json?              // Additional notification data
-  isRead    Boolean            @default(false) @map("is_read")
-  readAt    DateTime?          @map("read_at")
-  createdAt DateTime           @default(now()) @map("created_at")
+  data      Json? // Additional notification data
+  isRead    Boolean          @default(false) @map("is_read")
+  readAt    DateTime?        @map("read_at")
+  createdAt DateTime         @default(now()) @map("created_at")
 
   // Relationships
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
 }
@@ -514,22 +607,22 @@ model Notification {
 // ============================================================================
 
 model SupportTicket {
-  id          String            @id @default(uuid()) @db.Uuid
-  ticketCode  String            @unique @map("ticket_code")
-  userId      String            @map("user_id") @db.Uuid
+  id          String          @id @default(uuid()) @db.Uuid
+  ticketCode  String          @unique @map("ticket_code")
+  userId      String          @map("user_id") @db.Uuid
   category    SupportCategory
-  priority    SupportPriority   @default(MEDIUM)
-  status      SupportStatus     @default(OPEN)
+  priority    SupportPriority @default(MEDIUM)
+  status      SupportStatus   @default(OPEN)
   subject     String
   description String
   resolution  String?
-  assignedTo  String?           @map("assigned_to") @db.Uuid
-  resolvedAt  DateTime?         @map("resolved_at")
-  createdAt   DateTime          @default(now()) @map("created_at")
-  updatedAt   DateTime          @updatedAt @map("updated_at")
+  assignedTo  String?         @map("assigned_to") @db.Uuid
+  resolvedAt  DateTime?       @map("resolved_at")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
 
   // Relationships
-  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("support_tickets")
 }
@@ -637,6 +730,31 @@ enum PaymentMethod {
   CARD
   BANK_TRANSFER
   CASH
+  MOBILE_MONEY
+}
+
+enum PaymentProvider {
+  PAYSTACK
+  MOMO
+  INTERNAL
+}
+
+enum PaymentPurpose {
+  TRIP
+  WALLET_TOP_UP
+}
+
+enum PayoutAccountType {
+  MOMO_PSB
+  BANK
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  REVERSED
 }
 
 enum PaymentStatus {

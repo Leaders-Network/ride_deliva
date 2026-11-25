@@ -1,0 +1,4 @@
+$kind: collection
+description: |-
+  Role boundaries: 401 without a token, 403 for the wrong role.
+order: 6000

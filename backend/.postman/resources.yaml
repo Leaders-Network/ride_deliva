@@ -1,0 +1,9 @@
+cloudResources:
+  collections:
+    ../postman/collections/Ride Deliva Payments API: 38384497-784df004-44a0-48f7-a0f5-99a23202ef11
+  environments:
+    ../postman/environments/Local.environment.yaml: 38384497-f75180c6-9b3f-4d6f-afce-b5d1871015c7
+  globals:
+    ../postman/globals/workspace.globals.yaml: 556f8d63-d1bc-462b-89b4-d325d7e40b2c
+workspace:
+  id: 8605be39-078e-4208-ae8d-1f1bf6469ae5

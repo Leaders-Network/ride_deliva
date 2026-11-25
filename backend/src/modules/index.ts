@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authRoutes } from './auth/routes';
 import { socketRoutes } from './socket/routes';
 import queueRoutes from './queue/routes';
-// import { webhookRoutes } from './webhooks/routes'; // Temporarily disabled
+import { webhookRoutes } from './webhooks/routes';
 import { userRoutes } from './users/routes';
 import { rideRoutes } from './rides/routes';
 import { deliveryRoutes } from './delivery/routes';
@@ -21,7 +21,7 @@ router.get('/', (req, res) => {
       auth: '/auth',
       socket: '/socket',
       queues: '/queues',
-      // webhooks: '/webhooks', // Temporarily disabled
+      webhooks: '/webhooks',
       users: '/users',
       rides: '/rides',
       delivery: '/delivery',
@@ -51,7 +51,7 @@ router.get('/', (req, res) => {
 router.use('/auth', authRoutes);
 router.use('/socket', socketRoutes);
 router.use('/queues', queueRoutes);
-// router.use('/webhooks', webhookRoutes); // Temporarily disabled
+router.use('/webhooks', webhookRoutes);
 router.use('/users', userRoutes);
 router.use('/rides', rideRoutes);
 router.use('/delivery', deliveryRoutes);

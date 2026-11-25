@@ -1,0 +1,45 @@
+$kind: http-example
+name: 'Prompt sent'
+request:
+  url: '{{baseUrl}}/payments/wallet/top-up'
+  method: POST
+response:
+  statusCode: 201
+  statusText: 'Created'
+  headers:
+    - key: Content-Type
+      value: application/json; charset=utf-8
+  body:
+    type: json
+    content: |-
+      {
+        "success": true,
+        "message": "Top-up started",
+        "data": {
+          "payment": {
+            "id": "9b2f6d0e-3c1a-4e8b-a5d2-7f1e0c9b4a11",
+            "purpose": "WALLET_TOP_UP",
+            "rideId": null,
+            "deliveryId": null,
+            "amount": "500",
+            "currency": "NGN",
+            "method": "MOBILE_MONEY",
+            "provider": "MOMO",
+            "status": "PROCESSING",
+            "reference": "PAY-9b2f6d0e-3c1a-4e8b-a5d2-7f1e0c9b4a11-MI2K9X1A",
+            "channel": null,
+            "cashbackAmount": "0",
+            "failureReason": null,
+            "paidAt": null,
+            "refundedAt": null,
+            "createdAt": "2026-11-25T09:00:00.000Z",
+            "updatedAt": "2026-11-25T09:00:00.000Z"
+          },
+          "next": {
+            "type": "approve_on_phone",
+            "phoneNumber": "+2348123456789",
+            "expiresInMinutes": 5
+          }
+        },
+        "timestamp": "2026-11-25T09:00:00.000Z"
+      }

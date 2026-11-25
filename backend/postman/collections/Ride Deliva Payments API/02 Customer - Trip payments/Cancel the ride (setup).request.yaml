@@ -1,0 +1,15 @@
+$kind: http-request
+method: POST
+url: '{{baseUrl}}/rides/{{rideId}}/cancel'
+order: 12000
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Postman payments test"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 200', () => pm.response.to.have.status(200));

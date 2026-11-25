@@ -1,0 +1,18 @@
+$kind: http-request
+description: |-
+  Re-checks PROCESSING payments (> 2 min old) and payouts with the providers. Also runs on a schedule.
+method: POST
+url: '{{baseUrl}}/payments/admin/reconcile'
+order: 12000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 200', () => pm.response.to.have.status(200));
+      const d = pm.response.json().data;
+      pm.test('reports payments and payouts checked', () => {
+        pm.expect(d.payments).to.include.keys('checked', 'settled');
+        pm.expect(d.payouts).to.include.keys('checked');
+        pm.expect(d.payments.settled).to.be.at.most(d.payments.checked);
+      });
+examples: './.resources/Run reconciliation.resources/examples'

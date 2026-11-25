@@ -1,0 +1,19 @@
+$kind: http-request
+description: |-
+  With no method, the booking method applies. Cash is settled with the driver, so 400.
+method: POST
+url: '{{baseUrl}}/payments/initialize'
+order: 2000
+body:
+  type: json
+  content: |-
+    {
+      "rideId": "{{rideId}}"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 400', () => pm.response.to.have.status(400));
+      pm.test('error message matches /cash/i', () => pm.expect(pm.response.json().error.message).to.match(/cash/i));
+examples: './.resources/Initialize - cash trip is refused.resources/examples'

@@ -1,0 +1,27 @@
+$kind: http-request
+method: POST
+url: '{{baseUrl}}/webhooks/paystack'
+order: 4000
+headers:
+  - key: Content-Type
+    value: 'application/json'
+body:
+  type: text
+  content: |-
+    {{webhookBody}}
+scripts:
+  - type: beforeRequest
+    language: text/javascript
+    code: |-
+      const secret = pm.environment.get('paystackSecretKey');
+      const raw = '{"event": "charge.success", ';
+      pm.variables.set('webhookBody', raw);
+      if (secret) pm.request.headers.upsert({ key: 'x-paystack-signature', value: CryptoJS.HmacSHA512(raw, secret).toString(CryptoJS.enc.Hex) });
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      if (!pm.environment.get('paystackSecretKey')) {
+        pm.test.skip('needs paystackSecretKey in the environment', () => {});
+      } else {
+        pm.test('status is 400', () => pm.response.to.have.status(400));
+      }

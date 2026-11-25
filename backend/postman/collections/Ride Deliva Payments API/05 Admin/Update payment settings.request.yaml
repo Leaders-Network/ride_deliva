@@ -1,0 +1,24 @@
+$kind: http-request
+description: |-
+  Partial update: send only the fields to change (at least one).
+method: PUT
+url: '{{baseUrl}}/payments/admin/settings'
+order: 2000
+body:
+  type: json
+  content: |-
+    {
+      "commissionRate": 0.18
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 200', () => pm.response.to.have.status(200));
+      const s = pm.response.json().data;
+      pm.test('commissionRate updated, other fields kept, updatedBy set', () => {
+        pm.expect(Number(s.commissionRate)).to.eql(0.18);
+        pm.expect(s).to.have.property('payoutMinimum');
+        pm.expect(s.updatedBy).to.be.a('string');
+      });
+examples: './.resources/Update payment settings.resources/examples'

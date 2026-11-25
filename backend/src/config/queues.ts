@@ -6,6 +6,7 @@ import { rideProcessor } from '../shared/processors/ride.processor';
 import { paymentProcessor } from '../shared/processors/payment.processor';
 import { deliveryProcessor } from '../shared/processors/delivery.processor';
 import { logger } from './logger';
+import { config } from './index';
 
 // Queue names
 export const QUEUE_NAMES = {
@@ -128,12 +129,35 @@ export async function initializeQueues(): Promise<void> {
     }
 
     await queueService.waitUntilReady();
+    await schedulePaymentJobs();
 
     logger.info(`Successfully initialized ${queueConfigs.length} job queues`);
   } catch (error) {
     logger.error('Failed to initialize queues', { error });
     throw error;
   }
+}
+
+/**
+ * Recurring payment work. Repeatable jobs are keyed by name + pattern, so re-adding them on
+ * every start is idempotent; changing PAYOUT_CRON adds a new schedule (remove the old one in
+ * Bull Board).
+ */
+async function schedulePaymentJobs(): Promise<void> {
+  await queueService.addRepeatableJob(
+    QUEUE_NAMES.PAYMENT,
+    'driver_payout_batch',
+    { type: 'driver_payout_batch' },
+    { pattern: config.payments.payoutCron, tz: config.payments.timezone },
+    { attempts: 1 } // a batch is re-runnable by hand; automatic retries could overlap a slow run
+  );
+  await queueService.addRepeatableJob(
+    QUEUE_NAMES.PAYMENT,
+    'reconcile_payments',
+    { type: 'reconcile_payments' },
+    { every: 10 * 60 * 1000 },
+    { attempts: 1 }
+  );
 }
 
 /**

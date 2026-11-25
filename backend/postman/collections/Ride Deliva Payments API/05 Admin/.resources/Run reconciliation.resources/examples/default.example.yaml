@@ -1,0 +1,28 @@
+$kind: http-example
+name: 'Reconciled'
+request:
+  url: '{{baseUrl}}/payments/admin/reconcile'
+  method: POST
+response:
+  statusCode: 200
+  statusText: 'OK'
+  headers:
+    - key: Content-Type
+      value: application/json; charset=utf-8
+  body:
+    type: json
+    content: |-
+      {
+        "success": true,
+        "message": "Reconciliation run",
+        "data": {
+          "payments": {
+            "checked": 2,
+            "settled": 1
+          },
+          "payouts": {
+            "checked": 0
+          }
+        },
+        "timestamp": "2026-11-25T09:00:00.000Z"
+      }

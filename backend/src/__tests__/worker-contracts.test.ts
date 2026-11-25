@@ -26,6 +26,13 @@ jest.mock('@/shared/services/queue.service', () => ({
 }));
 
 jest.mock('@/shared/services/database', () => ({ dbService: { findNearbyDrivers: jest.fn() } }));
+jest.mock('@/modules/payments/services/payment.service', () => ({
+  paymentService: { onTripCompleted: jest.fn(), onTripCancelled: jest.fn(), refresh: jest.fn(), reconcilePending: jest.fn() },
+}));
+jest.mock('@/modules/payments/services/payout.service', () => ({
+  payoutService: { runBatch: jest.fn(), reconcileProcessing: jest.fn() },
+}));
+import { paymentService } from '@/modules/payments/services/payment.service';
 
 function job<T>(data: T): ProcessorJob<T> {
   return { id: 'job-id', data, attemptsMade: 0, updateProgress: jest.fn().mockResolvedValue(undefined) };
@@ -98,24 +105,21 @@ describe('Worker contracts against the Prisma schema', () => {
     expect(queueService.addJob).toHaveBeenCalledWith('payment', 'process_ride_payment', { type: 'process_ride_payment', rideId: 'ride', amount: 230000 });
   });
 
-  it('processes delivery payments through their own supported job type', async () => {
-    jest.mocked(prisma.delivery.findUnique).mockResolvedValue({ id: 'delivery', customerId: 'customer' } as Awaited<ReturnType<typeof prisma.delivery.findUnique>>);
-    jest.mocked(prisma.payment.upsert).mockResolvedValue({ id: 'payment', status: 'COMPLETED' } as Awaited<ReturnType<typeof prisma.payment.upsert>>);
-    const result = await paymentProcessor(job({ type: 'process_delivery_payment', deliveryId: 'delivery', amount: 95000 }));
-    expect(result).toMatchObject({ alreadyProcessed: true });
-    expect(prisma.payment.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: { deliveryId: 'delivery' } }));
+  it('delegates trip payment jobs to the idempotent settlement hook, ignoring the job amount', async () => {
+    await paymentProcessor(job({ type: 'process_delivery_payment', deliveryId: 'delivery', amount: 1 }));
+    await paymentProcessor(job({ type: 'process_ride_payment', rideId: 'ride', amount: 230000 }));
+    expect(paymentService.onTripCompleted).toHaveBeenCalledWith('delivery', 'delivery');
+    expect(paymentService.onTripCompleted).toHaveBeenCalledWith('ride', 'ride');
+    expect(prisma.payment.upsert).not.toHaveBeenCalled();
   });
 
-  it('does not settle a completed payment twice', async () => {
-    jest.mocked(prisma.ride.findUnique).mockResolvedValue({ id: 'ride', customerId: 'customer' } as Awaited<ReturnType<typeof prisma.ride.findUnique>>);
-    jest.mocked(prisma.payment.upsert).mockResolvedValue({ id: 'payment', status: 'COMPLETED' } as Awaited<ReturnType<typeof prisma.payment.upsert>>);
-    const result = await paymentProcessor(job({ type: 'process_ride_payment', rideId: 'ride', amount: 230000 }));
-    expect(result).toMatchObject({ alreadyProcessed: true });
-    expect(prisma.$transaction).not.toHaveBeenCalled();
+  it('rejects a trip payment job without its trip ID', async () => {
+    await expect(paymentProcessor(job({ type: 'process_ride_payment', amount: 230000 }))).rejects.toThrow('Ride ID is required');
+    expect(paymentService.onTripCompleted).not.toHaveBeenCalled();
   });
 
-  it('refuses to credit a wallet from mock external verification', async () => {
-    await expect(paymentProcessor(job({ type: 'wallet_top_up', userId: 'user', reference: 'external', amount: 10000 }))).rejects.toThrow('configured gateway');
+  it('refuses to credit a wallet from a queued top-up (only provider verification can)', async () => {
+    await expect(paymentProcessor(job({ type: 'wallet_top_up', userId: 'user', reference: 'external', amount: 10000 }))).rejects.toThrow('provider verification');
     expect(prisma.wallet.update).not.toHaveBeenCalled();
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });

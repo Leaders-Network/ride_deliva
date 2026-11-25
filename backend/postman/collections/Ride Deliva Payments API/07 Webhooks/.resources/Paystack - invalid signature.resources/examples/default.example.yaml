@@ -1,0 +1,17 @@
+$kind: http-example
+name: 'Rejected'
+request:
+  url: '{{baseUrl}}/webhooks/paystack'
+  method: POST
+response:
+  statusCode: 401
+  statusText: 'Unauthorized'
+  headers:
+    - key: Content-Type
+      value: application/json; charset=utf-8
+  body:
+    type: json
+    content: |-
+      {
+        "error": "Invalid signature"
+      }

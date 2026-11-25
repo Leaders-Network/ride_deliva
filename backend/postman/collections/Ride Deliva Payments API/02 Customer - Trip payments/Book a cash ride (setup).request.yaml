@@ -1,0 +1,31 @@
+$kind: http-request
+description: |-
+  Setup: books a fresh CASH ride for the customer so the payment flow has a trip to pay for.
+method: POST
+url: '{{baseUrl}}/rides'
+order: 1000
+body:
+  type: json
+  content: |-
+    {
+      "pickup": {
+        "latitude": 6.4541,
+        "longitude": 3.4246,
+        "address": "Victoria Island, Lagos"
+      },
+      "destination": {
+        "latitude": 6.6018,
+        "longitude": 3.3515,
+        "address": "Ikeja, Lagos"
+      },
+      "rideType": "STANDARD",
+      "paymentMethod": "CASH"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 201', () => pm.response.to.have.status(201));
+      const ride = pm.response.json().data.ride;
+      pm.collectionVariables.set('rideId', ride.id);
+      pm.collectionVariables.set('rideFare', String(ride.finalFare ?? ride.estimatedFare));

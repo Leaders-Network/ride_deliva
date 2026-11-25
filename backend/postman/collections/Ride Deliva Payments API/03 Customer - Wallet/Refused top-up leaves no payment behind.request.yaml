@@ -1,0 +1,22 @@
+$kind: http-request
+description: |-
+  When the MoMo top-up was refused (503), the newest payment must still be the card top-up: nothing is recorded for a provider that cannot take it.
+method: GET
+url: '{{baseUrl}}/payments?page=1&limit=1'
+order: 7500
+queryParams:
+  - key: page
+    value: '1'
+  - key: limit
+    value: '1'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 200', () => pm.response.to.have.status(200));
+      const [latest] = pm.response.json().data;
+      pm.test('newest payment is the MoMo top-up only if it was accepted', () => {
+        pm.expect(latest.purpose).to.eql('WALLET_TOP_UP');
+        if (latest.method === 'MOBILE_MONEY') pm.expect(latest.provider, 'an accepted MoMo top-up has a provider').to.eql('MOMO');
+        else pm.expect(latest.method).to.eql('CARD');
+      });

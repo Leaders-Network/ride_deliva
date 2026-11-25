@@ -1,0 +1,17 @@
+$kind: http-request
+method: PUT
+url: '{{baseUrl}}/payments/payout-account'
+order: 6000
+body:
+  type: json
+  content: |-
+    {
+      "type": "MOMO_PSB",
+      "accountNumber": "08098765432",
+      "bankCode": "058"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 422', () => pm.response.to.have.status(422));

@@ -1,0 +1,39 @@
+$kind: http-example
+name: 'Ledger'
+request:
+  url: '{{baseUrl}}/payments/wallet/transactions'
+  method: GET
+response:
+  statusCode: 200
+  statusText: 'OK'
+  headers:
+    - key: Content-Type
+      value: application/json; charset=utf-8
+  body:
+    type: json
+    content: |-
+      {
+        "success": true,
+        "message": "Transactions retrieved",
+        "data": [
+          {
+            "id": "aa11bb22-0000-4000-8000-000000000002",
+            "type": "DEBIT",
+            "amount": "2300",
+            "currency": "NGN",
+            "status": "COMPLETED",
+            "description": "Payment for ride RD202608290001",
+            "reference": "TXN_RIDE_001_1795435377485",
+            "createdAt": "2026-11-25T09:00:00.000Z"
+          }
+        ],
+        "meta": {
+          "page": 1,
+          "limit": 10,
+          "total": 1,
+          "totalPages": 1,
+          "hasNext": false,
+          "hasPrev": false
+        },
+        "timestamp": "2026-11-25T09:00:00.000Z"
+      }

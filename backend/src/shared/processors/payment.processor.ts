@@ -1,185 +1,92 @@
 ﻿import type { ProcessorJob } from './processor-job';
-import { Prisma, PaymentMethod } from '../../generated/prisma';
 import prisma from '../../config/database';
 import { logger } from '../../config/logger';
-import { queueService } from '../services/queue.service';
-import { QUEUE_NAMES } from '../../config/queues';
+import { paymentService } from '../../modules/payments/services/payment.service';
+import { payoutService } from '../../modules/payments/services/payout.service';
 
 export interface PaymentJobData {
-  type: 'process_ride_payment' | 'process_delivery_payment' | 'process_refund' | 'wallet_top_up' | 'driver_payout' | 'payment_verification' | 'failed_payment_retry';
+  type:
+    | 'process_ride_payment'
+    | 'process_delivery_payment'
+    | 'process_refund'
+    | 'payment_verification'
+    | 'reconcile_payments'
+    | 'driver_payout_batch'
+    // Legacy job types from the pre-provider worker; kept so old helpers still type-check.
+    | 'wallet_top_up'
+    | 'driver_payout'
+    | 'failed_payment_retry';
   paymentId?: string;
   rideId?: string;
   deliveryId?: string;
   userId?: string;
   driverId?: string;
-  amount: number; // Job amounts are integer kobo; database monetary decimals are naira.
+  /** Integer kobo where present. Settlement always uses the server-side fare, never this. */
+  amount?: number;
   currency?: string;
-  paymentMethod?: 'card' | 'wallet' | 'bank_transfer' | 'cash';
+  paymentMethod?: 'card' | 'wallet' | 'bank_transfer' | 'cash' | 'mobile_money';
   reference?: string;
+  batchKey?: string;
   metadata?: Record<string, unknown>;
 }
 
-interface GatewayResult {
-  success: boolean;
-  reference: string;
-  amount: number;
-  currency: string;
-}
-
-// Development placeholder. Real providers and verified webhook settlement remain pending.
-class MockPaymentGateway {
-  async processPayment(amount: number, currency: string, reference: string): Promise<GatewayResult> {
-    return { success: true, reference, amount, currency };
-  }
-  async verifyPayment(reference: string): Promise<GatewayResult> {
-    // A mock cannot attest the amount of an external payment.
-    throw new Error(`Payment verification requires a configured gateway: ${reference}`);
-  }
-  async processRefund(amount: number, currency: string, reference: string): Promise<GatewayResult> {
-    return { success: true, reference: `${reference}_refund`, amount, currency };
-  }
-}
-const paymentGateway = new MockPaymentGateway();
-
-function required(value: string | undefined, label: string): string {
-  if (!value) throw new Error(`${label} is required`);
-  return value;
-}
-function naira(amount: number): Prisma.Decimal {
-  if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('Payment amount must be positive integer kobo');
-  return new Prisma.Decimal(amount).div(100);
-}
-function method(value: PaymentJobData['paymentMethod']): PaymentMethod {
-  switch (value) {
-    case 'wallet': return 'WALLET';
-    case 'bank_transfer': return 'BANK_TRANSFER';
-    case 'cash': return 'CASH';
-    default: return 'CARD';
-  }
-}
-async function customerWallet(userId: string) {
-  const wallet = await prisma.wallet.findFirst({ where: { customer: { userId }, isActive: true } });
-  if (!wallet) throw new Error(`Active customer wallet not found for ${userId}`);
-  return wallet;
-}
-
+/**
+ * Thin queue adapter over the payments module. Every handler is idempotent, so BullMQ
+ * retries are safe. Money logic lives in PaymentService / PayoutService, not here.
+ */
 export async function paymentProcessor(job: ProcessorJob<PaymentJobData>) {
   await job.updateProgress(10);
+  const { data } = job;
   try {
-    let result;
-    switch (job.data.type) {
-      case 'process_ride_payment': result = await handleTripPayment(job.data); break;
-      case 'process_delivery_payment': result = await handleTripPayment(job.data); break;
-      case 'process_refund': result = await handleRefund(job); break;
-      case 'wallet_top_up': result = await handleWalletTopUp(job); break;
-      case 'driver_payout': result = await handleDriverPayout(job); break;
-      case 'payment_verification': result = await handlePaymentVerification(job); break;
-      case 'failed_payment_retry': result = await handlePaymentRetry(job); break;
-      default: throw new Error(`Unknown payment job type: ${job.data.type}`);
+    let result: unknown;
+    switch (data.type) {
+      case 'process_ride_payment':
+        if (!data.rideId) throw new Error('Ride ID is required');
+        await paymentService.onTripCompleted('ride', data.rideId);
+        result = { success: true, rideId: data.rideId };
+        break;
+      case 'process_delivery_payment':
+        if (!data.deliveryId) throw new Error('Delivery ID is required');
+        await paymentService.onTripCompleted('delivery', data.deliveryId);
+        result = { success: true, deliveryId: data.deliveryId };
+        break;
+      case 'process_refund':
+        result = await refund(data);
+        break;
+      case 'payment_verification':
+      case 'failed_payment_retry':
+        if (!data.paymentId) throw new Error('Payment ID is required');
+        result = { success: true, status: (await paymentService.refresh(data.paymentId)).status };
+        break;
+      case 'reconcile_payments':
+        result = { payments: await paymentService.reconcilePending(), payouts: await payoutService.reconcileProcessing() };
+        break;
+      case 'driver_payout_batch':
+        result = await payoutService.runBatch(data.batchKey);
+        break;
+      case 'wallet_top_up':
+        throw new Error('Wallet top-ups are settled by provider verification (POST /payments/wallet/top-up), not queued');
+      case 'driver_payout':
+        throw new Error('Individual payouts are not queued; use driver_payout_batch');
+      default:
+        throw new Error(`Unknown payment job type: ${(data as { type: string }).type}`);
     }
     await job.updateProgress(100);
     return result;
   } catch (error) {
-    logger.error('Payment job failed', { jobId: job.id, type: job.data.type, error });
+    logger.error('Payment job failed', { jobId: job.id, type: data.type, error: String(error) });
     throw error;
   }
 }
 
-async function handleTripPayment(data: PaymentJobData) {
-  const { rideId, deliveryId, amount, paymentMethod } = data;
-  if (!!rideId === !!deliveryId) throw new Error('Exactly one ride or delivery ID is required');
-  const trip = rideId
-    ? await prisma.ride.findUnique({ where: { id: rideId }, include: { customer: true } })
-    : await prisma.delivery.findUnique({ where: { id: deliveryId }, include: { customer: true } });
-  if (!trip) throw new Error('Trip not found');
-  const value = naira(amount);
-  const payment = rideId
-    ? await prisma.payment.upsert({ where: { rideId }, create: { rideId, amount: value, method: method(paymentMethod), status: 'PROCESSING' }, update: {} })
-    : await prisma.payment.upsert({ where: { deliveryId }, create: { deliveryId, amount: value, method: method(paymentMethod), status: 'PROCESSING' }, update: {} });
-  if (payment.status === 'COMPLETED') return { success: true, paymentId: payment.id, alreadyProcessed: true };
-  if (!payment.amount.equals(value)) throw new Error('Job amount does not match recorded payment');
-  if (payment.method === 'WALLET') {
-    throw new Error('Wallet trip settlement requires atomic debit implementation');
-  }
-  const gateway = await paymentGateway.processPayment(amount, payment.currency, payment.id);
-  if (!gateway.success) throw new Error('Payment failed');
-  const settled = await prisma.$transaction(async tx => {
-    const claimed = await tx.payment.updateMany({ where: { id: payment.id, status: { in: ['PENDING', 'PROCESSING', 'FAILED'] } }, data: { status: 'COMPLETED', reference: gateway.reference, gatewayResponse: { ...gateway } } });
-    if (!claimed.count) return false;
-    if (trip.driverId) {
-      const net = value.mul(0.8).toDecimalPlaces(2);
-      const wallet = await tx.wallet.upsert({ where: { driverId: trip.driverId }, create: { driverId: trip.driverId, balance: net }, update: { balance: { increment: net } } });
-      await tx.transaction.create({ data: { walletId: wallet.id, type: 'CREDIT', amount: net, status: 'COMPLETED', reference: `earning_${payment.id}` } });
-      await tx.driverEarning.create({ data: { driverId: trip.driverId, rideId, deliveryId, grossAmount: value, commission: value.sub(net), netAmount: net } });
-      await tx.driverProfile.update({ where: { id: trip.driverId }, data: { totalEarnings: { increment: net } } });
-    }
-    return true;
-  });
-  return { success: true, paymentId: payment.id, amount, settled };
-}
-
-async function handleRefund(job: ProcessorJob<PaymentJobData>) {
-  const paymentId = required(job.data.paymentId, 'Payment ID');
-  const payment = await prisma.payment.findUnique({ where: { id: paymentId }, include: { ride: { include: { customer: true } }, delivery: { include: { customer: true } } } });
+/** Cancels the trip-side effect of a completed payment by refunding it to the wallet. */
+async function refund(data: PaymentJobData) {
+  if (!data.paymentId) throw new Error('Payment ID is required');
+  const payment = await prisma.payment.findUnique({ where: { id: data.paymentId }, select: { rideId: true, deliveryId: true, status: true } });
   if (!payment) throw new Error('Payment not found');
-  if (payment.status === 'REFUNDED') return { success: true, paymentId, alreadyProcessed: true };
-  const amount = naira(job.data.amount);
-  if (payment.status !== 'COMPLETED' || !amount.equals(payment.amount)) {
-    throw new Error('Only a completed payment can be fully refunded; partial refund accounting is pending');
-  }
-  const gateway = await paymentGateway.processRefund(job.data.amount, payment.currency, payment.reference ?? payment.id);
-  if (!gateway.success) throw new Error('Refund failed');
-  await prisma.payment.update({ where: { id: payment.id }, data: { status: 'REFUNDED', gatewayResponse: { ...gateway } } });
-  const userId = payment.ride?.customer.userId ?? payment.delivery?.customer.userId;
-  if (userId) await queueService.addJob(QUEUE_NAMES.NOTIFICATION, 'push', { type: 'push', userId, title: 'Refund Processed', body: `Your refund of NGN ${amount.toFixed(2)} has been processed`, data: { paymentId }, category: 'refund' });
-  return { success: true, paymentId, reference: gateway.reference };
-}
-
-async function handleWalletTopUp(job: ProcessorJob<PaymentJobData>) {
-  const userId = required(job.data.userId, 'User ID');
-  const reference = required(job.data.reference, 'Payment reference');
-  const value = naira(job.data.amount);
-  const verification = await paymentGateway.verifyPayment(reference);
-  if (!verification.success || verification.amount !== job.data.amount || verification.currency !== 'NGN') {
-    throw new Error('Verified payment amount or currency does not match wallet top-up');
-  }
-  const wallet = await customerWallet(userId);
-  const transaction = await prisma.$transaction(async tx => {
-    const existing = await tx.transaction.findUnique({ where: { reference } });
-    if (existing) {
-      if (existing.walletId !== wallet.id || !existing.amount.equals(value) || existing.status !== 'COMPLETED') throw new Error('Payment reference already belongs to another transaction');
-      return existing;
-    }
-    const created = await tx.transaction.create({ data: { walletId: wallet.id, type: 'CREDIT', amount: value, status: 'COMPLETED', reference, metadata: { ...verification } } });
-    await tx.wallet.update({ where: { id: wallet.id }, data: { balance: { increment: value } } });
-    return created;
-  });
-  return { success: true, transactionId: transaction.id, userId };
-}
-
-async function handleDriverPayout(job: ProcessorJob<PaymentJobData>) {
-  const driverId = required(job.data.driverId, 'Driver profile ID');
-  const value = naira(job.data.amount);
-  const driver = await prisma.driverProfile.findUnique({ where: { id: driverId }, include: { wallet: true } });
-  if (!driver?.wallet?.isActive || driver.wallet.balance.lessThan(value)) throw new Error('Active driver wallet has insufficient funds');
-  // Reserving funds, gateway idempotency, and payout reconciliation require the financial milestone.
-  throw new Error('Driver payout settlement is not implemented');
-}
-
-async function handlePaymentVerification(job: ProcessorJob<PaymentJobData>) {
-  const reference = required(job.data.reference, 'Payment reference');
-  const verification = await paymentGateway.verifyPayment(reference);
-  if (job.data.paymentId) {
-    const payment = await prisma.payment.findUnique({ where: { id: job.data.paymentId } });
-    if (!payment || !payment.amount.equals(naira(verification.amount)) || payment.currency !== verification.currency) throw new Error('Verified payment does not match recorded payment');
-    await prisma.payment.update({ where: { id: payment.id }, data: { status: verification.success ? 'COMPLETED' : 'FAILED', gatewayResponse: { ...verification } } });
-  }
-  return verification;
-}
-
-async function handlePaymentRetry(job: ProcessorJob<PaymentJobData>) {
-  const paymentId = required(job.data.paymentId, 'Payment ID');
-  const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
-  if (!payment || payment.status !== 'FAILED') throw new Error('Failed payment not found');
-  return handleTripPayment({ ...job.data, rideId: payment.rideId ?? undefined, deliveryId: payment.deliveryId ?? undefined, amount: Number(payment.amount.mul(100)), paymentMethod: payment.method === 'CARD' ? 'card' : payment.method === 'WALLET' ? 'wallet' : payment.method === 'CASH' ? 'cash' : 'bank_transfer' });
+  if (payment.status === 'REFUNDED') return { success: true, alreadyProcessed: true };
+  if (payment.rideId) await paymentService.onTripCancelled('ride', payment.rideId);
+  else if (payment.deliveryId) await paymentService.onTripCancelled('delivery', payment.deliveryId);
+  else throw new Error('Only trip payments can be refunded');
+  return { success: true, paymentId: data.paymentId };
 }

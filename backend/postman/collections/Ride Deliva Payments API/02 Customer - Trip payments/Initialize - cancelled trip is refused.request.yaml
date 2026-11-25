@@ -1,0 +1,17 @@
+$kind: http-request
+method: POST
+url: '{{baseUrl}}/payments/initialize'
+order: 13000
+body:
+  type: json
+  content: |-
+    {
+      "rideId": "{{rideId}}",
+      "method": "CARD"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 409', () => pm.response.to.have.status(409));
+      pm.test('error message matches /cancelled/i', () => pm.expect(pm.response.json().error.message).to.match(/cancelled/i));

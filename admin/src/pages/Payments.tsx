@@ -6,7 +6,7 @@ import { useListParams } from '@/lib/useListParams';
 import { dateTime, fullName, label, money } from '@/lib/format';
 
 const STATUSES: PaymentStatus[] = ['COMPLETED', 'PENDING', 'PROCESSING', 'FAILED', 'REFUNDED'];
-const METHODS: PaymentMethod[] = ['WALLET', 'CARD', 'BANK_TRANSFER', 'CASH'];
+const METHODS: PaymentMethod[] = ['WALLET', 'CARD', 'BANK_TRANSFER', 'CASH', 'MOBILE_MONEY'];
 
 const columns: Column<PaymentRow>[] = [
   { header: 'Reference', cell: (p) => <span className="font-mono text-xs">{p.reference ?? p.id.slice(0, 8)}</span> },

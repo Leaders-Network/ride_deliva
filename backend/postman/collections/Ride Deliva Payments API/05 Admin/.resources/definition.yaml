@@ -1,0 +1,9 @@
+$kind: collection
+description: |-
+  ADMIN / SUPER_ADMIN only. Payment settings are a single row; every update records the admin user id.
+order: 5000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{adminToken}}'

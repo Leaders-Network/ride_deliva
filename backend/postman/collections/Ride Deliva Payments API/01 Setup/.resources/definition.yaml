@@ -1,0 +1,6 @@
+$kind: collection
+description: |-
+  Logs in as each seeded role (see src/database/seed.ts) and stores the access tokens as collection variables.
+order: 1000
+auth:
+  type: noauth

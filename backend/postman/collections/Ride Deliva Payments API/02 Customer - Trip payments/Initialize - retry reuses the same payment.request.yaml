@@ -1,0 +1,24 @@
+$kind: http-request
+description: |-
+  Calling again while the checkout is open re-checks the provider, then starts a new attempt on the SAME payment row (never a second payment).
+method: POST
+url: '{{baseUrl}}/payments/initialize'
+order: 4000
+body:
+  type: json
+  content: |-
+    {
+      "rideId": "{{rideId}}",
+      "method": "CARD"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 201', () => pm.response.to.have.status(201));
+      const { payment } = pm.response.json().data;
+      pm.test('same payment id, new attempt reference', () => {
+        pm.expect(payment.id).to.eql(pm.collectionVariables.get('paymentId'));
+        pm.expect(payment.reference).to.not.eql(pm.collectionVariables.get('paymentReference'));
+        pm.expect(payment.status).to.eql('PROCESSING');
+      });

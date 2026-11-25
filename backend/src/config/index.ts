@@ -78,6 +78,32 @@ export const config = {
     paystack: {
       publicKey: process.env.PAYSTACK_PUBLIC_KEY,
       secretKey: process.env.PAYSTACK_SECRET_KEY,
+      baseUrl: process.env.PAYSTACK_BASE_URL || 'https://api.paystack.co',
+      // Where Paystack checkout redirects the customer afterwards (app deep link or web page).
+      callbackUrl: process.env.PAYSTACK_CALLBACK_URL,
+      // Paystack requires an email; customers without one get <userId>@<this domain>.
+      fallbackEmailDomain: process.env.PAYSTACK_FALLBACK_EMAIL_DOMAIN || 'customers.ridedeliva.app',
+      // Optional override; otherwise looked up by name in Paystack's bank list.
+      momoPsbBankCode: process.env.PAYSTACK_MOMO_PSB_BANK_CODE,
+    },
+    // MTN MoMo Open API, Collections product (MoMo PSB in Nigeria). Sandbox defaults; the
+    // production base URL and target environment come from the MoMo developer portal.
+    momo: {
+      baseUrl: process.env.MOMO_BASE_URL || 'https://sandbox.momodeveloper.mtn.com',
+      targetEnvironment: process.env.MOMO_TARGET_ENVIRONMENT || 'sandbox',
+      subscriptionKey: process.env.MOMO_COLLECTION_SUBSCRIPTION_KEY,
+      apiUser: process.env.MOMO_API_USER,
+      apiKey: process.env.MOMO_API_KEY,
+      // The sandbox only accepts EUR.
+      currency: process.env.MOMO_CURRENCY || ((process.env.MOMO_TARGET_ENVIRONMENT || 'sandbox') === 'sandbox' ? 'EUR' : 'NGN'),
+      // MoMo callbacks are unsigned: this secret goes in the callback path, and every
+      // callback is re-checked against the status API before anything is settled.
+      callbackSecret: process.env.MOMO_CALLBACK_SECRET,
+      // Optional allowlist of MoMo callback source IPs (comma-separated). Requires correct
+      // `trust proxy` settings when behind a load balancer.
+      callbackIps: (process.env.MOMO_CALLBACK_IPS || '').split(',').map((ip) => ip.trim()).filter(Boolean),
+      // How long a customer has to approve the prompt before we let them retry.
+      requestTimeoutMinutes: parseInt(process.env.MOMO_REQUEST_TIMEOUT_MINUTES || '5'),
     },
     aws: {
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -85,6 +111,16 @@ export const config = {
       region: process.env.AWS_REGION || 'us-east-1',
       s3Bucket: process.env.AWS_S3_BUCKET,
     },
+  },
+
+  // Payments
+  payments: {
+    currency: 'NGN',
+    // Public HTTPS base of this API, used to build provider callback URLs.
+    publicBaseUrl: process.env.PUBLIC_API_URL,
+    // Weekly driver payouts (Monday 06:00 Lagos time by default).
+    payoutCron: process.env.PAYOUT_CRON || '0 6 * * 1',
+    timezone: 'Africa/Lagos',
   },
 
   // Security

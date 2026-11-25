@@ -1,0 +1,11 @@
+$kind: collection
+description: |-
+  POST /payments/initialize starts (or retries) payment for a ride or delivery the customer owns.
+  Exactly one of rideId / deliveryId. method is optional (defaults to the method chosen at booking);
+  CASH is never collected here. The response carries the payment and the next action for the app:
+  - { type: "redirect", authorizationUrl, accessCode }  CARD / BANK_TRANSFER via Paystack checkout
+  - { type: "approve_on_phone", phoneNumber, expiresInMinutes }  MOBILE_MONEY (MTN MoMo prompt)
+  - { type: "none" }  WALLET (debited immediately) or already settled
+  Poll GET /payments/:id until status leaves PROCESSING. A webhook or reconciliation settles it;
+  the client never marks a payment paid.
+order: 2000
