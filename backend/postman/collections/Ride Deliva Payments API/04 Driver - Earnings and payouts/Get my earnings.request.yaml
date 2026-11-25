@@ -1,0 +1,15 @@
+$kind: http-request
+method: GET
+url: '{{baseUrl}}/payments/earnings'
+order: 1000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 200', () => pm.response.to.have.status(200));
+      const isMoney = (v) => typeof v === 'string' && /^-?\d+(\.\d{1,2})?$/.test(v);
+      const e = pm.response.json().data;
+      pm.test('summary fields', () => pm.expect(e).to.include.keys('balance', 'currency', 'trips', 'gross', 'commission', 'net', 'payoutMinimum', 'payoutSchedule', 'payoutAccount', 'lastPayout'));
+      pm.test('money fields are money strings', () => ['balance', 'gross', 'commission', 'net', 'payoutMinimum'].forEach((k) => pm.expect(isMoney(String(e[k])), k).to.be.true));
+      pm.test('net = gross - commission', () => pm.expect(Number(e.net)).to.be.closeTo(Number(e.gross) - Number(e.commission), 0.001));
+examples: './.resources/Get my earnings.resources/examples'

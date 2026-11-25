@@ -1,0 +1,21 @@
+$kind: http-request
+description: |-
+  Polled by the app while checkout / the MoMo prompt is open. A PROCESSING payment older than 3s is re-checked with the provider on read.
+method: GET
+url: '{{baseUrl}}/payments/{{paymentId}}'
+order: 5000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 200', () => pm.response.to.have.status(200));
+      const p = pm.response.json().data;
+      pm.test('returns the payment just started', () => {
+        pm.expect(p.id).to.eql(pm.collectionVariables.get('paymentId'));
+        pm.expect(['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'REFUNDED']).to.include(p.status);
+      });
+      pm.test('gateway payloads are not exposed', () => {
+        const p = pm.response.json().data.payment || pm.response.json().data;
+        ['gatewayResponse', 'providerReference', 'payerPhone', 'userId'].forEach((k) => pm.expect(p).to.not.have.property(k));
+      });
+examples: './.resources/Get payment status.resources/examples'

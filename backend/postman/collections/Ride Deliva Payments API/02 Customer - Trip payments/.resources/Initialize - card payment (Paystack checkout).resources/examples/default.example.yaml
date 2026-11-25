@@ -1,0 +1,45 @@
+$kind: http-example
+name: 'Checkout opened'
+request:
+  url: '{{baseUrl}}/payments/initialize'
+  method: POST
+response:
+  statusCode: 201
+  statusText: 'Created'
+  headers:
+    - key: Content-Type
+      value: application/json; charset=utf-8
+  body:
+    type: json
+    content: |-
+      {
+        "success": true,
+        "message": "Payment started",
+        "data": {
+          "payment": {
+            "id": "9b2f6d0e-3c1a-4e8b-a5d2-7f1e0c9b4a11",
+            "purpose": "TRIP",
+            "rideId": "2a7c9e4b-1d3f-4a6e-8b0c-5d2e7f9a1b33",
+            "deliveryId": null,
+            "amount": "2300",
+            "currency": "NGN",
+            "method": "CARD",
+            "provider": "PAYSTACK",
+            "status": "PROCESSING",
+            "reference": "PAY-9b2f6d0e-3c1a-4e8b-a5d2-7f1e0c9b4a11-MI2K9X1A",
+            "channel": null,
+            "cashbackAmount": "0",
+            "failureReason": null,
+            "paidAt": null,
+            "refundedAt": null,
+            "createdAt": "2026-11-25T09:00:00.000Z",
+            "updatedAt": "2026-11-25T09:00:00.000Z"
+          },
+          "next": {
+            "type": "redirect",
+            "authorizationUrl": "https://checkout.paystack.com/0peioxfhpn",
+            "accessCode": "0peioxfhpn"
+          }
+        },
+        "timestamp": "2026-11-25T09:00:00.000Z"
+      }

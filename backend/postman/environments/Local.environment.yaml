@@ -1,0 +1,52 @@
+name: Local
+values:
+  - key: baseUrl
+    value: 'http://localhost:3000/api/v1'
+    enabled: true
+    type: default
+    description: 'API base URL including the /api/v1 prefix'
+  - key: customerPhone
+    value: '+2348123456789'
+    enabled: true
+    type: default
+    description: 'Seeded customer (John Doe)'
+  - key: customerPassword
+    value: 'customer123'
+    enabled: true
+    type: secret
+    description: 'Seed password from src/database/seed.ts (local only)'
+  - key: otherCustomerPhone
+    value: '+2348123456780'
+    enabled: true
+    type: default
+    description: 'Second seeded customer (Alice Smith), for ownership checks'
+  - key: otherCustomerPassword
+    value: 'customer123'
+    enabled: true
+    type: secret
+    description: 'Seed password (local only)'
+  - key: driverPhone
+    value: '+2348098765432'
+    enabled: true
+    type: default
+    description: 'Seeded approved driver (Michael Johnson)'
+  - key: driverPassword
+    value: 'driver123'
+    enabled: true
+    type: secret
+    description: 'Seed password (local only)'
+  - key: adminPhone
+    value: '+2348012345678'
+    enabled: true
+    type: default
+    description: 'Seeded SUPER_ADMIN'
+  - key: adminPassword
+    value: 'admin123!@#'
+    enabled: true
+    type: secret
+    description: 'Seed password (local only)'
+  - key: paystackSecretKey
+    value: ''
+    enabled: true
+    type: secret
+    description: 'Same value as PAYSTACK_SECRET_KEY in backend/.env; only used to sign webhook tests. Pass with --env-var, never commit.'

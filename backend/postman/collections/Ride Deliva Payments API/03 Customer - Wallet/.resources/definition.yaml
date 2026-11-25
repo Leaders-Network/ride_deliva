@@ -1,0 +1,6 @@
+$kind: collection
+description: |-
+  Each customer and driver has one NGN wallet. Every balance change is a ledger Transaction with a unique
+  reference, so the balance always equals the sum of its entries and retries never double-apply.
+  Top-ups go through the same payment flow as trips (purpose WALLET_TOP_UP); limits NGN 100 .. 500,000.
+order: 3000

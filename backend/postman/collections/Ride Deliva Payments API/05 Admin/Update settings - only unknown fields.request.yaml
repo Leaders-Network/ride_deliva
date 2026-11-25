@@ -1,0 +1,17 @@
+$kind: http-request
+description: |-
+  Unknown keys are stripped (they can never be written); with nothing left the body fails min(1).
+method: PUT
+url: '{{baseUrl}}/payments/admin/settings'
+order: 6000
+body:
+  type: json
+  content: |-
+    {
+      "updatedBy": "attacker"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 422', () => pm.response.to.have.status(422));

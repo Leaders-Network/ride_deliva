@@ -1,0 +1,33 @@
+$kind: http-example
+name: 'Banks'
+request:
+  url: '{{baseUrl}}/payments/banks'
+  method: GET
+response:
+  statusCode: 200
+  statusText: 'OK'
+  headers:
+    - key: Content-Type
+      value: application/json; charset=utf-8
+  body:
+    type: json
+    content: |-
+      {
+        "success": true,
+        "message": "Banks retrieved",
+        "data": [
+          {
+            "name": "Access Bank",
+            "code": "044"
+          },
+          {
+            "name": "Guaranty Trust Bank",
+            "code": "058"
+          },
+          {
+            "name": "MoMo PSB",
+            "code": "120003"
+          }
+        ],
+        "timestamp": "2026-11-25T09:00:00.000Z"
+      }

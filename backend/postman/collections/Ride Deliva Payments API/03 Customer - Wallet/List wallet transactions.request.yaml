@@ -1,0 +1,24 @@
+$kind: http-request
+method: GET
+url: '{{baseUrl}}/payments/wallet/transactions?page=1&limit=10'
+order: 2000
+queryParams:
+  - key: page
+    value: '1'
+  - key: limit
+    value: '10'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 200', () => pm.response.to.have.status(200));
+      pm.test('paginated envelope', () => {
+        const b = pm.response.json();
+        pm.expect(b.data).to.be.an('array');
+        pm.expect(b.meta).to.include.keys('page', 'limit', 'total', 'totalPages', 'hasNext', 'hasPrev');
+        pm.expect(b.data.length).to.be.at.most(b.meta.limit);
+      });
+      pm.test('entries expose only ledger fields', () => {
+        pm.response.json().data.forEach((t) => pm.expect(Object.keys(t).sort()).to.eql(['amount', 'createdAt', 'currency', 'description', 'id', 'reference', 'status', 'type']));
+      });
+examples: './.resources/List wallet transactions.resources/examples'

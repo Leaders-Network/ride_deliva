@@ -1,0 +1,25 @@
+$kind: http-example
+name: 'Cash trip'
+request:
+  url: '{{baseUrl}}/payments/initialize'
+  method: POST
+response:
+  statusCode: 400
+  statusText: 'Bad Request'
+  headers:
+    - key: Content-Type
+      value: application/json; charset=utf-8
+  body:
+    type: json
+    content: |-
+      {
+        "success": false,
+        "error": {
+          "code": "BAD_REQUEST",
+          "message": "Cash is paid to the driver at the end of the trip",
+          "statusCode": 400,
+          "timestamp": "2026-11-25T09:00:00.000Z",
+          "path": "/api/v1/payments/...",
+          "requestId": "7eccb8e4-5e78-41ff-b131-a4064aa58f70"
+        }
+      }

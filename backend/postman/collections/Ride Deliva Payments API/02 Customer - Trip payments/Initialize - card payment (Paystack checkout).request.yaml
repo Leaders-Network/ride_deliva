@@ -1,0 +1,44 @@
+$kind: http-request
+description: |-
+  Switches the trip to CARD and opens a Paystack checkout. Requires a configured Paystack key; 503 otherwise.
+method: POST
+url: '{{baseUrl}}/payments/initialize'
+order: 3000
+body:
+  type: json
+  content: |-
+    {
+      "rideId": "{{rideId}}",
+      "method": "CARD"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 201', () => pm.response.to.have.status(201));
+      const isMoney = (v) => typeof v === 'string' && /^-?\d+(\.\d{1,2})?$/.test(v);
+      const { payment, next } = pm.response.json().data;
+      pm.test('payment is a PROCESSING Paystack trip payment for this ride', () => {
+        pm.expect(payment.purpose).to.eql('TRIP');
+        pm.expect(payment.rideId).to.eql(pm.collectionVariables.get('rideId'));
+        pm.expect(payment.method).to.eql('CARD');
+        pm.expect(payment.provider).to.eql('PAYSTACK');
+        pm.expect(payment.status).to.eql('PROCESSING');
+        pm.expect(payment.reference).to.match(new RegExp('^PAY-' + payment.id + '-[0-9A-Z]+$'));
+      });
+      pm.test('amount is the ride fare, as a money string', () => {
+        pm.expect(isMoney(payment.amount)).to.be.true;
+        pm.expect(Number(payment.amount)).to.eql(Number(pm.collectionVariables.get('rideFare')));
+      });
+      pm.test('next action is a Paystack redirect', () => {
+        pm.expect(next.type).to.eql('redirect');
+        pm.expect(next.authorizationUrl).to.match(/^https:\/\/checkout\.paystack\.com\//);
+        pm.expect(next.accessCode).to.be.a('string').and.not.empty;
+      });
+      pm.test('gateway payloads are not exposed', () => {
+        const p = pm.response.json().data.payment || pm.response.json().data;
+        ['gatewayResponse', 'providerReference', 'payerPhone', 'userId'].forEach((k) => pm.expect(p).to.not.have.property(k));
+      });
+      pm.collectionVariables.set('paymentId', payment.id);
+      pm.collectionVariables.set('paymentReference', payment.reference);
+examples: './.resources/Initialize - card payment (Paystack checkout).resources/examples'

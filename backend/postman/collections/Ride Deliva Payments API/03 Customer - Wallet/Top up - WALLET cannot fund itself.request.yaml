@@ -1,0 +1,21 @@
+$kind: http-request
+method: POST
+url: '{{baseUrl}}/payments/wallet/top-up'
+order: 5000
+body:
+  type: json
+  content: |-
+    {
+      "amount": 500,
+      "method": "WALLET"
+    }
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{otherCustomerToken}}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 422', () => pm.response.to.have.status(422));

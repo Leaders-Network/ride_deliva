@@ -1,0 +1,17 @@
+$kind: http-request
+description: |-
+  Nigerian banks from Paystack (cached), for the payout-account picker.
+method: GET
+url: '{{baseUrl}}/payments/banks'
+order: 3000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 200', () => pm.response.to.have.status(200));
+      const banks = pm.response.json().data;
+      pm.test('non-empty list of { name, code }', () => {
+        pm.expect(banks).to.be.an('array').that.is.not.empty;
+        banks.forEach((b) => pm.expect(Object.keys(b).sort()).to.eql(['code', 'name']));
+      });
+examples: './.resources/List banks.resources/examples'

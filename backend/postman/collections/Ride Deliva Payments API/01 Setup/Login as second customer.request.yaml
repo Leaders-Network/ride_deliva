@@ -1,0 +1,22 @@
+$kind: http-request
+method: POST
+url: '{{baseUrl}}/auth/login'
+order: 2000
+body:
+  type: json
+  content: |-
+    {
+      "phoneNumber": "{{otherCustomerPhone}}",
+      "password": "{{otherCustomerPassword}}"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 200', () => pm.response.to.have.status(200));
+      const d = pm.response.json().data;
+      pm.test('returns an access token and a customerProfile', () => {
+        pm.expect(d.tokens.accessToken).to.be.a('string').and.not.empty;
+        pm.expect(d.user.customerProfile).to.be.an('object');
+      });
+      pm.collectionVariables.set('otherCustomerToken', d.tokens.accessToken);

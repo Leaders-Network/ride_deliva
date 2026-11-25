@@ -1,0 +1,20 @@
+$kind: http-request
+description: |-
+  A customer who has never transacted gets a zero-balance placeholder with id null.
+method: GET
+url: '{{baseUrl}}/payments/wallet'
+order: 1000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 200', () => pm.response.to.have.status(200));
+      const isMoney = (v) => typeof v === 'string' && /^-?\d+(\.\d{1,2})?$/.test(v);
+      const w = pm.response.json().data;
+      pm.test('NGN wallet with a money-string balance', () => {
+        pm.expect(isMoney(String(w.balance))).to.be.true;
+        pm.expect(w.currency).to.eql('NGN');
+        pm.expect(w.isActive).to.be.a('boolean');
+      });
+      pm.collectionVariables.set('customerBalance', String(w.balance));
+examples: './.resources/Get my wallet.resources/examples'

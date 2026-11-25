@@ -1,0 +1,24 @@
+$kind: http-request
+method: GET
+url: '{{baseUrl}}/payments/admin/payouts?status=PAID&page=1&limit=20'
+order: 7000
+queryParams:
+  - key: status
+    value: 'PAID'
+    description: 'PENDING | PROCESSING | PAID | FAILED | REVERSED'
+  - key: page
+    value: '1'
+  - key: limit
+    value: '20'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 200', () => pm.response.to.have.status(200));
+      pm.test('paginated envelope', () => {
+        const b = pm.response.json();
+        pm.expect(b.data).to.be.an('array');
+        pm.expect(b.meta).to.include.keys('page', 'limit', 'total', 'totalPages', 'hasNext', 'hasPrev');
+        pm.expect(b.data.length).to.be.at.most(b.meta.limit);
+      });
+      pm.test('every row has the filtered status', () => pm.response.json().data.forEach((p) => pm.expect(p.status).to.eql('PAID')));

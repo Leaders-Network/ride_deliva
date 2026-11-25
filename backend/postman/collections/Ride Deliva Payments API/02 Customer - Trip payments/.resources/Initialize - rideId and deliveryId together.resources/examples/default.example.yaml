@@ -1,0 +1,35 @@
+$kind: http-example
+name: 'Both ids'
+request:
+  url: '{{baseUrl}}/payments/initialize'
+  method: POST
+response:
+  statusCode: 422
+  statusText: 'Unprocessable Entity'
+  headers:
+    - key: Content-Type
+      value: application/json; charset=utf-8
+  body:
+    type: json
+    content: |-
+      {
+        "success": false,
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Validation failed",
+          "statusCode": 422,
+          "timestamp": "2026-11-25T09:00:00.000Z",
+          "path": "/api/v1/payments/...",
+          "details": [
+            {
+              "field": "",
+              "message": "value contains a conflict between exclusive peers [rideId, deliveryId]",
+              "value": {
+                "rideId": "2a7c9e4b-1d3f-4a6e-8b0c-5d2e7f9a1b33",
+                "deliveryId": "2a7c9e4b-1d3f-4a6e-8b0c-5d2e7f9a1b33"
+              }
+            }
+          ],
+          "requestId": "7eccb8e4-5e78-41ff-b131-a4064aa58f70"
+        }
+      }

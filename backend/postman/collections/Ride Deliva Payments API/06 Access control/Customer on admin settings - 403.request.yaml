@@ -1,0 +1,10 @@
+$kind: http-request
+method: GET
+url: '{{baseUrl}}/payments/admin/settings'
+order: 2000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 403', () => pm.response.to.have.status(403));
+      pm.test('error code is FORBIDDEN', () => pm.expect(pm.response.json().error.code).to.eql('FORBIDDEN'));

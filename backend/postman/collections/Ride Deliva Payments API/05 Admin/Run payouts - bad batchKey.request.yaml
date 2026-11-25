@@ -1,0 +1,15 @@
+$kind: http-request
+method: POST
+url: '{{baseUrl}}/payments/admin/payouts/run'
+order: 9000
+body:
+  type: json
+  content: |-
+    {
+      "batchKey": "next-monday"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 422', () => pm.response.to.have.status(422));

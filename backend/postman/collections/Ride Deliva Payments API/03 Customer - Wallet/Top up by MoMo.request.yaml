@@ -1,0 +1,29 @@
+$kind: http-request
+description: |-
+  Prompts the account's own verified number (consent). 503 when MoMo credentials are not configured.
+method: POST
+url: '{{baseUrl}}/payments/wallet/top-up'
+order: 7000
+body:
+  type: json
+  content: |-
+    {
+      "amount": 500,
+      "method": "MOBILE_MONEY"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('prompt sent, or 503 when MoMo is not configured', () => pm.expect([201, 503]).to.include(pm.response.code));
+      if (pm.response.code === 201) {
+        const { next } = pm.response.json().data;
+        pm.test('next action is approve_on_phone with the account number', () => {
+          pm.expect(next.type).to.eql('approve_on_phone');
+          pm.expect(next.phoneNumber).to.eql(pm.environment.get('customerPhone'));
+          pm.expect(next.expiresInMinutes).to.be.above(0);
+        });
+      } else {
+        pm.test('error message matches /MoMo payments are not available/', () => pm.expect(pm.response.json().error.message).to.match(/MoMo payments are not available/));
+      }
+examples: './.resources/Top up by MoMo.resources/examples'

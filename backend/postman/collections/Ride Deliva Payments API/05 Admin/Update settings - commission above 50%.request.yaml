@@ -1,0 +1,15 @@
+$kind: http-request
+method: PUT
+url: '{{baseUrl}}/payments/admin/settings'
+order: 5000
+body:
+  type: json
+  content: |-
+    {
+      "commissionRate": 0.6
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 422', () => pm.response.to.have.status(422));

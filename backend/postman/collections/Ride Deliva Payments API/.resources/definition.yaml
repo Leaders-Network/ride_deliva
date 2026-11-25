@@ -1,0 +1,42 @@
+$kind: collection
+name: 'Ride Deliva Payments API'
+description: |-
+  Payments module of the Ride Deliva backend: trip payments, wallet top-ups, the wallet ledger,
+  driver earnings and payouts, admin payment settings, and the Paystack / MTN MoMo webhooks.
+
+  Base URL: {{baseUrl}} (e.g. http://localhost:3000/api/v1). Auth is a Bearer access token from
+  POST /auth/login; the "01 Setup" folder logs in as each seeded role and stores the tokens.
+
+  Conventions
+  - Success: { success: true, message, data, meta?, timestamp }. Lists add meta.page/limit/total/totalPages/hasNext/hasPrev.
+  - Error: { success: false, error: { code, message, statusCode, details?, path, requestId } }.
+    Validation failures are 422 VALIDATION_ERROR with error.details[] = { field, message, value }.
+  - Money is a decimal string in naira (e.g. "2300", "1500.50"). Paystack is charged in kobo internally.
+  - Pagination: page >= 1 (default 1), limit 1..100 (default 20).
+  - POST /payments/initialize, POST /payments/wallet/top-up and PUT /payments/payout-account share a
+    per-user limit of 10 requests / 10 minutes (429 TOO_MANY_BOOKING_ATTEMPTS) with ride/delivery booking.
+
+  Run order matters: folders chain ids and tokens through collection variables.
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{customerToken}}'
+scripts:
+  - type: http:afterResponse
+    language: text/javascript
+    code: |-
+      // Shared response contract. Webhooks reply in the provider's expected shape, so they are exempt.
+      if (!pm.request.url.getPath().includes('/webhooks/')) {
+        pm.test('[contract] JSON envelope', () => {
+          const b = pm.response.json();
+          pm.expect(b.success, 'success flag').to.be.a('boolean');
+          if (b.success) {
+            pm.expect(pm.response.code).to.be.below(400);
+            pm.expect(b).to.have.property('timestamp');
+          } else {
+            pm.expect(b.error).to.include.keys('code', 'message', 'statusCode');
+            pm.expect(b.error.statusCode, 'error.statusCode matches HTTP status').to.eql(pm.response.code);
+          }
+        });
+      }

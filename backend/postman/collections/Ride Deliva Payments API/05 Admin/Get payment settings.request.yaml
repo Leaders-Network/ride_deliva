@@ -1,0 +1,13 @@
+$kind: http-request
+method: GET
+url: '{{baseUrl}}/payments/admin/settings'
+order: 1000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 200', () => pm.response.to.have.status(200));
+      const s = pm.response.json().data;
+      pm.test('all settings present', () => pm.expect(s).to.include.keys('commissionRate', 'momoCashbackEnabled', 'momoCashbackRate', 'momoCashbackCap', 'momoCashbackMinFare', 'payoutMinimum'));
+      pm.collectionVariables.set('originalCommissionRate', String(s.commissionRate));
+examples: './.resources/Get payment settings.resources/examples'

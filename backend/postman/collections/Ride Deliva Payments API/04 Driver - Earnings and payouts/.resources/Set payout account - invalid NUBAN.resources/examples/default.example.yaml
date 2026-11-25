@@ -1,0 +1,32 @@
+$kind: http-example
+name: 'Bad NUBAN'
+request:
+  url: '{{baseUrl}}/payments/payout-account'
+  method: PUT
+response:
+  statusCode: 422
+  statusText: 'Unprocessable Entity'
+  headers:
+    - key: Content-Type
+      value: application/json; charset=utf-8
+  body:
+    type: json
+    content: |-
+      {
+        "success": false,
+        "error": {
+          "code": "VALIDATION_ERROR",
+          "message": "Validation failed",
+          "statusCode": 422,
+          "timestamp": "2026-11-25T09:00:00.000Z",
+          "path": "/api/v1/payments/...",
+          "details": [
+            {
+              "field": "accountNumber",
+              "message": "accountNumber must be a 10-digit NUBAN",
+              "value": "12345"
+            }
+          ],
+          "requestId": "7eccb8e4-5e78-41ff-b131-a4064aa58f70"
+        }
+      }

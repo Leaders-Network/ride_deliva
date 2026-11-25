@@ -1,0 +1,22 @@
+$kind: http-request
+method: POST
+url: '{{baseUrl}}/auth/login'
+order: 4000
+body:
+  type: json
+  content: |-
+    {
+      "phoneNumber": "{{adminPhone}}",
+      "password": "{{adminPassword}}"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('status is 200', () => pm.response.to.have.status(200));
+      const d = pm.response.json().data;
+      pm.test('returns an access token and a adminProfile', () => {
+        pm.expect(d.tokens.accessToken).to.be.a('string').and.not.empty;
+        pm.expect(d.user.adminProfile).to.be.an('object');
+      });
+      pm.collectionVariables.set('adminToken', d.tokens.accessToken);
