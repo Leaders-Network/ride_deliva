@@ -4,7 +4,7 @@
 const db = {
   $transaction: jest.fn(),
   $executeRaw: jest.fn(),
-  payment: { findUnique: jest.fn(), findUniqueOrThrow: jest.fn(), update: jest.fn(), updateMany: jest.fn(), upsert: jest.fn(), findFirst: jest.fn() },
+  payment: { create: jest.fn(), findUnique: jest.fn(), findUniqueOrThrow: jest.fn(), update: jest.fn(), updateMany: jest.fn(), upsert: jest.fn(), findFirst: jest.fn() },
   ride: { findUnique: jest.fn(), update: jest.fn() },
   delivery: { findUnique: jest.fn(), update: jest.fn() },
   wallet: { upsert: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
@@ -234,6 +234,15 @@ describe('payments', () => {
       db.transaction.findUnique.mockResolvedValue({ id: 'existing' });
       expect(await walletService.credit(db as any, 'w', money(100), { type: 'CREDIT', reference: 'r', description: 'x' })).toBeNull();
       expect(db.wallet.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('top-up', () => {
+    it('refuses an unavailable provider before creating the payment, so no PENDING row is left behind', async () => {
+      jest.spyOn(momo, 'configured', 'get').mockReturnValue(false);
+      const user = { id: 'user-1', phoneNumber: '+2348031234567', customerProfile: { id: 'cust-1' } } as any;
+      await expect(paymentService.initializeTopUp(user, { amount: 500, method: 'MOBILE_MONEY' })).rejects.toMatchObject({ statusCode: 503 });
+      expect(db.payment.create).not.toHaveBeenCalled();
     });
   });
 

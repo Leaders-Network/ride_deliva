@@ -136,6 +136,8 @@ export class PaymentService {
     const customerId = user.customerProfile?.id;
     if (!customerId) throw createError.forbidden('Customer profile required');
     const amount = money(input.amount);
+    // Before the insert: each top-up is a new row, and one the provider can never take would sit PENDING forever.
+    this.assertProviderAvailable(input.method);
 
     const payment = await prisma.payment.create({
       data: { purpose: 'WALLET_TOP_UP', userId: user.id, amount, method: input.method, status: 'PENDING' },
@@ -158,8 +160,9 @@ export class PaymentService {
       return { type: 'none' };
     }
 
+    this.assertProviderAvailable(method);
+
     if (method === 'CARD' || method === 'BANK_TRANSFER') {
-      if (!paystack.configured) throw createError.serviceUnavailable('Card and transfer payments are not available right now');
       // Record the attempt BEFORE calling out, so a webhook that beats our response still matches.
       await this.recordAttempt(payment.id, { method, amount, reference, provider: 'PAYSTACK' });
       try {
@@ -178,7 +181,6 @@ export class PaymentService {
     }
 
     if (method === 'MOBILE_MONEY') {
-      if (!momo.configured) throw createError.serviceUnavailable('MoMo payments are not available right now');
       // Consent (MoMo best practice): only debit a number proven to belong to this user. The
       // account's phone number is OTP-verified at sign-up, so it is the only one allowed for now.
       let msisdn: string;
@@ -617,6 +619,13 @@ export class PaymentService {
   /** Serialises everything that touches one payment (webhook, poll, trip hooks) for the transaction's lifetime. */
   private lock(tx: Tx, paymentId: string) {
     return tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`payment:${paymentId}`}))`;
+  }
+
+  private assertProviderAvailable(method: PaymentMethod) {
+    if ((method === 'CARD' || method === 'BANK_TRANSFER') && !paystack.configured) {
+      throw createError.serviceUnavailable('Card and transfer payments are not available right now');
+    }
+    if (method === 'MOBILE_MONEY' && !momo.configured) throw createError.serviceUnavailable('MoMo payments are not available right now');
   }
 
   private momoPromptExpired(payment: Payment) {
