@@ -5,7 +5,7 @@ export type DriverStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED' | '
 export type RideStatus = 'REQUESTED' | 'ACCEPTED' | 'DRIVER_ARRIVING' | 'DRIVER_ARRIVED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 export type DeliveryStatus = 'REQUESTED' | 'ACCEPTED' | 'DRIVER_ASSIGNED' | 'PICKED_UP' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
 export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
-export type PaymentMethod = 'WALLET' | 'CARD' | 'BANK_TRANSFER' | 'CASH';
+export type PaymentMethod = 'WALLET' | 'CARD' | 'BANK_TRANSFER' | 'CASH' | 'MOBILE_MONEY';
 
 export interface UserSummary {
   id: string;
