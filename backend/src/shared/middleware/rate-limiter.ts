@@ -7,6 +7,7 @@ export const rateLimiter = rateLimit({
   windowMs: config.security.rateLimitWindowMs, // Time window in milliseconds
   max: config.security.rateLimitMaxRequests, // Maximum number of requests per window
   message: {
+    success: false,
     error: {
       code: 'TOO_MANY_REQUESTS',
       message: 'Too many requests from this IP, please try again later',
@@ -49,6 +50,7 @@ export const rateLimiter = rateLimit({
     });
 
     res.status(429).json({
+      success: false,
       error: {
         code: 'TOO_MANY_REQUESTS',
         message: 'Too many requests from this IP, please try again later',
@@ -65,6 +67,7 @@ export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10, // Maximum 10 auth attempts per 15 minutes
   message: {
+    success: false,
     error: {
       code: 'TOO_MANY_AUTH_ATTEMPTS',
       message: 'Too many authentication attempts, please try again later',
@@ -94,6 +97,7 @@ export const authRateLimiter = rateLimit({
     });
 
     res.status(429).json({
+      success: false,
       error: {
         code: 'TOO_MANY_AUTH_ATTEMPTS',
         message: 'Too many authentication attempts, please try again in 15 minutes',
@@ -110,6 +114,7 @@ export const passwordResetRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 5, // Maximum 5 password reset attempts per hour
   message: {
+    success: false,
     error: {
       code: 'TOO_MANY_PASSWORD_RESET_ATTEMPTS',
       message: 'Too many password reset attempts, please try again later',
@@ -127,6 +132,7 @@ export const otpRateLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
   max: 5, // Maximum 5 OTP attempts per 5 minutes
   message: {
+    success: false,
     error: {
       code: 'TOO_MANY_OTP_ATTEMPTS',
       message: 'Too many OTP verification attempts, please try again later',
@@ -147,6 +153,7 @@ export const bookingRateLimiter = rateLimit({
   max: 10,
   keyGenerator: (req) => `booking:${(req as any).user?.id ?? req.ip}`,
   message: {
+    success: false,
     error: {
       code: 'TOO_MANY_BOOKING_ATTEMPTS',
       message: 'Too many booking attempts, please try again later',
