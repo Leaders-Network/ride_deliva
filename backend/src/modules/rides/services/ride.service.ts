@@ -1,12 +1,14 @@
 import { randomBytes } from 'crypto';
 import prisma from '@/config/database';
 import { logger } from '@/config/logger';
-import { Prisma, RideStatus, RideType } from '@/generated/prisma';
+import { PaymentMethod, Prisma, RideStatus, RideType } from '@/generated/prisma';
 import { createError } from '@/shared/middleware/error-handler';
 import { queueService } from '@/shared/services/queue.service';
 import { QUEUE_NAMES } from '@/config/queues';
 import { customValidators } from '@/shared/utils/validation';
 import { estimateFare, FareEstimate } from '../fare';
+import { paymentService } from '@/modules/payments/services/payment.service';
+import { assertCanPayFromWallet } from '@/modules/payments/booking';
 
 interface LocationInput {
   latitude: number;
@@ -24,6 +26,7 @@ export interface BookRideInput {
   passengerCount: number;
   scheduledAt?: Date;
   notes?: string;
+  paymentMethod?: PaymentMethod;
 }
 
 /**
@@ -86,6 +89,8 @@ export class RideService {
   async book(customerId: string, userId: string, input: BookRideInput) {
     // Price on the server. The client never sends a fare, so it cannot choose its own price.
     const estimate = this.estimate(input);
+    const paymentMethod = input.paymentMethod ?? 'CASH';
+    if (paymentMethod === 'WALLET') await assertCanPayFromWallet(customerId, estimate.fare);
 
     const toAddress = (title: string, l: LocationInput) => ({
       userId,
@@ -124,6 +129,7 @@ export class RideService {
           passengerCount: input.passengerCount,
           scheduledAt: input.scheduledAt,
           notes: input.notes,
+          paymentMethod,
           estimatedFare: estimate.fare,
           surgeMultiplier: estimate.surgeMultiplier,
           estimatedDistance: estimate.distanceKm,
@@ -268,6 +274,12 @@ export class RideService {
       }
     });
 
+    // After the commit: settle cash, debit the wallet, or credit the driver if already paid.
+    // Best-effort here; payment state is reconciled on its own and never blocks the trip.
+    if (to === 'COMPLETED') {
+      await paymentService.onTripCompleted('ride', rideId).catch((error) => logger.error('Ride payment settlement failed', { rideId, error: String(error) }));
+    }
+
     return this.view(rideId);
   }
 
@@ -286,6 +298,7 @@ export class RideService {
       if (driverId) await tx.driverProfile.update({ where: { id: driverId }, data: { isAvailable: true } });
     });
 
+    await paymentService.onTripCancelled('ride', rideId).catch((error) => logger.error('Ride refund failed', { rideId, error: String(error) }));
     return this.view(rideId);
   }
 

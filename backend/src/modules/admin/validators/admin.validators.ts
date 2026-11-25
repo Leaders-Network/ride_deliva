@@ -57,7 +57,7 @@ export const listPaymentsQuerySchema = Joi.object({
   ...commonPatterns.pagination,
   ...dateRange,
   status: Joi.string().valid('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'REFUNDED'),
-  method: Joi.string().valid('WALLET', 'CARD', 'BANK_TRANSFER', 'CASH'),
+  method: Joi.string().valid('WALLET', 'CARD', 'BANK_TRANSFER', 'CASH', 'MOBILE_MONEY'),
 });
 
 export const updateDriverStatusSchema = Joi.object({

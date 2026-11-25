@@ -61,6 +61,9 @@ class RideDelivaApp {
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     }));
     this.app.use(compression());
+    // Provider webhooks need the exact bytes for signature checks. Mounted before express.json,
+    // which then skips these requests because the body is already read.
+    this.app.use(`${config.app.apiPrefix}/webhooks`, express.raw({ type: '*/*', limit: '1mb' }));
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
     this.app.use(morgan('combined', { stream: logStream }));

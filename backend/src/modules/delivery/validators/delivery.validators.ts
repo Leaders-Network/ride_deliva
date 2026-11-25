@@ -30,6 +30,8 @@ export const bookDeliverySchema = Joi.object({
   recipient: contact.required(),
   sender: contact, // defaults to the booking customer
   specialInstructions: Joi.string().trim().max(500),
+  // How the customer will pay. Cash is the default; card/transfer/MoMo are paid via POST /payments/initialize.
+  paymentMethod: Joi.string().valid('CASH', 'WALLET', 'CARD', 'BANK_TRANSFER', 'MOBILE_MONEY').default('CASH'),
   scheduledPickupAt: Joi.date().iso().greater('now').when('deliveryType', {
     is: 'SCHEDULED',
     then: Joi.required(),

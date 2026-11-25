@@ -30,7 +30,9 @@ export const rateLimiter = rateLimit({
   skip: (req) => {
     // Skip rate limiting for health check endpoints
     const healthEndpoints = ['/health', '/health/readiness', '/health/liveness'];
-    return healthEndpoints.includes(req.path);
+    // Payment provider callbacks come from a few provider IPs; throttling them would delay settlement.
+    // They are authenticated per request instead (signature / path secret + status re-check).
+    return healthEndpoints.includes(req.path) || req.originalUrl.startsWith(`${config.app.apiPrefix}/webhooks/`);
   },
 
   // Custom handler for rate limit exceeded

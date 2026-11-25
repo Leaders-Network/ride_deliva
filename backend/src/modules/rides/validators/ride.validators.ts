@@ -20,6 +20,8 @@ export const bookRideSchema = Joi.object({
     otherwise: Joi.forbidden(),
   }),
   notes: Joi.string().trim().max(500),
+  // How the customer will pay. Cash is the default; card/transfer/MoMo are paid via POST /payments/initialize.
+  paymentMethod: Joi.string().valid('CASH', 'WALLET', 'CARD', 'BANK_TRANSFER', 'MOBILE_MONEY').default('CASH'),
 });
 
 export const rideIdParamSchema = Joi.object({

@@ -260,6 +260,7 @@ export class QueueService {
     repeatOptions: {
       pattern?: string; // Cron pattern
       every?: number; // Milliseconds
+      tz?: string; // IANA timezone for `pattern`
       limit?: number;
       endDate?: Date;
     },

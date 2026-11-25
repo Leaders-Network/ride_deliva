@@ -1,13 +1,15 @@
 import { randomBytes } from 'crypto';
 import prisma from '@/config/database';
 import { logger } from '@/config/logger';
-import { DeliveryStatus, DeliveryType, Prisma } from '@/generated/prisma';
+import { DeliveryStatus, DeliveryType, PaymentMethod, Prisma } from '@/generated/prisma';
 import { createError } from '@/shared/middleware/error-handler';
 import { queueService } from '@/shared/services/queue.service';
 import { QUEUE_NAMES } from '@/config/queues';
 import { customValidators } from '@/shared/utils/validation';
 import { estimateDeliveryFee, DeliveryFeeEstimate } from '../fee';
 import { generatePin, hashPin, verifyPin, MAX_PIN_ATTEMPTS } from '../pin';
+import { paymentService } from '@/modules/payments/services/payment.service';
+import { assertCanPayFromWallet } from '@/modules/payments/booking';
 
 interface LocationInput {
   latitude: number;
@@ -41,6 +43,7 @@ export interface BookDeliveryInput extends EstimateDeliveryInput {
   sender?: Contact;
   specialInstructions?: string;
   scheduledPickupAt?: Date;
+  paymentMethod?: PaymentMethod;
 }
 
 export interface BookingUser {
@@ -101,6 +104,7 @@ const deliveryView = {
   cancelledAt: true,
   estimatedFare: true,
   finalFare: true,
+  paymentMethod: true,
   estimatedDistance: true,
   actualDistance: true,
   estimatedDuration: true,
@@ -148,6 +152,8 @@ export class DeliveryService {
   async book(customerId: string, user: BookingUser, input: BookDeliveryInput) {
     // Price on the server. The client never sends a fee, so it cannot choose its own price.
     const estimate = this.estimate(input);
+    const paymentMethod = input.paymentMethod ?? 'CASH';
+    if (paymentMethod === 'WALLET') await assertCanPayFromWallet(customerId, estimate.fee);
     const sender = input.sender ?? { name: `${user.firstName} ${user.lastName}`.trim(), phoneNumber: user.phoneNumber };
 
     const pin = generatePin();
@@ -195,6 +201,7 @@ export class DeliveryService {
           senderInfo: { name: sender.name, phoneNumber: sender.phoneNumber },
           recipientInfo: { name: input.recipient.name, phoneNumber: input.recipient.phoneNumber },
           scheduledPickupAt: input.scheduledPickupAt,
+          paymentMethod,
           estimatedFare: estimate.fee,
           estimatedDistance: estimate.distanceKm,
           estimatedDuration: estimate.durationMinutes,
@@ -376,6 +383,11 @@ export class DeliveryService {
       await tx.customerProfile.update({ where: { id: customerId }, data: { totalDeliveries: { increment: 1 } } });
     });
 
+    // After the commit, best-effort: payment state is reconciled on its own and never blocks hand-over.
+    await paymentService
+      .onTripCompleted('delivery', deliveryId)
+      .catch((error) => logger.error('Delivery payment settlement failed', { deliveryId, error: String(error) }));
+
     return this.view(deliveryId);
   }
 
@@ -397,6 +409,7 @@ export class DeliveryService {
       if (driverId) await tx.driverProfile.update({ where: { id: driverId }, data: { isAvailable: true } });
     });
 
+    await paymentService.onTripCancelled('delivery', deliveryId).catch((error) => logger.error('Delivery refund failed', { deliveryId, error: String(error) }));
     return this.view(deliveryId);
   }
 
